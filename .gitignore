@@ -1,7 +1,7 @@
 # Configs
-memoria/configs/*
-planificacion/planificacion.config
-file_system/configs/*
+# memoria/configs/*
+# planificacion/planificacion.config
+# file_system/configs/*
 
 # Debug
 planificacion/Debug/*
