@@ -3,11 +3,10 @@
 !*.c
 !*.h
 
-/* Configs */
-!memoria/configs/*
-!planificacion/configs/*
-!file_system/configs/*
-
+# Configs
+memoria/configs/*
+planificacion/configs/*
+file_system/configs/*
 
 # Debug
 planificacion/Debug/*
