@@ -1,11 +1,6 @@
-*
-!*/
-!*.c
-!*.h
-
 # Configs
 memoria/configs/*
-planificacion/configs/*
+planificacion/planificacion.config
 file_system/configs/*
 
 # Debug
@@ -21,3 +16,9 @@ memoria/Debug/*
 
 # Executables
 *.exe
+
+# Settings
+.settings
+/.settings
+
+settings.json
