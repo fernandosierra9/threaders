@@ -6,7 +6,7 @@ t_log *logger;
 /* Executed before main() */
 __attribute__((constructor)) void init_log(void)
 {
-	logger = log_create("Muse.log", "MUSE", true, LOG_LEVEL_INFO);
+	logger = log_create("memoria.log", "MUSE", true, LOG_LEVEL_INFO);
 	log_info(logger, "Se inicio el logger.");
 }
 
