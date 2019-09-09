@@ -1,5 +1,6 @@
 #include "memoria.h"
 
+//primer commit
 int main(void) {
 	int response = memoria_logger_create();
 	if (response < 0)
