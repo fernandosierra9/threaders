@@ -8,10 +8,17 @@
 !planificacion/configs/*
 !file_system/configs/*
 
-/* Logs */
-!planificacion/planificacion.log
-!memoria/Muse.log
-!file_system/file_system.log
 
-!Makefile
-!.gitignore
+# Debug
+planificacion/Debug/*
+file_system/Debug/*
+memoria/Debug/*
+
+# Files
+*.log
+
+# Object files
+*.o
+
+# Executables
+*.exe
