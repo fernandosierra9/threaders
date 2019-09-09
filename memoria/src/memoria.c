@@ -1,4 +1,5 @@
 #include "memoria.h"
+#include <common/config.h>
 
 //primer commit
 int main(void) {
