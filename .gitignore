@@ -19,7 +19,9 @@ shared-common/Debug/*
 *.exe
 
 # Settings
-.settings
-/.settings
+planificacion/.settings/*
+file_system/.settings/*
+memoria/.settings/*
+shared-common/.settings/*
 
 settings.json
