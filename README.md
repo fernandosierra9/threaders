@@ -1,5 +1,3 @@
-# tp-2019-2c-threaders
-
 =====================
 Implementacion del TP de sistemas operativos - TP-2019-2C-Threaders ROCKS!
 ----------------------------------------------------------
