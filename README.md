@@ -6,5 +6,5 @@ Desde eclipse:
 
 `Run > Run Configurations > Environment > New`
 
-`Name: "LD_LIBRARY_PATH" -- Value: "${workspace_loc}/hilolay/Debug:${workspace_loc}/libmuse/Debug"`
+`Name: "LD_LIBRARY_PATH" -- Value: "${PATH_PROYECTO}/hilolay/Debug:${PATH_PROYECTO}/libmuse/Debug"`
 
