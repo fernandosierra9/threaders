@@ -4,12 +4,15 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../example.c \
 ../hilolay.c 
 
 OBJS += \
+./example.o \
 ./hilolay.o 
 
 C_DEPS += \
+./example.d \
 ./hilolay.d 
 
 
