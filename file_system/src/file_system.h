@@ -9,8 +9,6 @@
 #include <commons/config.h>
 #include <commons/bitarray.h>
 
-#include <common/console.h>
-
 #include "config/file_system_config.h"
 #include "logger/file_system_logger.h"
 

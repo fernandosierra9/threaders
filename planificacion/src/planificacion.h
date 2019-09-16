@@ -9,8 +9,6 @@
 #include <commons/config.h>
 #include <commons/bitarray.h>
 
-#include <common/console.h>
-
 #include "config/planificacion_config.h"
 #include "logger/planificacion_logger.h"
 
