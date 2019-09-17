@@ -17,7 +17,11 @@
 #include <commons/config.h>
 #include <commons/bitarray.h>
 
+
 #include "config/muse_config.h"
 #include "logger/muse_logger.h"
+#include <common/sockets.h>
 
+
+int muse_socket;
 #endif /* MUSE_H_ */

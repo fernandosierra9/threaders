@@ -18,6 +18,8 @@ typedef struct
 
 } t_muse_config;
 
+t_muse_config* muse_config;
+
 int muse_config_load();
 void muse_config_free();
 int muse_get_listen_port();

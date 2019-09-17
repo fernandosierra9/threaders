@@ -1,13 +1,13 @@
 #include "muse_logger.h"
 
-t_log* muse_log;
+
 
 int muse_logger_create()
 {
 	muse_log = logger_create(LOG_FILE, PROGRAM_NAME);
 	if (muse_log == NULL || muse_log < 0)
 	{
-		perror("No ha sido posible instanciar el file_system_logger");
+		perror("No ha sido posible instanciar el muse_logger");
 		return -1;
 	}
 

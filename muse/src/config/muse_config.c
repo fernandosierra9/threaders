@@ -4,7 +4,7 @@ t_muse_config* muse_config_reload();
 void read(t_config* config_file);
 void print();
 
-t_muse_config* muse_config;
+
 
 int muse_config_load()
 {

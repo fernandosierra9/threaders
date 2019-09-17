@@ -37,6 +37,10 @@ typedef enum{
 }t_protocolo;
 
 
-
+int crearSocket(int *mySocket);
+int setearParaEscuchar(int *mySocket, int puerto);
+int conectar(int* mySocket, int puerto, char *ip) ;
+int aceptarConexion(int fd);
+void serializarYEnviar(int socket, int tipoDePaquete, void* package);
 
 #endif /* COMMON_SOCKETS_H_ */

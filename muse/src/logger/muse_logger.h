@@ -17,4 +17,5 @@ void muse_logger_error(char* message, ...);
 void muse_logger_destroy();
 t_log* muse_log_get();
 
+t_log* muse_log;
 #endif /* LOGGER_MUSE_LOGGER_H_ */
