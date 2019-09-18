@@ -117,18 +117,17 @@ void serializarYEnviar(int socket, int tipoDepackage, void* package){
 			break;
 		}
 		case MALLOC:{
+			t_package* package = malloc(sizeof(t_package));
+			package->operation_code = MALLOC;
+			package->buffer = malloc(sizeof(t_buffer));
+			package->buffer->size = sizeof(uint32_t);
+			package->buffer->stream = malloc(package->buffer->size);
+			memcpy(package->buffer->stream, &((t_malloc*)package)->memoria, package->buffer->size);
+			int bytes = package->buffer->size + 2*sizeof(int);
+     		void* a_enviar = serializer_serialize_package(package, bytes);
+			send(socket, a_enviar, bytes, 0);
+			free(a_enviar);
 			break;
-//			t_package* package = malloc(sizeof(t_package));
-//			package->operation_code = MESSAGE;
-//			package->buffer = malloc(sizeof(t_buffer));
-//			package->buffer->size = sizeof(uint32_t);
-//			package->buffer->stream = malloc(package->buffer->size);
-//			memcpy(package->buffer->stream, &((t_malloc*)package)->memoria, package->buffer->size);
-//			int bytes = package->buffer->size + 2*sizeof(int);
-//     		void* a_enviar = serializar_package(package, bytes);
-//			send(socket, a_enviar, bytes, 0);
-//			free(a_enviar);
-//			break;
 		}
 
 	}
@@ -137,7 +136,6 @@ void serializarYEnviar(int socket, int tipoDepackage, void* package){
 
 void* recibirYDeserializar(int socket,int tipo){
 	switch(tipo){
-
 		case MALLOC:
 		{
 			t_malloc *pedido_malloc=malloc (sizeof(t_malloc));

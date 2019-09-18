@@ -34,9 +34,9 @@ void test2() {
 int main() {
     /* HILOLAY CLIENTS */
 
-    lib_init();
-	th_create(test1);
-	th_create(test2);
+  //  lib_init();
+ //th_create(test1);
+//th_create(test2);
 
 
     /* MUSE CLIENTS */

@@ -18,6 +18,8 @@
 #include <commons/string.h>
 #include <fcntl.h>
 #include <commons/log.h>
+#include "protocols.h"
+#include "serializer.h"
 
 #define BACKLOG 20
 
@@ -34,6 +36,13 @@ typedef struct
 {
 	uint32_t memoria;
 } t_malloc;
+
+typedef struct
+{
+	t_protocolo operation_code;
+	t_buffer* buffer;
+} t_paquete;
+
 
 
 int crearSocket(int *mySocket);
