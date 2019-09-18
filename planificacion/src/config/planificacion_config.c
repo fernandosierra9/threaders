@@ -1,15 +1,15 @@
 #include "planificacion_config.h"
 
 t_suse_config* planificacion_config_reload();
-void read(t_config* config_file);
-void print();
+void read_config(t_config* config_file);
+void print_config();
 
 t_suse_config* planificacion_config;
 
 int planificacion_config_load()
 {
 	planificacion_logger_info("Se establecerá la configuración");
-	return config_load(planificacion_log_get(), CONFIG_FILE_PATH, read, print);
+	return config_load(planificacion_log_get(), CONFIG_FILE_PATH, read_config, print_config);
 }
 
 void planificacion_config_free()
@@ -58,11 +58,11 @@ double planificacion_get_alpha_sjf()
 t_suse_config* planificacion_config_reload()
 {
 	planificacion_config_free();
-	planificacion_config_load(planificacion_log_get(), CONFIG_FILE_PATH, read, print);
+	planificacion_config_load(planificacion_log_get(), CONFIG_FILE_PATH, read_config, print_config);
 	return planificacion_config;
 }
 
-void read(t_config* config_file)
+void read_config(t_config* config_file)
 {
 	planificacion_config = malloc(sizeof(t_suse_config));
 	planificacion_config->listen_port = config_get_int_value(config_file, "LISTEN_PORT");
@@ -74,7 +74,7 @@ void read(t_config* config_file)
 	planificacion_config->alpha_sjf = config_get_double_value(config_file, "ALPHA_SJF");
 }
 
-void print()
+void print_config()
 {
 	planificacion_logger_info("LISTEN_PORT: %d", planificacion_config->listen_port);
 	planificacion_logger_info("METRICS_TIMER: %d", planificacion_config->metrics_timer);

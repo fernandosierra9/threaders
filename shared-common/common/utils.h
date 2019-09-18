@@ -8,6 +8,9 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <commons/string.h>
+#include "sockets.h"
+#include "protocols.h"
+#include "serializer.h"
 
 #define max(a,b) \
 		({ __typeof__ (a) _a = (a); \
@@ -31,5 +34,11 @@ char* utils_to_string_uint(uint16_t value);
 char* utils_to_string_ul(unsigned value);
 void utils_free_array(char** array);
 char* utils_array_to_string(char** array);
+void utils_buffer_create(t_package* package);
+t_package* utils_package_create(void);
+void utils_package_add(t_package* package, void* value, int size);
+void utils_package_destroy(t_package* package);
+void utils_send_message(char* message, int client_socket);
+void utils_package_send_to(t_package* t_package, int client_socket);
 
 #endif /* CUSTOM_UTILITARIA_H_ */

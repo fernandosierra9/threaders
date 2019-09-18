@@ -28,7 +28,7 @@ all: liblibmuse.so
 liblibmuse.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -shared -o "liblibmuse.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/git/tp-2019-2c-threaders/shared-common/Debug" -shared -o "liblibmuse.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

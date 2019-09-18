@@ -31,10 +31,7 @@ void test2() {
     }
 }
 
-/* Main program */
-void main() {
-    int i;
-
+int main() {
     /* HILOLAY CLIENTS */
 
     lib_init();
@@ -46,4 +43,5 @@ void main() {
 
 	muse_init(1);
     th_return(0);
+    return 0;
 }

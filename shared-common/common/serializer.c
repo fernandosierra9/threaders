@@ -1,4 +1,4 @@
-#include "serializador.h"
+#include "serializer.h"
 
 package_t* create_package(size_t size) {
 	package_t* new_package = malloc(sizeof(package_t));
@@ -102,17 +102,17 @@ void destroy_package(package_t* package) {
 char* status_message(package_t* package, package_status status) {
 	switch (status) {
 	case LOAD_SUCCESS:
-		return string_from_format("Se creo un paquete de tamaño %d\n",
+		return string_from_format("Se creo un package de tamaño %d\n",
 				package->size);
 		break;
 
 	case SEND_SUCCESS:
-		return string_duplicate("Se envio el paquete exitosamente\n");
+		return string_duplicate("Se envio el package exitosamente\n");
 		break;
 
 	case LOAD_MISSING:
 		return string_from_format(
-				"Faltan completar %d de %d bytes para poder enviar el paquete\n",
+				"Faltan completar %d de %d bytes para poder enviar el package\n",
 				package->remaining_load, package->size);
 		break;
 
@@ -122,7 +122,7 @@ char* status_message(package_t* package, package_status status) {
 		break;
 
 	case SEND_ERROR:
-		return string_duplicate("No se pudo enviar el paquete\n");
+		return string_duplicate("No se pudo enviar el package\n");
 		break;
 
 	default:
@@ -148,4 +148,19 @@ int recv_package_variable(int fd, void** receiver) {
 	}
 
 	return recv_package(fd, *receiver, package_size);
+}
+
+void* serializer_serialize_package(t_package* package, int bytes)
+{
+	void * magic = malloc(bytes);
+	int offset = 0;
+
+	memcpy(magic + offset, &(package->operation_code), sizeof(int));
+	offset+= sizeof(int);
+	memcpy(magic + offset, &(package->buffer->size), sizeof(int));
+	offset+= sizeof(int);
+	memcpy(magic + offset, package->buffer->stream, package->buffer->size);
+	offset+= package->buffer->size;
+
+	return magic;
 }

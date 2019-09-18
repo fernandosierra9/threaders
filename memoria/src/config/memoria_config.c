@@ -1,15 +1,15 @@
 #include "memoria_config.h"
 
 t_muse_config* memoria_config_reload();
-void read(t_config* config_file);
-void print();
+void read_config(t_config* config_file);
+void print_config();
 
 t_muse_config* memoria_config;
 
 int memoria_config_load()
 {
 	memoria_logger_info("Se establecerá la configuración");
-	return config_load(memoria_log_get(), CONFIG_FILE_PATH, read, print);
+	return config_load(memoria_log_get(), CONFIG_FILE_PATH, read_config, print_config);
 }
 
 void memoria_config_free()
@@ -40,11 +40,11 @@ int memoria_get_swap_size()
 t_muse_config* memoria_config_reload()
 {
 	memoria_config_free();
-	memoria_config_load(memoria_log_get(), CONFIG_FILE_PATH, read, print);
+	memoria_config_load(memoria_log_get(), CONFIG_FILE_PATH, read_config, print_config);
 	return memoria_config;
 }
 
-void read(t_config* config_file)
+void read_config(t_config* config_file)
 {
 	memoria_config = malloc(sizeof(t_muse_config));
 	memoria_config->listen_port = config_get_int_value(config_file, "LISTEN_PORT");
@@ -53,7 +53,7 @@ void read(t_config* config_file)
 	memoria_config->swap_size = config_get_int_value(config_file, "SWAP_SIZE");
 }
 
-void print()
+void print_config()
 {
 	memoria_logger_info("LISTEN_PORT: %d", memoria_config->listen_port);
 	memoria_logger_info("MEMORY_SIZE: %d", memoria_config->memory_size);

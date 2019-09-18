@@ -1,13 +1,5 @@
-/*
- * sockets.h
- *
- *  Created on: 17 sep. 2019
- *      Author: utnso
- */
-
 #ifndef COMMON_SOCKETS_H_
 #define COMMON_SOCKETS_H_
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,6 +19,8 @@
 #include <fcntl.h>
 #include <commons/log.h>
 
+#define BACKLOG 20
+
 //Estructura para manejar el protocolo
 typedef enum{
 	HANDSHAKE,     		//general
@@ -38,27 +32,15 @@ typedef enum{
 
 typedef struct
 {
-	int size;
-	void* stream;
-} t_buffer;
-
-typedef struct
-{
-	t_protocolo codigo_operacion;
-	t_buffer* buffer;
-} t_paquete;
-
-typedef struct
-{
 	uint32_t memoria;
 } t_malloc;
-
 
 
 int crearSocket(int *mySocket);
 int setearParaEscuchar(int *mySocket, int puerto);
 int conectar(int* mySocket, int puerto, char *ip) ;
 int aceptarConexion(int fd);
+
 void serializarYEnviar(int socket, int tipoDePaquete, void* package);
 void* recibirYDeserializar(int socket,int tipo);
 

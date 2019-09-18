@@ -90,3 +90,65 @@ char* utils_array_to_string(char** array)
 	string_append(&ret, "]");
 	return ret;
 }
+
+void utils_buffer_create(t_package* package)
+{
+	package->buffer = malloc(sizeof(t_buffer));
+	package->buffer->size = 0;
+	package->buffer->stream = NULL;
+}
+
+t_package* utils_package_create(void)
+{
+	t_package* package = malloc(sizeof(t_package));
+	package->operation_code = PACKAGE;
+	utils_buffer_create(package);
+	return package;
+}
+
+void utils_package_add(t_package* package, void* value, int size)
+{
+	package->buffer->stream = realloc(package->buffer->stream, package->buffer->size + size + sizeof(int));
+
+	memcpy(package->buffer->stream + package->buffer->size, &size, sizeof(int));
+	memcpy(package->buffer->stream + package->buffer->size + sizeof(int), value, size);
+
+	package->buffer->size += size + sizeof(int);
+}
+
+void utils_package_destroy(t_package* package)
+{
+	free(package->buffer->stream);
+	free(package->buffer);
+	free(package);
+}
+
+void utils_send_message(char* message, int client_socket)
+{
+	t_package* package = malloc(sizeof(t_package));
+
+	package->operation_code = MESSAGE;
+	package->buffer = malloc(sizeof(t_buffer));
+	package->buffer->size = strlen(message) + 1;
+	package->buffer->stream = malloc(package->buffer->size);
+	memcpy(package->buffer->stream, message, package->buffer->size);
+
+	int bytes = package->buffer->size + 2*sizeof(int);
+
+	void* to_send = serializer_serialize_package(package, bytes);
+
+	send(client_socket, to_send, bytes, 0);
+
+	free(to_send);
+	utils_package_destroy(package);
+}
+
+void utils_package_send_to(t_package* t_package, int client_socket)
+{
+	int bytes = t_package->buffer->size + 2*sizeof(int);
+	void* to_send = serializer_serialize_package(t_package, bytes);
+
+	send(client_socket, to_send, bytes, 0);
+
+	free(to_send);
+}

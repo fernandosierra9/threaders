@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <sys/socket.h>
 #include <stdlib.h>
+#include "protocols.h"
 
 #define RECV_DATA_ERROR		-1
 #define RECV_SIZE_ERROR		-2
@@ -53,5 +54,7 @@ package_t* receive_package(int socket_sender);
 int recv_package(int fd, void* receiver, size_t size);
 
 int recv_package_variable(int fd, void** receiver);
+
+void* serializer_serialize_package(t_package* package, int bytes);
 
 #endif

@@ -1,7 +1,5 @@
 #include "sockets.h"
 
-#define BACKLOG 20
-
 int crearSocket(int *mySocket) {
 	int opcion=1;
 
@@ -112,42 +110,25 @@ int escuchar(int socketListener, fd_set *fd,  void *(funcionSocketNuevo)(int, vo
 	return 0;
 }
 
+void serializarYEnviar(int socket, int tipoDepackage, void* package){
 
-void* serializar_paquete(t_paquete* paquete, int bytes)
-{
-	void * magic = malloc(bytes);
-	int desplazamiento = 0;
-
-	memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(int));
-	desplazamiento+= sizeof(int);
-	memcpy(magic + desplazamiento, &(paquete->buffer->size), sizeof(int));
-	desplazamiento+= sizeof(int);
-	memcpy(magic + desplazamiento, paquete->buffer->stream, paquete->buffer->size);
-	desplazamiento+= paquete->buffer->size;
-
-	return magic;
-}
-
-
-
-void serializarYEnviar(int socket, int tipoDePaquete, void* package){
-
-	switch(tipoDePaquete){
+	switch(tipoDepackage){
 		case HANDSHAKE:{
 			break;
 		}
 		case MALLOC:{
-			t_paquete* paquete = malloc(sizeof(t_paquete));
-			paquete->codigo_operacion = MALLOC;
-			paquete->buffer = malloc(sizeof(t_buffer));
-			paquete->buffer->size = sizeof(uint32_t);
-			paquete->buffer->stream = malloc(paquete->buffer->size);
-			memcpy(paquete->buffer->stream, &((t_malloc*)package)->memoria, paquete->buffer->size);
-			int bytes = paquete->buffer->size + 2*sizeof(int);
-     		void* a_enviar = serializar_paquete(paquete, bytes);
-			send(socket, a_enviar, bytes, 0);
-			free(a_enviar);
 			break;
+//			t_package* package = malloc(sizeof(t_package));
+//			package->operation_code = MESSAGE;
+//			package->buffer = malloc(sizeof(t_buffer));
+//			package->buffer->size = sizeof(uint32_t);
+//			package->buffer->stream = malloc(package->buffer->size);
+//			memcpy(package->buffer->stream, &((t_malloc*)package)->memoria, package->buffer->size);
+//			int bytes = package->buffer->size + 2*sizeof(int);
+//     		void* a_enviar = serializar_package(package, bytes);
+//			send(socket, a_enviar, bytes, 0);
+//			free(a_enviar);
+//			break;
 		}
 
 	}
