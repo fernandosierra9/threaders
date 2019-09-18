@@ -112,13 +112,61 @@ int escuchar(int socketListener, fd_set *fd,  void *(funcionSocketNuevo)(int, vo
 	return 0;
 }
 
+
+void* serializar_paquete(t_paquete* paquete, int bytes)
+{
+	void * magic = malloc(bytes);
+	int desplazamiento = 0;
+
+	memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(int));
+	desplazamiento+= sizeof(int);
+	memcpy(magic + desplazamiento, &(paquete->buffer->size), sizeof(int));
+	desplazamiento+= sizeof(int);
+	memcpy(magic + desplazamiento, paquete->buffer->stream, paquete->buffer->size);
+	desplazamiento+= paquete->buffer->size;
+
+	return magic;
+}
+
+
+
 void serializarYEnviar(int socket, int tipoDePaquete, void* package){
 
 	switch(tipoDePaquete){
-	case HANDSHAKE:
-
-	return;
+		case HANDSHAKE:{
+			break;
+		}
+		case MALLOC:{
+			t_paquete* paquete = malloc(sizeof(t_paquete));
+			paquete->codigo_operacion = MALLOC;
+			paquete->buffer = malloc(sizeof(t_buffer));
+			paquete->buffer->size = sizeof(uint32_t);
+			paquete->buffer->stream = malloc(paquete->buffer->size);
+			memcpy(paquete->buffer->stream, &((t_malloc*)package)->memoria, paquete->buffer->size);
+			int bytes = paquete->buffer->size + 2*sizeof(int);
+     		void* a_enviar = serializar_paquete(paquete, bytes);
+			send(socket, a_enviar, bytes, 0);
+			free(a_enviar);
+			break;
+		}
 
 	}
 
 }
+
+void* recibirYDeserializar(int socket,int tipo){
+	switch(tipo){
+
+		case MALLOC:
+		{
+			t_malloc *pedido_malloc=malloc (sizeof(t_malloc));
+			int size;
+			recv(socket, &size, sizeof(int), MSG_WAITALL);
+			recv(socket, &pedido_malloc->memoria, size, MSG_WAITALL);
+			return pedido_malloc;
+		}
+	}
+	return NULL;
+}
+
+

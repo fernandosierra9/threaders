@@ -31,10 +31,28 @@
 typedef enum{
 	HANDSHAKE,     		//general
 	MALLOC,
-	FREE,
+	FREE_MALLOC,
 	COPY,
 	GET
 }t_protocolo;
+
+typedef struct
+{
+	int size;
+	void* stream;
+} t_buffer;
+
+typedef struct
+{
+	t_protocolo codigo_operacion;
+	t_buffer* buffer;
+} t_paquete;
+
+typedef struct
+{
+	uint32_t memoria;
+} t_malloc;
+
 
 
 int crearSocket(int *mySocket);
@@ -42,5 +60,6 @@ int setearParaEscuchar(int *mySocket, int puerto);
 int conectar(int* mySocket, int puerto, char *ip) ;
 int aceptarConexion(int fd);
 void serializarYEnviar(int socket, int tipoDePaquete, void* package);
+void* recibirYDeserializar(int socket,int tipo);
 
 #endif /* COMMON_SOCKETS_H_ */
