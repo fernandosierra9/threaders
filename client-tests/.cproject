@@ -29,6 +29,7 @@
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.369791615" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.1825970631" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/hilolay}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/shared-common}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmuse}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.725931549" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
@@ -36,11 +37,13 @@
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.117280306" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
 								<option id="gnu.c.link.option.paths.1476679620" name="Library search path (-L)" superClass="gnu.c.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/hilolay/Debug}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/shared-common/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmuse/Debug}&quot;"/>
 								</option>
 								<option id="gnu.c.link.option.libs.1954981502" name="Libraries (-l)" superClass="gnu.c.link.option.libs" useByScannerDiscovery="false" valueType="libs">
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="hilolay"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="libmuse"/>
+									<listOptionValue builtIn="false" value="hilolay"/>
+									<listOptionValue builtIn="false" value="shared-common"/>
+									<listOptionValue builtIn="false" value="libmuse"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1735588525" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>

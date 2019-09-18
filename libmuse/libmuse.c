@@ -7,9 +7,9 @@ int muse_init(int id){
     printf("HELLO MUSE");
     int muse_fd;
     crearSocket(&muse_fd);
-    int puerto;
     int puerto_muse = 5003;
     char *ip_muse="127.0.0.1";
+
 
 	if(conectar(&muse_fd,puerto_muse,ip_muse)!=0){
 		return -1;
