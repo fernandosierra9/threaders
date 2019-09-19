@@ -67,51 +67,65 @@ int socket_accept_conection(int server_socket)
 	return client_socket;
 }
 
-char* socket_get_ip(int fd) {
+char* socket_get_ip(int fd)
+{
 	struct sockaddr_in addr;
 	socklen_t addr_size = sizeof(struct sockaddr_in);
 	int res = getpeername(fd, (struct sockaddr *) &addr, &addr_size);
 	if (res == -1)
-	{
 		return NULL;
-	}
 	char ip_nodo[20];
 	strcpy(ip_nodo, inet_ntoa(addr.sin_addr));
 	return strdup(ip_nodo);
 }
 
-int escuchar(int socketListener, fd_set *fd,  void *(funcionSocketNuevo)(int, void*), void *argumentosSocketNuevo,
-				void *(funcionSocketExistente)(int, void*), void *argumentosSocketExistente){
+int escuchar(int socketListener, fd_set *fd,
+				void *(funcionSocketNuevo)(int, void*),
+				void *argumentosSocketNuevo,
+				void *(funcionSocketExistente)(int, void*),
+				void *argumentosSocketExistente)
+{
 
 	fd_set copia = *fd;
-	int socketsComunicandose=0;
-	if((socketsComunicandose=select(FD_SETSIZE,&copia,NULL,NULL,NULL))==-1) {
+	int socketsComunicandose = 0;
+	if ((socketsComunicandose = select(FD_SETSIZE, &copia, NULL, NULL, NULL))
+					== -1)
+	{
 
 		perror("Fallo en el select");
 		return -1;
 	}
 
-	if(FD_ISSET(socketListener,&copia)) {
+	if (FD_ISSET(socketListener, &copia))
+	{
 
-		int socketNuevo=0;
-		if ((socketNuevo = accept(socketListener, NULL, 0)) < 0) {
+		int socketNuevo = 0;
+		if ((socketNuevo = accept(socketListener, NULL, 0)) < 0)
+		{
 
 			perror("Error al aceptar conexion entrante");
 			return -1;
-		} else {
+		}
+		else
+		{
 
-			FD_SET(socketNuevo,fd);
+			FD_SET(socketNuevo, fd);
 
-			if(funcionSocketNuevo!=NULL) {
+			if (funcionSocketNuevo != NULL)
+			{
 				funcionSocketNuevo(socketNuevo, argumentosSocketNuevo);
 			}
 		}
-	}else{
+	}
+	else
+	{
 
 		int i;
-		for (i = 0; i < FD_SETSIZE; i++) {
+		for (i = 0; i < FD_SETSIZE; i++)
+		{
 
-			if (FD_ISSET(i, &copia) && i != socketListener) {
+			if (FD_ISSET(i, &copia) && i != socketListener)
+			{
 				funcionSocketExistente(i, argumentosSocketExistente);
 			}
 		}
