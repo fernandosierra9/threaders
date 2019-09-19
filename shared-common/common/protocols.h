@@ -17,9 +17,18 @@ typedef struct
 	void* stream;
 } t_buffer;
 
+typedef enum
+{
+	HANDSHAKE,
+	MALLOC,
+	FREE_MALLOC,
+	COPY,
+	GET
+} t_protocol;
+
 typedef struct
 {
-	op_code operation_code;
+	t_protocol operation_code;
 	t_buffer* buffer;
 } t_package;
 
@@ -35,24 +44,12 @@ typedef enum
 	LOAD_SUCCESS, LOAD_MISSING, LOAD_EXTRA, SEND_SUCCESS, SEND_ERROR
 } package_status;
 
-typedef enum
-{
-	HANDSHAKE,
-	MALLOC,
-	FREE_MALLOC,
-	COPY,
-	GET
-} t_protocolo;
+
 
 typedef struct
 {
 	uint32_t memoria;
 } t_malloc;
 
-typedef struct
-{
-	t_protocolo operation_code;
-	t_buffer* buffer;
-} t_paquete;
 
 #endif /* COMMON_PROTOCOLS_H_ */

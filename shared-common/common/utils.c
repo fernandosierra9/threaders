@@ -98,10 +98,10 @@ void utils_buffer_create(t_package* package)
 	package->buffer->stream = NULL;
 }
 
-t_package* utils_package_create(void)
+t_package* utils_package_create(t_protocol code)
 {
 	t_package* package = malloc(sizeof(t_package));
-	package->operation_code = PACKAGE;
+	package->operation_code =code;
 	utils_buffer_create(package);
 	return package;
 }
@@ -163,16 +163,11 @@ void utils_serialize_and_send(int socket, int package_type, void* package)
 	}
 	case MALLOC:
 	{
-		t_package* package = malloc(sizeof(t_package));
-		package->operation_code = MALLOC;
-		package->buffer = malloc(sizeof(t_buffer));
-		package->buffer->size = sizeof(uint32_t);
-		package->buffer->stream = malloc(package->buffer->size);
-		memcpy(package->buffer->stream, &((t_malloc*) package)->memoria, package->buffer->size);
-		int bytes = package->buffer->size + 2 * sizeof(int);
-		void* to_send = serializer_serialize_package(package, bytes);
-		send(socket, to_send, bytes, 0);
-		free(to_send);
+
+		t_package* package = utils_package_create(package_type);
+		utils_package_add(package, &((t_malloc*) package)->memoria,sizeof(t_buffer));
+		utils_package_send_to(package,socket);
+		utils_package_destroy(package);
 		break;
 	}
 	}

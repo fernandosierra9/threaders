@@ -47,7 +47,8 @@ void muse_server_init()
 
 		if (received_bytes <= 0)
 		{
-			muse_logger_error("Error al recibir la operacion del DAM");
+			muse_logger_error("Error al recibir la operacion del libmuse");
+			muse_logger_error("Se desconecto libmuse");
 			exit(1);
 		}
 		switch (protocol)

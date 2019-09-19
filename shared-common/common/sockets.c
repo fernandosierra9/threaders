@@ -19,7 +19,7 @@ struct addrinfo* set_server_info(char* ip, int port)
 	return server_info;
 }
 
-int socket_create_listener(char* ip, int port)
+int socket_create_client(char* ip, int port)
 {
 	if (ip == NULL)
 		return -1;
@@ -27,21 +27,45 @@ int socket_create_listener(char* ip, int port)
 
 	int server_socket = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
 
-	int activado = 1;
-	setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &activado, sizeof(activado));
 
-	if (server_socket == -1 || bind(server_socket, server_info->ai_addr, server_info->ai_addrlen) == -1)
-	{
-		freeaddrinfo(server_info);
+	if (server_socket ==-1){
+		perror("-1 al crear el socket");
 		return -1;
 	}
 
-	freeaddrinfo(server_info);
-
-	if (listen(server_socket, BACKLOG) == -1)
+	int activado = 1;
+	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &activado, sizeof(activado))==-1){
+		perror("-1 al setear las opciones del socket");
 		return -1;
+	}
 	return server_socket;
 }
+int socket_create_listener(char* ip, int port){
+		if (ip == NULL)
+			return -1;
+		struct addrinfo* server_info = set_server_info(ip, port);
+
+		int server_socket = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
+
+		int activado = 1;
+		setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &activado, sizeof(activado));
+
+		if (server_socket == -1 || bind(server_socket, server_info->ai_addr, server_info->ai_addrlen) == -1)
+		{
+			freeaddrinfo(server_info);
+			return -1;
+		}
+
+		freeaddrinfo(server_info);
+
+		if (listen(server_socket, BACKLOG) == -1)
+			return -1;
+	return server_socket;
+
+}
+
+
+
 
 int socket_connect_to_server(char* ip, int port, int server_socket)
 {

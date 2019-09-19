@@ -48,7 +48,7 @@ int main(void)
 	//th_create(test2);
 
 	/* MUSE CLIENTS */
-	muse_init(1);
-	th_return(0);
+    muse_init(1);
+	//th_return(0);
 	return 0;
 }

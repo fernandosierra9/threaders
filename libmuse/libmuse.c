@@ -11,14 +11,20 @@ int muse_fd;
 int muse_init(int id)
 {
     printf("HELLO MUSE");
-    muse_fd = socket_create_listener(ip_muse, puerto_muse);
+    muse_fd = socket_create_client(ip_muse, puerto_muse);
 
-	if(socket_connect_to_server(ip_muse, puerto_muse, muse_fd) != 0)
+	if(socket_connect_to_server(ip_muse, puerto_muse, muse_fd) < 0)
 	{
 		close(muse_fd);
 		return -1;
 	}
 	puts("Conexion con Muse establecida");
+
+	t_malloc *sendMalloc = malloc(sizeof(t_malloc));
+	sendMalloc->memoria = 2000;
+	t_protocol malloc_protocol = MALLOC;
+	utils_serialize_and_send(muse_fd, malloc_protocol, sendMalloc);
+
 	return 0;
 }
 

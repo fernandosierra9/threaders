@@ -35,7 +35,7 @@ char* utils_to_string_ul(unsigned value);
 void utils_free_array(char** array);
 char* utils_array_to_string(char** array);
 void utils_buffer_create(t_package* package);
-t_package* utils_package_create(void);
+t_package* utils_package_create(t_protocol code);
 void utils_package_add(t_package* package, void* value, int size);
 void utils_package_destroy(t_package* package);
 void utils_send_message(char* message, int client_socket);
