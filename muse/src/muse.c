@@ -32,7 +32,6 @@ int main(void) {
 	return EXIT_SUCCESS;
 }
 
-
 void muse_server(){
 	crearSocket(&muse_socket);
 	if (setearParaEscuchar(&muse_socket,muse_config->listen_port)<0){
@@ -41,6 +40,7 @@ void muse_server(){
 	}
 
 	muse_logger_info("Esperando conexion del libmuse");
+	muse_logger_info("TESTTTTTTTI");
 
 	int libmuse_fd=aceptarConexion(muse_socket);
 
@@ -50,9 +50,11 @@ void muse_server(){
 		return;
 	}
 
+
 	muse_logger_info("Conexion establecida con libmuse");
 	int bytesRecibidos;
 	int protocolo;
+
 	while(1){
 		bytesRecibidos=recv(libmuse_fd,&protocolo,sizeof(int),0);
 
@@ -70,13 +72,8 @@ void muse_server(){
 				muse_logger_info("Recibi malloc de libmuse");
 				break;
 			}
-			case FREE:{
-				muse_logger_info("Recibi malloc de libmuse");
-				break;
-			}
 
 		}
 
 	}
 }
-

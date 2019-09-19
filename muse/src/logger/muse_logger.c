@@ -1,7 +1,5 @@
 #include "muse_logger.h"
 
-
-
 int muse_logger_create()
 {
 	muse_log = logger_create(LOG_FILE, PROGRAM_NAME);
