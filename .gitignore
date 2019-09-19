@@ -18,6 +18,8 @@ client-tests/Debug/*
 
 # Executables
 *.exe
+*.out
+*.app
 
 # Settings
 planificacion/.settings/*
@@ -27,3 +29,9 @@ shared-common/.settings/*
 
 settings.json
 /.metadata/
+
+# Remote Temp files
+RemoteSystemsTempFiles/*
+
+# OSX
+.DS_STORE
