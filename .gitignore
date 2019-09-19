@@ -8,6 +8,7 @@ planificacion/Debug/*
 file_system/Debug/*
 shared-common/Debug/*
 muse/Debug/*
+client-tests/Debug/*
 
 # Files
 *.log
