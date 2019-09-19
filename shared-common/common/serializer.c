@@ -1,6 +1,7 @@
 #include "serializer.h"
 
-package_t* create_package(size_t size) {
+package_t* create_package(size_t size)
+{
 	package_t* new_package = malloc(sizeof(package_t));
 
 	new_package->load = malloc(size);
@@ -10,46 +11,50 @@ package_t* create_package(size_t size) {
 	return new_package;
 }
 
-void add_content(package_t* package, void* content, size_t content_size) {
+void add_content(package_t* package, void* content, size_t content_size)
+{
 	memcpy(package->load, content, content_size);
 
 	package->load += content_size;
 	package->remaining_load -= content_size;
 }
 
-void add_content_variable(package_t* package, void* content,
-		size_t content_size) {
+void add_content_variable(package_t* package, void* content, size_t content_size)
+{
 	add_content(package, &content_size, sizeof(size_t));
-
 	add_content(package, content, content_size);
 }
 
-package_status check_package(package_t* package) {
-	if (package->remaining_load > 0) {
+package_status check_package(package_t* package)
+{
+	if (package->remaining_load > 0)
+	{
 		return LOAD_MISSING;
 	}
 
-	else if (package->remaining_load < 0) {
+	else if (package->remaining_load < 0)
+	{
 		return LOAD_EXTRA;
 	}
 
-	else {
+	else
+	{
 		return LOAD_SUCCESS;
 	}
 }
 
-void* build_package(package_t* package) {
-	if (check_package(package) == LOAD_SUCCESS) {
+void* build_package(package_t* package)
+{
+	if (check_package(package) == LOAD_SUCCESS)
+	{
 		package->load -= package->size;
-
 		void* serialized_package = malloc(package->size);
-
 		memcpy(serialized_package, package->load, package->size);
-
 		return serialized_package;
 	}
 
-	else {
+	else
+	{
 		return NULL;
 	}
 }
@@ -94,40 +99,39 @@ void* build_package(package_t* package) {
 //	return package;
 //}
 
-void destroy_package(package_t* package) {
+void destroy_package(package_t* package)
+{
 	free(package->load);
 	free(package);
 }
 
-char* status_message(package_t* package, package_status status) {
-	switch (status) {
-	case LOAD_SUCCESS:
-		return string_from_format("Se creo un package de tamaño %d\n",
-				package->size);
-		break;
+char* status_message(package_t* package, package_status status)
+{
+	switch (status)
+	{
+		case LOAD_SUCCESS:
+			return string_from_format("Se creo un package de tamaño %d\n", package->size);
+			break;
 
-	case SEND_SUCCESS:
-		return string_duplicate("Se envio el package exitosamente\n");
-		break;
+		case SEND_SUCCESS:
+			return string_duplicate("Se envio el package exitosamente\n");
+			break;
 
-	case LOAD_MISSING:
-		return string_from_format(
-				"Faltan completar %d de %d bytes para poder enviar el package\n",
-				package->remaining_load, package->size);
-		break;
+		case LOAD_MISSING:
+			return string_from_format( "Faltan completar %d de %d bytes para poder enviar el package\n", package->remaining_load, package->size);
+			break;
 
-	case LOAD_EXTRA:
-		return string_from_format("Hay %d bytes de mas\n",
-				abs(package->remaining_load));
-		break;
+		case LOAD_EXTRA:
+			return string_from_format("Hay %d bytes de mas\n", abs(package->remaining_load));
+			break;
 
-	case SEND_ERROR:
-		return string_duplicate("No se pudo enviar el package\n");
-		break;
+		case SEND_ERROR:
+			return string_duplicate("No se pudo enviar el package\n");
+			break;
 
-	default:
-		return string_duplicate("Error inesperado\n");
-		break;
+		default:
+			return string_duplicate("Error inesperado\n");
+			break;
 	}
 }
 
@@ -156,11 +160,11 @@ void* serializer_serialize_package(t_package* package, int bytes)
 	int offset = 0;
 
 	memcpy(magic + offset, &(package->operation_code), sizeof(int));
-	offset+= sizeof(int);
+	offset += sizeof(int);
 	memcpy(magic + offset, &(package->buffer->size), sizeof(int));
-	offset+= sizeof(int);
+	offset += sizeof(int);
 	memcpy(magic + offset, package->buffer->stream, package->buffer->size);
-	offset+= package->buffer->size;
+	offset += package->buffer->size;
 
 	return magic;
 }
