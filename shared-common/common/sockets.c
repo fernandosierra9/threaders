@@ -1,75 +1,84 @@
 #include "sockets.h"
 
-int crearSocket(int *mySocket) {
-	int opcion=1;
+struct addrinfo* set_server_info(char* ip, int port)
+{
+	struct addrinfo hints;
+	struct addrinfo *server_info;
 
-	if ((*mySocket=socket(AF_INET, SOCK_STREAM,0))==-1){
-		perror("-1 al crear el socket");
-		return -1;
-	}
-	if (setsockopt(*mySocket, SOL_SOCKET, SO_REUSEADDR, &opcion, sizeof(int))==-1){
-		perror("-1 al setear las opciones del socket");
-		return -1;
-	}
-	return 0;
-}
+	memset(&hints, 0, sizeof(hints));
 
-int setearParaEscuchar(int *mySocket, int puerto) {
-	struct addrinfo direccion, *infoBind = malloc(sizeof(struct addrinfo));
-
-	memset(&direccion, 0, sizeof direccion);
-	direccion.ai_family = AF_INET;
-	direccion.ai_socktype = SOCK_STREAM;
-	direccion.ai_flags = AI_PASSIVE;
-
-	char *port= malloc(sizeof(char)*6);
-
-	port = string_itoa(puerto);
-	getaddrinfo(NULL, port, &direccion, &infoBind);
-
-	free(port);
-
-	if(bind(*mySocket,infoBind->ai_addr, infoBind->ai_addrlen)==-1){
-		perror("Fallo el bind");
-		free(infoBind);
-		return -1;
-	}
-	//ver si hay que sacar el free
-	free(infoBind);
-	if (listen(*mySocket, BACKLOG) ==-1){
-		perror("Fallo el listen");
-		return -1;
-	}
-	//Si en todos los procesos llamamos al logger con el mismo nombre podemos llamarlo desde la biblioteca
-	//log_info(logger, " ... Escuchando conexiones ... ");
-	return 0;
-}
-
-int conectar(int* mySocket, int puerto, char *ip) {
-	struct addrinfo hints, *res;
-
-	memset(&hints, 0, sizeof hints);
+	// No importa si uso IPv4 o IPv6
 	hints.ai_family = AF_UNSPEC;
+	// Asigna el address del localhost: 127.0.0.1
+	hints.ai_flags = AI_PASSIVE;
+	// Indica que usaremos el protocolo TCP
 	hints.ai_socktype = SOCK_STREAM;
-	char *stringPort = string_itoa(puerto);
-	getaddrinfo(ip, stringPort, &hints, &res);
-	free(stringPort);
-	if(connect(*mySocket, res->ai_addr, res->ai_addrlen)!=0){
+
+	// Si IP es NULL, usa el localhost
+	getaddrinfo(ip, string_itoa(port), &hints, &server_info);
+	return server_info;
+}
+
+int socket_create_listener(char* ip, int port)
+{
+	if (ip == NULL)
+		return -1;
+	struct addrinfo* server_info = set_server_info(ip, port);
+
+	int server_socket = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
+
+	int activado = 1;
+	setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &activado, sizeof(activado));
+
+	if (server_socket == -1 || bind(server_socket, server_info->ai_addr, server_info->ai_addrlen) == -1)
+	{
+		freeaddrinfo(server_info);
 		return -1;
 	}
-	return 0;
+
+	freeaddrinfo(server_info);
+
+	if (listen(server_socket, BACKLOG) == -1)
+		return -1;
+	return server_socket;
 }
 
-int aceptarConexion(int fd){
+int socket_connect_to_server(char* ip, int port, int server_socket)
+{
+	struct addrinfo* server_info = set_server_info(ip, port);
+	int retorno = connect(server_socket, server_info->ai_addr, server_info->ai_addrlen);
 
-	struct sockaddr_in cliente;
+	freeaddrinfo(server_info);
 
-	unsigned int len = sizeof(struct sockaddr);
-
-	return accept(fd,(void*)&cliente,&len);
-
+	return (retorno < 0 || server_socket == -1) ? -1 : server_socket;
 }
 
+int socket_accept_conection(int server_socket)
+{
+	struct sockaddr_in addr;
+	socklen_t addrlen = sizeof(addr);
+
+	int client_socket = accept(server_socket, (struct sockaddr *) &addr, &addrlen);
+	if (client_socket < 0)
+	{
+		perror("Error al aceptar cliente");
+		return -1;
+	}
+	return client_socket;
+}
+
+char* socket_get_ip(int fd) {
+	struct sockaddr_in addr;
+	socklen_t addr_size = sizeof(struct sockaddr_in);
+	int res = getpeername(fd, (struct sockaddr *) &addr, &addr_size);
+	if (res == -1)
+	{
+		return NULL;
+	}
+	char ip_nodo[20];
+	strcpy(ip_nodo, inet_ntoa(addr.sin_addr));
+	return strdup(ip_nodo);
+}
 
 int escuchar(int socketListener, fd_set *fd,  void *(funcionSocketNuevo)(int, void*), void *argumentosSocketNuevo,
 				void *(funcionSocketExistente)(int, void*), void *argumentosSocketExistente){
@@ -109,43 +118,3 @@ int escuchar(int socketListener, fd_set *fd,  void *(funcionSocketNuevo)(int, vo
 	}
 	return 0;
 }
-
-void serializarYEnviar(int socket, int tipoDepackage, void* package){
-
-	switch(tipoDepackage){
-		case HANDSHAKE:{
-			break;
-		}
-		case MALLOC:{
-			t_package* package = malloc(sizeof(t_package));
-			package->operation_code = MALLOC;
-			package->buffer = malloc(sizeof(t_buffer));
-			package->buffer->size = sizeof(uint32_t);
-			package->buffer->stream = malloc(package->buffer->size);
-			memcpy(package->buffer->stream, &((t_malloc*)package)->memoria, package->buffer->size);
-			int bytes = package->buffer->size + 2*sizeof(int);
-     		void* a_enviar = serializer_serialize_package(package, bytes);
-			send(socket, a_enviar, bytes, 0);
-			free(a_enviar);
-			break;
-		}
-
-	}
-
-}
-
-void* recibirYDeserializar(int socket,int tipo){
-	switch(tipo){
-		case MALLOC:
-		{
-			t_malloc *pedido_malloc=malloc (sizeof(t_malloc));
-			int size;
-			recv(socket, &size, sizeof(int), MSG_WAITALL);
-			recv(socket, &pedido_malloc->memoria, size, MSG_WAITALL);
-			return pedido_malloc;
-		}
-	}
-	return NULL;
-}
-
-

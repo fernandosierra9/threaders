@@ -40,5 +40,7 @@ void utils_package_add(t_package* package, void* value, int size);
 void utils_package_destroy(t_package* package);
 void utils_send_message(char* message, int client_socket);
 void utils_package_send_to(t_package* t_package, int client_socket);
+void utils_serialize_and_send(int socket, int package_type, void* package);
+void* utils_receive_and_deserialize(int socket, int package_type);
 
 #endif /* CUSTOM_UTILITARIA_H_ */

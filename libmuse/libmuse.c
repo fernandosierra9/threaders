@@ -1,23 +1,25 @@
-#include "libmuse.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "libmuse.h"
+#include "common/sockets.h"
 
-int muse_init(int id){
+char *ip_muse = "127.0.0.1";
+int puerto_muse = 5003;
+int muse_fd;
+
+int muse_init(int id)
+{
     printf("HELLO MUSE");
-    int muse_fd;
-    crearSocket(&muse_fd);
-    int puerto_muse = 5003;
-    char *ip_muse="127.0.0.1";
+    muse_fd = socket_create_listener(ip_muse, puerto_muse);
 
-
-	if(conectar(&muse_fd,puerto_muse,ip_muse)!=0){
+	if(socket_connect_to_server(ip_muse, puerto_muse, muse_fd) != 0)
+	{
+		close(muse_fd);
 		return -1;
 	}
-	else{
-		puts("Conexion con Muse establecida");
-		return 0;
-	}
+	puts("Conexion con Muse establecida");
+	return 0;
 }
 
 void muse_close(){ /* Does nothing :) */ }

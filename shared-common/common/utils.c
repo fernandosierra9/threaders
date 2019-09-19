@@ -152,3 +152,44 @@ void utils_package_send_to(t_package* t_package, int client_socket)
 
 	free(to_send);
 }
+
+void utils_serialize_and_send(int socket, int package_type, void* package)
+{
+	switch (package_type)
+	{
+	case HANDSHAKE:
+	{
+		break;
+	}
+	case MALLOC:
+	{
+		t_package* package = malloc(sizeof(t_package));
+		package->operation_code = MALLOC;
+		package->buffer = malloc(sizeof(t_buffer));
+		package->buffer->size = sizeof(uint32_t);
+		package->buffer->stream = malloc(package->buffer->size);
+		memcpy(package->buffer->stream, &((t_malloc*) package)->memoria, package->buffer->size);
+		int bytes = package->buffer->size + 2 * sizeof(int);
+		void* to_send = serializer_serialize_package(package, bytes);
+		send(socket, to_send, bytes, 0);
+		free(to_send);
+		break;
+	}
+	}
+}
+
+void* utils_receive_and_deserialize(int socket, int package_type)
+{
+	switch (package_type)
+	{
+	case MALLOC:
+	{
+		t_malloc *malloc_request = malloc(sizeof(t_malloc));
+		int size;
+		recv(socket, &size, sizeof(int), MSG_WAITALL);
+		recv(socket, &malloc_request->memoria, size, MSG_WAITALL);
+		return malloc_request;
+	}
+	}
+	return NULL;
+}

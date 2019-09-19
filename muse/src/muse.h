@@ -1,10 +1,3 @@
-/*
- * muse.h
- *
- *  Created on: 17 sep. 2019
- *      Author: utnso
- */
-
 #ifndef MUSE_H_
 #define MUSE_H_
 
@@ -16,11 +9,10 @@
 #include <assert.h>
 #include <commons/config.h>
 #include <commons/bitarray.h>
-
+#include <common/sockets.h>
 
 #include "config/muse_config.h"
 #include "logger/muse_logger.h"
-#include <common/sockets.h>
 
 
 int muse_socket;

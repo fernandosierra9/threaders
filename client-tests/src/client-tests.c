@@ -1,47 +1,54 @@
 #include "hilolay.h"
 #include "libmuse.h"
 
-void recursiva(int cant) {
-    if(cant > 0) recursiva(cant - 1);
+void recursiva(int cant)
+{
+	if (cant > 0)
+		recursiva(cant - 1);
 }
 
-void test1() {
-    int i, tid;
+void test1()
+{
+	int i, tid;
 
-    for (i = 0; i < 10; i++) {
-        tid = th_get_tid();
-        printf("Soy el ult %d mostrando el numero %d \n", tid, i);
-        usleep(5000 * i * tid); /* Randomizes the sleep, so it gets larger after a few iterations */
+	for (i = 0; i < 10; i++)
+	{
+		tid = th_get_tid();
+		printf("Soy el ult %d mostrando el numero %d \n", tid, i);
+		/* Randomizes the sleep, so it gets larger after a few iterations */
+		usleep(5000 * i * tid);
 
-        recursiva(i);
+		recursiva(i);
 
-        // Round Robin will yield the CPU
-        if((i+tid)%5 == 0) th_yield();
-    }
+		// Round Robin will yield the CPU
+		if ((i + tid) % 5 == 0)
+			th_yield();
+	}
 }
 
-void test2() {
-    int i, tid;
+void test2()
+{
+	int i, tid;
 
-    for (i = 0; i < 5; i++) {
-        tid = th_get_tid();
-        printf("Soy el ult %d mostrando el numero %d \n", tid, i);
-        usleep(2000 * i * tid); /* Randomizes the sleep, so it gets larger after a few iterations */
-        recursiva(i);
-    }
+	for (i = 0; i < 5; i++)
+	{
+		tid = th_get_tid();
+		printf("Soy el ult %d mostrando el numero %d \n", tid, i);
+		/* Randomizes the sleep, so it gets larger after a few iterations */
+		usleep(2000 * i * tid);
+		recursiva(i);
+	}
 }
 
-int main() {
-    /* HILOLAY CLIENTS */
+int main(void)
+{
+	/* HILOLAY CLIENTS */
+	//lib_init();
+	//th_create(test1);
+	//th_create(test2);
 
-  //  lib_init();
- //th_create(test1);
-//th_create(test2);
-
-
-    /* MUSE CLIENTS */
-
+	/* MUSE CLIENTS */
 	muse_init(1);
-    th_return(0);
-    return 0;
+	th_return(0);
+	return 0;
 }

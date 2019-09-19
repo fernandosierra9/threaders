@@ -54,45 +54,45 @@ void* build_package(package_t* package) {
 	}
 }
 
-package_status send_serialized_package(int fd, void* serialized_package,
-		size_t package_size) {
-	int bytes_sent = send(fd, serialized_package, package_size, 0);
+//package_status send_serialized_package(int fd, void* serialized_package,
+//		size_t package_size) {
+//	int bytes_sent = send(fd, serialized_package, package_size, 0);
+//
+//	if (bytes_sent < 0) {
+//		return SEND_ERROR;
+//	}
+//
+//	else if (bytes_sent < package_size) {
+//		return send_serialized_package(fd, serialized_package + bytes_sent,
+//				package_size - bytes_sent);
+//	}
+//
+//	else {
+//		return SEND_SUCCESS;
+//	}
+//}
 
-	if (bytes_sent < 0) {
-		return SEND_ERROR;
-	}
-
-	else if (bytes_sent < package_size) {
-		return send_serialized_package(fd, serialized_package + bytes_sent,
-				package_size - bytes_sent);
-	}
-
-	else {
-		return SEND_SUCCESS;
-	}
-}
-
-package_t* receive_package(int socket_sender) {
-	package_t *package = malloc(sizeof(package_t));
-
-	int ret = recv(socket_sender, &(package->size), sizeof(package->size),
-			MSG_WAITALL);
-	if (ret == -1) {
-		free(package);
-		return NULL;
-	}
-
-	package->load = malloc(package->size);
-
-	ret = recv(socket_sender, package->load, package->size, MSG_WAITALL);
-	if (ret == -1) {
-		free(package->load);
-		free(package);
-		return NULL;
-	}
-
-	return package;
-}
+//package_t* receive_package(int socket_sender) {
+//	package_t *package = malloc(sizeof(package_t));
+//
+//	int ret = recv(socket_sender, &(package->size), sizeof(package->size),
+//			MSG_WAITALL);
+//	if (ret == -1) {
+//		free(package);
+//		return NULL;
+//	}
+//
+//	package->load = malloc(package->size);
+//
+//	ret = recv(socket_sender, package->load, package->size, MSG_WAITALL);
+//	if (ret == -1) {
+//		free(package->load);
+//		free(package);
+//		return NULL;
+//	}
+//
+//	return package;
+//}
 
 void destroy_package(package_t* package) {
 	free(package->load);
@@ -131,24 +131,24 @@ char* status_message(package_t* package, package_status status) {
 	}
 }
 
-int recv_package(int fd, void* receiver, size_t size) {
-	bool success = recv(fd, receiver, size, MSG_WAITALL) == size;
-	return success ? RECV_SUCCESS : RECV_DATA_ERROR;
-}
+//int recv_package(int fd, void* receiver, size_t size) {
+//	bool success = recv(fd, receiver, size, MSG_WAITALL) == size;
+//	return success ? RECV_SUCCESS : RECV_DATA_ERROR;
+//}
 
-int recv_package_variable(int fd, void** receiver) {
-	size_t package_size;
-	if (!recv_package(fd, &package_size, sizeof(package_size))) {
-		return RECV_SIZE_ERROR;
-	}
-
-	*receiver = malloc(package_size);
-	if (receiver == NULL) {
-		return RECV_MALLOC_ERROR;
-	}
-
-	return recv_package(fd, *receiver, package_size);
-}
+//int recv_package_variable(int fd, void** receiver) {
+//	size_t package_size;
+//	if (!recv_package(fd, &package_size, sizeof(package_size))) {
+//		return RECV_SIZE_ERROR;
+//	}
+//
+//	*receiver = malloc(package_size);
+//	if (receiver == NULL) {
+//		return RECV_MALLOC_ERROR;
+//	}
+//
+//	return recv_package(fd, *receiver, package_size);
+//}
 
 void* serializer_serialize_package(t_package* package, int bytes)
 {
