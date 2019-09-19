@@ -6,8 +6,8 @@
 # Debug
 planificacion/Debug/*
 file_system/Debug/*
-memoria/Debug/*
 shared-common/Debug/*
+muse/Debug/*
 
 # Files
 *.log
@@ -25,3 +25,4 @@ memoria/.settings/*
 shared-common/.settings/*
 
 settings.json
+/.metadata/
