@@ -30,8 +30,6 @@ char* utils_get_parameter_i(char** array, int i);
 char* utils_get_extension(char* file_name);
 char* utils_get_file_name(char* path);
 bool utils_is_number(char* string);
-char* utils_to_string_uint(uint16_t value);
-char* utils_to_string_ul(unsigned value);
 void utils_free_array(char** array);
 char* utils_array_to_string(char** array);
 void utils_buffer_create(t_package* package);

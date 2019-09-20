@@ -38,20 +38,6 @@ bool utils_is_number(char* string)
 	return strlen(string) != 0;
 }
 
-char* utils_to_string_uint(uint16_t value)
-{
-	char* aux = malloc(sizeof(char));
-	sprintf(aux, "%u", value);
-	return aux;
-}
-
-char* utils_to_string_ul(unsigned value)
-{
-	char* aux = malloc(sizeof(char));
-	sprintf(aux, "%u", value);
-	return aux;
-}
-
 void utils_free_array(char** array)
 {
 	unsigned int i = 0;
@@ -151,27 +137,17 @@ void utils_serialize_and_send(int socket, int package_type, void* package)
 {
 	switch (package_type)
 	{
-<<<<<<< HEAD
-	case HANDSHAKE:
-	{
-		break;
-	}
-	case MALLOC:
-	{
-
-		t_package* package = utils_package_create(package_type);
-		utils_package_add(package, &((t_malloc*) package)->memoria,sizeof(t_buffer));
-		utils_package_send_to(package,socket);
-		utils_package_destroy(package);
-		break;
-	}
-=======
 		case HANDSHAKE:
 		{
 			break;
 		}
 		case MALLOC:
 		{
+//			t_package* package = utils_package_create(package_type);
+//			utils_package_add(package, &((t_malloc*) package)->memoria,sizeof(t_buffer));
+//			utils_package_send_to(package,socket);
+//			utils_package_destroy(package);
+//			break;
 			t_package* package = malloc(sizeof(t_package));
 			package->operation_code = MALLOC;
 			package->buffer = malloc(sizeof(t_buffer));
@@ -184,7 +160,6 @@ void utils_serialize_and_send(int socket, int package_type, void* package)
 			free(to_send);
 			break;
 		}
->>>>>>> b21729c0524eb1bcd7ed9a2f2cb0065f23755777
 	}
 }
 

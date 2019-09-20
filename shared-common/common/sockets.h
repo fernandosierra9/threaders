@@ -33,10 +33,7 @@ int socket_create_listener(char* ip, int port);
  * @NAME: socket_create_client
  * @DESC: crea la configuracion de un socket client y devuelve -1 si hubo algun error al crear el socket
  */
-
 int socket_create_client(char* ip, int port);
-
-
 
 /**
  * @NAME: socket_connect_to_server
@@ -55,6 +52,12 @@ int socket_accept_conection(int server_socket);
  * @DESC: Devuelve la IP de un socket
  */
 char* socket_get_ip(int fd);
+
+/**
+ * @NAME: socket_free_conection
+ * @DESC: Cierra el socket
+ */
+void socket_close_conection(int socket_client);
 
 
 #endif /* COMMON_SOCKETS_H_ */
