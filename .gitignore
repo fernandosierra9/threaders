@@ -26,6 +26,9 @@ planificacion/.settings/*
 file_system/.settings/*
 memoria/.settings/*
 shared-common/.settings/*
+client-tests/.settings/*
+hilolay/.settings/*
+libmuse/.settings/*
 
 settings.json
 /.metadata/
