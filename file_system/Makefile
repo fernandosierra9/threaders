@@ -1,9 +1,9 @@
 CC = gcc
 RM = rm -f
 
-TARGET = muse.exe
+TARGET = file_system.exe
 SRC = $(wildcard *.c) $(wildcard */*.c) $(wildcard */*/*.c)
-SRC += ../shared-common/common/config.c ../shared-common/common/sockets.c ../shared-common/common/logger.c ../shared-common/common/serializer.c
+SRC += ../shared-common/common/config.c ../shared-common/common/logger.c
 OBJ = $(SRC:.c=.o)
 HEADER = $(SRC:.c=.h) defines.h
 LIB = -lcommons

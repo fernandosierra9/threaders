@@ -2,7 +2,7 @@
 #define LOGGER_PLANIFICACION_LOGGER_H_
 
 #include <commons/log.h>
-#include <common/logger.h>
+#include "../../../shared-common/common/logger.h"
 #include <commons/string.h>
 #include <stdarg.h>
 #include <stdio.h>

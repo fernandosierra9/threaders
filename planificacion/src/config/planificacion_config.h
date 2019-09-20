@@ -2,11 +2,10 @@
 #define CONFIG_PLANIFICACION_CONFIG_H_
 
 #include <stdlib.h>
-#include <common/config.h>
 #include <commons/config.h>
 #include <commons/string.h>
-#include <common/utils.h>
-
+#include "../../../shared-common/common/utils.h"
+#include "../../../shared-common/common/config.h"
 #include "../logger/planificacion_logger.h"
 
 #define CONFIG_FILE_PATH "planificacion.config"
