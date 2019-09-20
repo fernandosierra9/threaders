@@ -5,12 +5,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-typedef enum
-{
-	MESSAGE,
-	PACKAGE
-}op_code;
-
 typedef struct
 {
 	int size;
@@ -19,11 +13,7 @@ typedef struct
 
 typedef enum
 {
-	HANDSHAKE,
-	MALLOC,
-	FREE_MALLOC,
-	COPY,
-	GET
+	HANDSHAKE, MALLOC, FREE_MALLOC, COPY, GET
 } t_protocol;
 
 typedef struct
@@ -34,22 +24,7 @@ typedef struct
 
 typedef struct
 {
-	void* load;
-	size_t size;
-	size_t remaining_load;
-} package_t;
-
-typedef enum
-{
-	LOAD_SUCCESS, LOAD_MISSING, LOAD_EXTRA, SEND_SUCCESS, SEND_ERROR
-} package_status;
-
-
-
-typedef struct
-{
 	uint32_t memoria;
 } t_malloc;
-
 
 #endif /* COMMON_PROTOCOLS_H_ */

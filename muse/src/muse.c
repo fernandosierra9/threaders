@@ -33,7 +33,8 @@ void muse_server_init()
 
 	int libmuse_fd = socket_accept_conection(muse_socket);
 
-	if (libmuse_fd == -1) {
+	if (libmuse_fd == -1)
+	{
 		muse_logger_error("Error al establecer conexion con el libmuse");
 		return;
 	}
@@ -53,21 +54,21 @@ void muse_server_init()
 		}
 		switch (protocol)
 		{
-		case HANDSHAKE:
-		{
-			muse_logger_info("Recibi malloc de libmuse");
-			break;
-		}
-		case MALLOC:
-		{
-			muse_logger_info("Recibi malloc de libmuse");
-			break;
-		}
-		case FREE_MALLOC:
-		{
-			muse_logger_info("Recibi malloc de libmuse");
-			break;
-		}
+			case HANDSHAKE:
+			{
+				muse_logger_info("Recibi malloc de libmuse");
+				break;
+			}
+			case MALLOC:
+			{
+				muse_logger_info("Recibi malloc de libmuse");
+				break;
+			}
+			case FREE_MALLOC:
+			{
+				muse_logger_info("Recibi malloc de libmuse");
+				break;
+			}
 
 		}
 

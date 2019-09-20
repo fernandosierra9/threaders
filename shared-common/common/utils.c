@@ -103,26 +103,6 @@ void utils_package_destroy(t_package* package)
 	free(package);
 }
 
-void utils_send_message(char* message, int client_socket)
-{
-	t_package* package = malloc(sizeof(t_package));
-
-	package->operation_code = MESSAGE;
-	package->buffer = malloc(sizeof(t_buffer));
-	package->buffer->size = strlen(message) + 1;
-	package->buffer->stream = malloc(package->buffer->size);
-	memcpy(package->buffer->stream, message, package->buffer->size);
-
-	int bytes = package->buffer->size + 2 * sizeof(int);
-
-	void* to_send = serializer_serialize_package(package, bytes);
-
-	send(client_socket, to_send, bytes, 0);
-
-	free(to_send);
-	utils_package_destroy(package);
-}
-
 void utils_package_send_to(t_package* t_package, int client_socket)
 {
 	int bytes = t_package->buffer->size + 2 * sizeof(int);
@@ -143,21 +123,10 @@ void utils_serialize_and_send(int socket, int package_type, void* package)
 		}
 		case MALLOC:
 		{
-//			t_package* package = utils_package_create(package_type);
-//			utils_package_add(package, &((t_malloc*) package)->memoria,sizeof(t_buffer));
-//			utils_package_send_to(package,socket);
-//			utils_package_destroy(package);
-//			break;
-			t_package* package = malloc(sizeof(t_package));
-			package->operation_code = MALLOC;
-			package->buffer = malloc(sizeof(t_buffer));
-			package->buffer->size = sizeof(uint32_t);
-			package->buffer->stream = malloc(package->buffer->size);
-			memcpy(package->buffer->stream, &((t_malloc*) package)->memoria, package->buffer->size);
-			int bytes = package->buffer->size + 2 * sizeof(int);
-			void* to_send = serializer_serialize_package(package, bytes);
-			send(socket, to_send, bytes, 0);
-			free(to_send);
+			t_package* package = utils_package_create(package_type);
+			utils_package_add(package, &((t_malloc*) package)->memoria,sizeof(t_buffer));
+			utils_package_send_to(package,socket);
+			utils_package_destroy(package);
 			break;
 		}
 	}
