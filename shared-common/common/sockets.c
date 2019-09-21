@@ -222,6 +222,8 @@ void socket_start_listening_select(char* ip, int port)
 	socket_close_conection(master_socket);
 }
 
+void *server_handler(void *fd_pointer);
+
 void socket_start_listening_miltithreaded(char* ip, int port)
 {
 	int master_socket, client_socket;
@@ -230,9 +232,49 @@ void socket_start_listening_miltithreaded(char* ip, int port)
 		exit(EXIT_FAILURE);
 	}
 
-	while((client_socket = socket_accept_conection(master_socket)) < 0)
+	while((client_socket = socket_accept_conection(master_socket)) != 0)
 	{
+		pthread_t server_thread;
+		int *new_sock = malloc(sizeof(int));
+		*new_sock = client_socket;
+		pthread_create(&server_thread, NULL, server_handler, (void*)new_sock);
+	}
 
+	if(client_socket < 0)
+	{
+		exit(EXIT_FAILURE);
 	}
 	socket_close_conection(master_socket);
+}
+
+void *server_handler(void *fd_pointer)
+{
+	printf("Hello Server Handler \n");
+	int sock = *(int *) fd_pointer;
+	int read_size;
+	static char client_message[2000];
+
+	static int send_once = 0;
+	if (send_once < 1)
+	{
+		send_once++;
+	}
+
+	while ((read_size = recv(sock, client_message, 2000, 0)) > 0)
+	{
+		printf("Read Size %d \n", read_size);
+		write(sock, client_message, strlen(client_message));
+	}
+	if (read_size == 0)
+	{
+		puts("Client disconnected");
+		fflush(stdout);
+	}
+	else if (read_size == -1)
+	{
+		perror("recv failed");
+	}
+	free(fd_pointer);
+
+	return 0;
 }

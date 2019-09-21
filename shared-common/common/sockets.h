@@ -15,6 +15,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <commons/string.h>
 #include "protocols.h"
 
