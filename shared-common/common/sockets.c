@@ -89,56 +89,150 @@ void socket_close_conection(int socket_client)
 	close(socket_client);
 }
 
-int escuchar(int socketListener, fd_set *fd,
-				void *(funcionSocketNuevo)(int, void*),
-				void *argumentosSocketNuevo,
-				void *(funcionSocketExistente)(int, void*),
-				void *argumentosSocketExistente)
+void socket_select_init_clients(int client_socket[])
 {
-
-	fd_set copia = *fd;
-	int socketsComunicandose = 0;
-	if ((socketsComunicandose = select(FD_SETSIZE, &copia, NULL, NULL, NULL))
-					== -1)
+	//initialize all client_socket[] to 0 so not checked
+	int i;
+	for (i = 0; i < BACKLOG; i++)
 	{
-
-		perror("Fallo en el select");
-		return -1;
+		client_socket[i] = 0;
 	}
+}
 
-	if (FD_ISSET(socketListener, &copia))
+void socket_select_add_child_sockets_to_set(int sd, int max_sd, int client_socket[], fd_set readfds)
+{
+	//add child sockets to set
+	int i;
+	for (i = 0; i < BACKLOG; i++)
 	{
+		//socket descriptor
+		sd = client_socket[i];
+		//if valid socket descriptor then add to read list
+		if (sd > 0)
+			FD_SET(sd, &readfds);
+		//highest file descriptor number, need it for the select function
+		if (sd > max_sd)
+			max_sd = sd;
+	}
+}
 
-		int socketNuevo = 0;
-		if ((socketNuevo = accept(socketListener, NULL, 0)) < 0)
+void socket_select_add_new_client(int new_socket, int client_socket[])
+{
+	//add new socket to array of sockets
+	int i;
+	for (i = 0; i < BACKLOG; i++)
+	{
+		//if position is empty
+		if (client_socket[i] == 0)
 		{
-
-			perror("Error al aceptar conexion entrante");
-			return -1;
+			client_socket[i] = new_socket;
+			break;
 		}
-		else
+	}
+}
+
+void socket_select_catch_incoming_conections(int master_socket,int client_socket[], fd_set readfds)
+{
+	//If something happened on the master socket, then its an incoming connection
+	if (FD_ISSET(master_socket, &readfds))
+	{
+		int new_socket = socket_accept_conection(master_socket);
+		if (new_socket < 0)
 		{
+			exit(EXIT_FAILURE);
+		}
 
-			FD_SET(socketNuevo, fd);
+		/**
+		 * Here should go code/function to validate what to do like handshake, etc*/
+		printf("IP cliente: %s", socket_get_ip(new_socket));
 
-			if (funcionSocketNuevo != NULL)
+		socket_select_add_new_client(new_socket, client_socket);
+	}
+}
+
+void socket_select_close_and_reuse(int i, int sd, int client_socket[])
+{
+	//Close the socket and mark as 0 in list for reuse
+	socket_close_conection(sd);
+	client_socket[i] = 0;
+}
+
+void socket_select_check_operations(int sd, int client_socket[], fd_set readfds)
+{
+	//else its some IO operation on some other socket
+	int i;
+	for (i = 0; i < BACKLOG; i++)
+	{
+		sd = client_socket[i];
+
+		if (FD_ISSET(sd, &readfds))
+		{
+			//Check if it was for closing , and also read the incoming message
+
+			/**
+			 *Here should go another method when closing and receiving a message
+			 * */
+			if (1 == 0)
 			{
-				funcionSocketNuevo(socketNuevo, argumentosSocketNuevo);
+				//Somebody disconnected , get his details and print
+				printf("IP cliente desconectado: %s", socket_get_ip(sd));
+				socket_select_close_and_reuse(i, sd, client_socket);
+			}
+
+			//Echo back the message that came in
+			else
+			{
+
 			}
 		}
 	}
-	else
+}
+
+void socket_start_listening_select(char* ip, int port)
+{
+	int master_socket, client_socket[BACKLOG];
+	fd_set readfds;
+
+	if ((master_socket = socket_create_listener(ip, port)) < 0)
+	{
+		exit(EXIT_FAILURE);
+	}
+
+	socket_select_init_clients(client_socket);
+	while (1)
+	{
+		//clear the socket set
+		FD_ZERO(&readfds);
+		//add master socket to set
+		FD_SET(master_socket, &readfds);
+		int max_sd = master_socket;
+
+		int sd = 0;
+		socket_select_add_child_sockets_to_set(sd, max_sd, client_socket, readfds);
+		//wait for an activity on one of the sockets, timeout is NULL, so wait indefinitely
+		int activity = select(max_sd + 1, &readfds, NULL, NULL, NULL);
+		if ((activity < 0) && (errno != EINTR))
+		{
+			perror("select");
+		}
+
+		socket_select_catch_incoming_conections(master_socket, client_socket, readfds);
+		socket_select_check_operations(sd, client_socket, readfds);
+	}
+	socket_close_conection(master_socket);
+}
+
+void socket_start_listening_miltithreaded(char* ip, int port)
+{
+	int master_socket, client_socket;
+	if ((master_socket = socket_create_listener(ip, port)) < 0)
+	{
+		exit(EXIT_FAILURE);
+	}
+
+	while((client_socket = socket_accept_conection(master_socket)) < 0)
 	{
 
-		int i;
-		for (i = 0; i < FD_SETSIZE; i++)
-		{
-
-			if (FD_ISSET(i, &copia) && i != socketListener)
-			{
-				funcionSocketExistente(i, argumentosSocketExistente);
-			}
-		}
 	}
-	return 0;
+	socket_close_conection(master_socket);
 }

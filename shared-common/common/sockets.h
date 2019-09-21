@@ -18,7 +18,7 @@
 #include <commons/string.h>
 #include "protocols.h"
 
-#define BACKLOG 100
+#define BACKLOG 10
 
 /**
  * @NAME: socket_create_listener
@@ -28,12 +28,6 @@
  * 		port - puerto en el que escuchar
  */
 int socket_create_listener(char* ip, int port);
-
-/**
- * @NAME: socket_create_client
- * @DESC: crea la configuracion de un socket client y devuelve -1 si hubo algun error al crear el socket
- */
-int socket_create_fd(char* ip, int port);
 
 /**
  * @NAME: socket_connect_to_server
@@ -59,5 +53,7 @@ char* socket_get_ip(int fd);
  */
 void socket_close_conection(int socket_client);
 
+void socket_start_listening_select(char* ip, int port);
+void socket_start_listening_miltithreaded(char* ip, int port);
 
 #endif /* COMMON_SOCKETS_H_ */

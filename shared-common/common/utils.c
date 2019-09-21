@@ -1,9 +1,16 @@
 #include "utils.h"
 
+static int NEW_LINE = '\n';
+static int END_LINE = '\0';
+static int DOT = '.';
+static int SLIDE = '/';
+static char* COMMA = ",";
+static char* EMPTY_STRING = "";
+
 void utils_end_string(char *string)
 {
-	if ((strlen(string) > 0) && (string[strlen(string) - 1] == '\n'))
-		string[strlen(string) - 1] = '\0';
+	if ((strlen(string) > 0) && (string[strlen(string) - 1] == NEW_LINE))
+		string[strlen(string) - 1] = END_LINE;
 }
 
 bool utils_is_empty(char* string)
@@ -13,19 +20,19 @@ bool utils_is_empty(char* string)
 
 char* utils_get_parameter_i(char** array, int i)
 {
-	return array[i] != NULL ? array[i] : "";
+	return array[i] != NULL ? array[i] : EMPTY_STRING;
 }
 
 char* utils_get_extension(char* file_name)
 {
-	char *extension = strrchr(file_name, '.');
-	return !extension || extension == file_name ? "" : extension + 1;
+	char *extension = strrchr(file_name, DOT);
+	return !extension || extension == file_name ? EMPTY_STRING : extension + 1;
 }
 
 char* utils_get_file_name(char* path)
 {
-	char *file = strrchr(path, '/');
-	return !file || file == path ? "" : file + 1;
+	char *file = strrchr(path, SLIDE);
+	return !file || file == path ? EMPTY_STRING : file + 1;
 }
 
 bool utils_is_number(char* string)
@@ -61,7 +68,7 @@ char* utils_array_to_string(char** array)
 		free(aux);
 		if (array[i + 1] != NULL)
 		{
-			string_append(&ret, ",");
+			string_append(&ret, COMMA);
 		}
 		i++;
 	}
