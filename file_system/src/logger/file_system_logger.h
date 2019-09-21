@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #define LOG_FILE "file_system.log"
-#define PROGRAM_NAME "FUSE"
+#define PROGRAM_NAME "SAC-servidor"
 
 int file_system_logger_create();
 void file_system_logger_info(char* message, ...);
