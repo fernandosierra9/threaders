@@ -11,9 +11,9 @@ int muse_fd;
 int muse_init(int id)
 {
     printf("HELLO MUSE");
-    muse_fd = socket_create_client(ip_muse, puerto_muse);
+    muse_fd = socket_connect_to_server(ip_muse, puerto_muse);
 
-	if(socket_connect_to_server(ip_muse, puerto_muse, muse_fd) < 0)
+	if(muse_fd < 0)
 	{
 		close(muse_fd);
 		return -1;

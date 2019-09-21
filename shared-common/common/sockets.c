@@ -1,51 +1,20 @@
 #include "sockets.h"
 
-struct addrinfo* set_server_info(char* ip, int port)
+int socket_create_listener(char* ip, int port)
 {
+	if (ip == NULL)
+		return -1;
+
 	struct addrinfo hints;
 	struct addrinfo *server_info;
 
 	memset(&hints, 0, sizeof(hints));
 
-	// No importa si uso IPv4 o IPv6
 	hints.ai_family = AF_UNSPEC;
-	// Asigna el address del localhost: 127.0.0.1
 	hints.ai_flags = AI_PASSIVE;
-	// Indica que usaremos el protocolo TCP
 	hints.ai_socktype = SOCK_STREAM;
 
-	// Si IP es NULL, usa el localhost
 	getaddrinfo(ip, string_itoa(port), &hints, &server_info);
-	return server_info;
-}
-
-int socket_create_client(char* ip, int port)
-{
-	if (ip == NULL)
-		return -1;
-	struct addrinfo* server_info = set_server_info(ip, port);
-	int client_socket = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
-
-	if (client_socket == -1)
-	{
-		perror("Error al crear el socket");
-		return -1;
-	}
-
-	int activated = 1;
-	if (setsockopt(client_socket, SOL_SOCKET, SO_REUSEADDR, &activated, sizeof(activated)) == -1)
-	{
-		perror("Error al setear las opciones del socket");
-		return -1;
-	}
-	return client_socket;
-}
-
-int socket_create_listener(char* ip, int port)
-{
-	if (ip == NULL)
-		return -1;
-	struct addrinfo* server_info = set_server_info(ip, port);
 
 	int server_socket = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
 
@@ -62,18 +31,31 @@ int socket_create_listener(char* ip, int port)
 
 	if (listen(server_socket, BACKLOG) == -1)
 		return -1;
-
 	return server_socket;
 }
 
-int socket_connect_to_server(char* ip, int port, int server_socket)
+int socket_connect_to_server(char* ip, int port)
 {
-	struct addrinfo* server_info = set_server_info(ip, port);
-	int retorno = connect(server_socket, server_info->ai_addr, server_info->ai_addrlen);
+	if (ip == NULL)
+		return -1;
+
+	struct addrinfo hints;
+	struct addrinfo *server_info;
+
+	memset(&hints, 0, sizeof(hints));
+
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+
+	getaddrinfo(ip, string_itoa(port), &hints, &server_info);
+
+	int server_socket = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
+
+	int result = connect(server_socket, server_info->ai_addr, server_info->ai_addrlen);
 
 	freeaddrinfo(server_info);
 
-	return (retorno < 0 || server_socket == -1) ? -1 : server_socket;
+	return (result < 0 || server_socket == -1) ? -1 : server_socket;
 }
 
 int socket_accept_conection(int server_socket)
@@ -97,9 +79,9 @@ char* socket_get_ip(int fd)
 	int res = getpeername(fd, (struct sockaddr *) &addr, &addr_size);
 	if (res == -1)
 		return NULL;
-	char ip_nodo[20];
-	strcpy(ip_nodo, inet_ntoa(addr.sin_addr));
-	return strdup(ip_nodo);
+	char ip_node[20];
+	strcpy(ip_node, inet_ntoa(addr.sin_addr));
+	return strdup(ip_node);
 }
 
 void socket_close_conection(int socket_client)

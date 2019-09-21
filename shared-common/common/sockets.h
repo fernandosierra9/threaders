@@ -33,13 +33,13 @@ int socket_create_listener(char* ip, int port);
  * @NAME: socket_create_client
  * @DESC: crea la configuracion de un socket client y devuelve -1 si hubo algun error al crear el socket
  */
-int socket_create_client(char* ip, int port);
+int socket_create_fd(char* ip, int port);
 
 /**
  * @NAME: socket_connect_to_server
  * @DESC: Me conecto al server, y devuelvo el socket, o -1 si hubo error
  */
-int socket_connect_to_server(char* ip, int port, int server_socket);
+int socket_connect_to_server(char* ip, int port);
 
 /**
  * @NAME: socket_accept_conection
