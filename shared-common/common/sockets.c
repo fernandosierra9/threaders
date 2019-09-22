@@ -1,151 +1,280 @@
 #include "sockets.h"
 
-int crearSocket(int *mySocket) {
-	int opcion=1;
+int socket_create_listener(char* ip, int port)
+{
+	if (ip == NULL)
+		return -1;
 
-	if ((*mySocket=socket(AF_INET, SOCK_STREAM,0))==-1){
-		perror("-1 al crear el socket");
+	struct addrinfo hints;
+	struct addrinfo *server_info;
+
+	memset(&hints, 0, sizeof(hints));
+
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_flags = AI_PASSIVE;
+	hints.ai_socktype = SOCK_STREAM;
+
+	getaddrinfo(ip, string_itoa(port), &hints, &server_info);
+
+	int server_socket = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
+
+	int activated = 1;
+	setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &activated, sizeof(activated));
+
+	if (server_socket == -1 || bind(server_socket, server_info->ai_addr, server_info->ai_addrlen) == -1)
+	{
+		freeaddrinfo(server_info);
 		return -1;
 	}
-	if (setsockopt(*mySocket, SOL_SOCKET, SO_REUSEADDR, &opcion, sizeof(int))==-1){
-		perror("-1 al setear las opciones del socket");
+
+	freeaddrinfo(server_info);
+
+	if (listen(server_socket, BACKLOG) == -1)
 		return -1;
-	}
-	return 0;
+	return server_socket;
 }
 
-int setearParaEscuchar(int *mySocket, int puerto) {
-	struct addrinfo direccion, *infoBind = malloc(sizeof(struct addrinfo));
-
-	memset(&direccion, 0, sizeof direccion);
-	direccion.ai_family = AF_INET;
-	direccion.ai_socktype = SOCK_STREAM;
-	direccion.ai_flags = AI_PASSIVE;
-
-	char *port= malloc(sizeof(char)*6);
-
-	port = string_itoa(puerto);
-	getaddrinfo(NULL, port, &direccion, &infoBind);
-
-	free(port);
-
-	if(bind(*mySocket,infoBind->ai_addr, infoBind->ai_addrlen)==-1){
-		perror("Fallo el bind");
-		free(infoBind);
+int socket_connect_to_server(char* ip, int port)
+{
+	if (ip == NULL)
 		return -1;
-	}
-	//ver si hay que sacar el free
-	free(infoBind);
-	if (listen(*mySocket, BACKLOG) ==-1){
-		perror("Fallo el listen");
-		return -1;
-	}
-	//Si en todos los procesos llamamos al logger con el mismo nombre podemos llamarlo desde la biblioteca
-	//log_info(logger, " ... Escuchando conexiones ... ");
-	return 0;
-}
 
-int conectar(int* mySocket, int puerto, char *ip) {
-	struct addrinfo hints, *res;
+	struct addrinfo hints;
+	struct addrinfo *server_info;
 
-	memset(&hints, 0, sizeof hints);
+	memset(&hints, 0, sizeof(hints));
+
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
-	char *stringPort = string_itoa(puerto);
-	getaddrinfo(ip, stringPort, &hints, &res);
-	free(stringPort);
-	if(connect(*mySocket, res->ai_addr, res->ai_addrlen)!=0){
+
+	getaddrinfo(ip, string_itoa(port), &hints, &server_info);
+
+	int server_socket = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
+
+	int result = connect(server_socket, server_info->ai_addr, server_info->ai_addrlen);
+
+	freeaddrinfo(server_info);
+
+	return (result < 0 || server_socket == -1) ? -1 : server_socket;
+}
+
+int socket_accept_conection(int server_socket)
+{
+	struct sockaddr_in addr;
+	socklen_t addrlen = sizeof(addr);
+
+	int client_socket = accept(server_socket, (struct sockaddr *) &addr, &addrlen);
+	if (client_socket < 0)
+	{
+		perror("Error al aceptar cliente");
 		return -1;
 	}
-	return 0;
+	return client_socket;
 }
 
-int aceptarConexion(int fd){
-
-	struct sockaddr_in cliente;
-
-	unsigned int len = sizeof(struct sockaddr);
-
-	return accept(fd,(void*)&cliente,&len);
-
+char* socket_get_ip(int fd)
+{
+	struct sockaddr_in addr;
+	socklen_t addr_size = sizeof(struct sockaddr_in);
+	int res = getpeername(fd, (struct sockaddr *) &addr, &addr_size);
+	if (res == -1)
+		return NULL;
+	char ip_node[20];
+	strcpy(ip_node, inet_ntoa(addr.sin_addr));
+	return strdup(ip_node);
 }
 
+void socket_close_conection(int socket_client)
+{
+	close(socket_client);
+}
 
-int escuchar(int socketListener, fd_set *fd,  void *(funcionSocketNuevo)(int, void*), void *argumentosSocketNuevo,
-				void *(funcionSocketExistente)(int, void*), void *argumentosSocketExistente){
-
-	fd_set copia = *fd;
-	int socketsComunicandose=0;
-	if((socketsComunicandose=select(FD_SETSIZE,&copia,NULL,NULL,NULL))==-1) {
-
-		perror("Fallo en el select");
-		return -1;
+void socket_select_init_clients(int client_socket[])
+{
+	//initialize all client_socket[] to 0 so not checked
+	int i;
+	for (i = 0; i < BACKLOG; i++)
+	{
+		client_socket[i] = 0;
 	}
-
-	if(FD_ISSET(socketListener,&copia)) {
-
-		int socketNuevo=0;
-		if ((socketNuevo = accept(socketListener, NULL, 0)) < 0) {
-
-			perror("Error al aceptar conexion entrante");
-			return -1;
-		} else {
-
-			FD_SET(socketNuevo,fd);
-
-			if(funcionSocketNuevo!=NULL) {
-				funcionSocketNuevo(socketNuevo, argumentosSocketNuevo);
-			}
-		}
-	}else{
-
-		int i;
-		for (i = 0; i < FD_SETSIZE; i++) {
-
-			if (FD_ISSET(i, &copia) && i != socketListener) {
-				funcionSocketExistente(i, argumentosSocketExistente);
-			}
-		}
-	}
-	return 0;
 }
 
-void serializarYEnviar(int socket, int tipoDepackage, void* package){
-
-	switch(tipoDepackage){
-		case HANDSHAKE:{
-			break;
-		}
-		case MALLOC:{
-			t_package* package = malloc(sizeof(t_package));
-			package->operation_code = MALLOC;
-			package->buffer = malloc(sizeof(t_buffer));
-			package->buffer->size = sizeof(uint32_t);
-			package->buffer->stream = malloc(package->buffer->size);
-			memcpy(package->buffer->stream, &((t_malloc*)package)->memoria, package->buffer->size);
-			int bytes = package->buffer->size + 2*sizeof(int);
-     		void* a_enviar = serializer_serialize_package(package, bytes);
-			send(socket, a_enviar, bytes, 0);
-			free(a_enviar);
-			break;
-		}
-
+void socket_select_add_child_sockets_to_set(int sd, int max_sd, int client_socket[], fd_set readfds)
+{
+	//add child sockets to set
+	int i;
+	for (i = 0; i < BACKLOG; i++)
+	{
+		//socket descriptor
+		sd = client_socket[i];
+		//if valid socket descriptor then add to read list
+		if (sd > 0)
+			FD_SET(sd, &readfds);
+		//highest file descriptor number, need it for the select function
+		if (sd > max_sd)
+			max_sd = sd;
 	}
-
 }
 
-void* recibirYDeserializar(int socket,int tipo){
-	switch(tipo){
-		case MALLOC:
+void socket_select_add_new_client(int new_socket, int client_socket[])
+{
+	//add new socket to array of sockets
+	int i;
+	for (i = 0; i < BACKLOG; i++)
+	{
+		//if position is empty
+		if (client_socket[i] == 0)
 		{
-			t_malloc *pedido_malloc=malloc (sizeof(t_malloc));
-			int size;
-			recv(socket, &size, sizeof(int), MSG_WAITALL);
-			recv(socket, &pedido_malloc->memoria, size, MSG_WAITALL);
-			return pedido_malloc;
+			client_socket[i] = new_socket;
+			break;
 		}
 	}
-	return NULL;
 }
 
+void socket_select_catch_incoming_conections(int master_socket,int client_socket[], fd_set readfds)
+{
+	//If something happened on the master socket, then its an incoming connection
+	if (FD_ISSET(master_socket, &readfds))
+	{
+		int new_socket = socket_accept_conection(master_socket);
+		if (new_socket < 0)
+		{
+			exit(EXIT_FAILURE);
+		}
 
+		/**
+		 * Here should go code/function to validate what to do like handshake, etc*/
+		printf("IP cliente: %s", socket_get_ip(new_socket));
+
+		socket_select_add_new_client(new_socket, client_socket);
+	}
+}
+
+void socket_select_close_and_reuse(int i, int sd, int client_socket[])
+{
+	//Close the socket and mark as 0 in list for reuse
+	socket_close_conection(sd);
+	client_socket[i] = 0;
+}
+
+void socket_select_check_operations(int sd, int client_socket[], fd_set readfds)
+{
+	//else its some IO operation on some other socket
+	int i;
+	for (i = 0; i < BACKLOG; i++)
+	{
+		sd = client_socket[i];
+
+		if (FD_ISSET(sd, &readfds))
+		{
+			//Check if it was for closing , and also read the incoming message
+
+			/**
+			 *Here should go another method when closing and receiving a message
+			 * */
+			if (1 == 0)
+			{
+				//Somebody disconnected , get his details and print
+				printf("IP cliente desconectado: %s", socket_get_ip(sd));
+				socket_select_close_and_reuse(i, sd, client_socket);
+			}
+
+			//Echo back the message that came in
+			else
+			{
+
+			}
+		}
+	}
+}
+
+void socket_start_listening_select(char* ip, int port)
+{
+	int master_socket, client_socket[BACKLOG];
+	fd_set readfds;
+
+	if ((master_socket = socket_create_listener(ip, port)) < 0)
+	{
+		exit(EXIT_FAILURE);
+	}
+
+	socket_select_init_clients(client_socket);
+	while (1)
+	{
+		//clear the socket set
+		FD_ZERO(&readfds);
+		//add master socket to set
+		FD_SET(master_socket, &readfds);
+		int max_sd = master_socket;
+
+		int sd = 0;
+		socket_select_add_child_sockets_to_set(sd, max_sd, client_socket, readfds);
+		//wait for an activity on one of the sockets, timeout is NULL, so wait indefinitely
+		int activity = select(max_sd + 1, &readfds, NULL, NULL, NULL);
+		if ((activity < 0) && (errno != EINTR))
+		{
+			perror("select");
+		}
+
+		socket_select_catch_incoming_conections(master_socket, client_socket, readfds);
+		socket_select_check_operations(sd, client_socket, readfds);
+	}
+	socket_close_conection(master_socket);
+}
+
+void *server_handler(void *fd_pointer);
+
+void socket_start_listening_miltithreaded(char* ip, int port)
+{
+	int master_socket, client_socket;
+	if ((master_socket = socket_create_listener(ip, port)) < 0)
+	{
+		exit(EXIT_FAILURE);
+	}
+
+	while((client_socket = socket_accept_conection(master_socket)) != 0)
+	{
+		pthread_t server_thread;
+		int *new_sock = malloc(sizeof(int));
+		*new_sock = client_socket;
+		pthread_create(&server_thread, NULL, server_handler, (void*)new_sock);
+	}
+
+	if(client_socket < 0)
+	{
+		exit(EXIT_FAILURE);
+	}
+	socket_close_conection(master_socket);
+}
+
+void *server_handler(void *fd_pointer)
+{
+	printf("Hello Server Handler \n");
+	int sock = *(int *) fd_pointer;
+	int read_size;
+	static char client_message[2000];
+
+	static int send_once = 0;
+	if (send_once < 1)
+	{
+		send_once++;
+	}
+
+	while ((read_size = recv(sock, client_message, 2000, 0)) > 0)
+	{
+		printf("Read Size %d \n", read_size);
+		write(sock, client_message, strlen(client_message));
+	}
+	if (read_size == 0)
+	{
+		puts("Client disconnected");
+		fflush(stdout);
+	}
+	else if (read_size == -1)
+	{
+		perror("recv failed");
+	}
+	free(fd_pointer);
+
+	return 0;
+}

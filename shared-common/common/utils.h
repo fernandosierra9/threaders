@@ -30,15 +30,14 @@ char* utils_get_parameter_i(char** array, int i);
 char* utils_get_extension(char* file_name);
 char* utils_get_file_name(char* path);
 bool utils_is_number(char* string);
-char* utils_to_string_uint(uint16_t value);
-char* utils_to_string_ul(unsigned value);
 void utils_free_array(char** array);
 char* utils_array_to_string(char** array);
 void utils_buffer_create(t_package* package);
-t_package* utils_package_create(void);
+t_package* utils_package_create(t_protocol code);
 void utils_package_add(t_package* package, void* value, int size);
 void utils_package_destroy(t_package* package);
-void utils_send_message(char* message, int client_socket);
 void utils_package_send_to(t_package* t_package, int client_socket);
+void utils_serialize_and_send(int socket, int package_type, void* package);
+void* utils_receive_and_deserialize(int socket, int package_type);
 
 #endif /* CUSTOM_UTILITARIA_H_ */

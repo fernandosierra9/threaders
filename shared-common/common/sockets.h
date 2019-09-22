@@ -14,43 +14,47 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
-#include <commons/collections/list.h>
-#include <commons/string.h>
 #include <fcntl.h>
-#include <commons/log.h>
+#include <pthread.h>
+#include <commons/string.h>
 #include "protocols.h"
-#include "serializer.h"
 
-#define BACKLOG 20
+#define BACKLOG 10
 
-//Estructura para manejar el protocolo
-typedef enum{
-	HANDSHAKE,     		//general
-	MALLOC,
-	FREE_MALLOC,
-	COPY,
-	GET
-}t_protocolo;
+/**
+ * @NAME: socket_create_listener
+ * @DESC: Creo un socket de escucha y lo devuelvo, o -1 se hubo error. Me pongo a escuchar.
+ * @PARAMS:
+ * 		ip   - ip del server. Si es NULL, usa el localhost: 127.0.0.1
+ * 		port - puerto en el que escuchar
+ */
+int socket_create_listener(char* ip, int port);
 
-typedef struct
-{
-	uint32_t memoria;
-} t_malloc;
+/**
+ * @NAME: socket_connect_to_server
+ * @DESC: Me conecto al server, y devuelvo el socket, o -1 si hubo error
+ */
+int socket_connect_to_server(char* ip, int port);
 
-typedef struct
-{
-	t_protocolo operation_code;
-	t_buffer* buffer;
-} t_paquete;
+/**
+ * @NAME: socket_accept_conection
+ * @DESC: Acepta una nueva conexión y devuelve el nuevo socket conectado
+ */
+int socket_accept_conection(int server_socket);
 
+/**
+ * @NAME: socket_get_ip
+ * @DESC: Devuelve la IP de un socket
+ */
+char* socket_get_ip(int fd);
 
+/**
+ * @NAME: socket_free_conection
+ * @DESC: Cierra el socket
+ */
+void socket_close_conection(int socket_client);
 
-int crearSocket(int *mySocket);
-int setearParaEscuchar(int *mySocket, int puerto);
-int conectar(int* mySocket, int puerto, char *ip) ;
-int aceptarConexion(int fd);
-
-void serializarYEnviar(int socket, int tipoDePaquete, void* package);
-void* recibirYDeserializar(int socket,int tipo);
+void socket_start_listening_select(char* ip, int port);
+void socket_start_listening_miltithreaded(char* ip, int port);
 
 #endif /* COMMON_SOCKETS_H_ */
