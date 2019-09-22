@@ -1,5 +1,5 @@
-#include "hilolay.h"
-#include "libmuse.h"
+#include "../../hilolay/hilolay.h"
+#include "../../libmuse/libmuse.h"
 
 void recursiva(int cant) {
     if(cant > 0) recursiva(cant - 1);
