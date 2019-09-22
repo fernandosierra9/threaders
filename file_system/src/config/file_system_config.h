@@ -2,7 +2,7 @@
 #define CONFIG_FILE_SYSTEM_CONFIG_H_
 
 #include <stdlib.h>
-#include <common/config.h>
+#include "../../../shared-common/common/logger.h"
 #include <commons/config.h>
 #include <commons/string.h>
 

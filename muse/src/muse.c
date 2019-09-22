@@ -39,6 +39,7 @@ void muse_server_init()
 		return;
 	}
 
+
 	muse_logger_info("Conexion establecida con libmuse");
 	int received_bytes;
 	int protocol;
@@ -74,4 +75,3 @@ void muse_server_init()
 
 	}
 }
-

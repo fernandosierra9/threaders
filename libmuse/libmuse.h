@@ -20,10 +20,8 @@
 
     #include <stdint.h>
     #include <stddef.h>
-	#include <common/sockets.h>
-	#include <common/utils.h>
-
-
+	#include "../shared-common/common/sockets.h"
+	#include "../shared-common/common/utils.h"
 
     /**
      * Inicializa la biblioteca de MUSE.
