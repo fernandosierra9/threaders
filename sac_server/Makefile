@@ -2,7 +2,7 @@ CC = gcc
 RM = rm -f
 
 TARGET = sac_server.exe
-SRC = $(wildcard *.c) $(wildcard */*.c) $(wildcard */*/*.c)
+SRC = $(wildcard *.c) $(wildcard */*.c) $(wildcard */*/*.c) $(wildcard */*/*/*.c)
 SRC += ../shared-common/common/config.c ../shared-common/common/logger.c
 OBJ = $(SRC:.c=.o)
 HEADER = $(SRC:.c=.h) defines.h
