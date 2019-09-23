@@ -6,7 +6,7 @@ RM = rm -f
 TARGET_LIB = libmuse.so # target lib
 LIB = -lcommons
 
-SRCS = libmuse.c
+SRCS = libmuse.c ../shared-common/common/sockets.c
 OBJS = $(SRCS:.c=.o)
 
 .PHONY: all

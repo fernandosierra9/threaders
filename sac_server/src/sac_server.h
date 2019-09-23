@@ -1,5 +1,5 @@
-#ifndef FILE_SYSTEM_H_
-#define FILE_SYSTEM_H_
+#ifndef SAC_SERVER_H_
+#define SAC_SERVER_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,7 +9,7 @@
 #include <commons/config.h>
 #include <commons/bitarray.h>
 
-#include "config/file_system_config.h"
-#include "logger/file_system_logger.h"
+#include "config/sac_server_config.h"
+#include "logger/sac_server_logger.h"
 
-#endif /* FILE_SYSTEM_H_ */
+#endif /* SAC_SERVER_H_ */
