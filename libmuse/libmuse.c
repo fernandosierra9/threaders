@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "libmuse.h"
-#include "common/sockets.h"
+#include "../shared-common/common/sockets.h"
 
 char *ip_muse = "127.0.0.1";
 int puerto_muse = 5003;
