@@ -1,11 +1,18 @@
 # Configs
 # memoria/configs/*
 # planificacion/configs/*
-# file_system/configs/*
+# sac_server/configs/*
+
+#.so
+libmuse/libmuse.so
+hilolay/hilolay.so
+
+#.d
+*.d
 
 # Debug
 planificacion/Debug/*
-file_system/Debug/*
+sac_server/Debug/*
 shared-common/Debug/*
 muse/Debug/*
 client-tests/Debug/*
@@ -23,7 +30,7 @@ client-tests/Debug/*
 
 # Settings
 planificacion/.settings/*
-file_system/.settings/*
+sac_server/.settings/*
 memoria/.settings/*
 shared-common/.settings/*
 client-tests/.settings/*
