@@ -11,11 +11,11 @@ hilolay/hilolay.so
 *.d
 
 # Debug
-suse/Debug/*
-sac_server/Debug/*
-shared-common/Debug/*
-muse/Debug/*
-client-tests/Debug/*
+suse/Debug/
+sac_server/Debug/
+shared-common/Debug/
+muse/Debug/
+client-tests/Debug/
 
 # Files
 *.log
