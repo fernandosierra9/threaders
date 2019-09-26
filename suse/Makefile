@@ -1,7 +1,7 @@
 CC = gcc
 RM = rm -f
 
-TARGET = planificacion.exe
+TARGET = suse.exe
 SRC = $(wildcard *.c) $(wildcard */*.c) $(wildcard */*/*.c) 
 SRC += ../shared-common/common/config.c ../shared-common/common/utils.c ../shared-common/common/sockets.c ../shared-common/common/logger.c ../shared-common/common/serializer.c
 OBJ = $(SRC:.c=.o)

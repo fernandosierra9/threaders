@@ -1,4 +1,4 @@
-#include "semaphore.h"
+#include "suse_semaphore.h"
 
 t_semaphore* semaphore_create(char* id, int value)
 {
