@@ -6,6 +6,8 @@ static int DOT = '.';
 static int SLIDE = '/';
 static char* COMMA = ",";
 static char* EMPTY_STRING = "";
+static char* OPENING_SQUARE_BRACKET = "[";
+static char* CLOSING_SQUARE_BRACKET = "]";
 
 void utils_end_string(char *string)
 {
@@ -60,7 +62,7 @@ char* utils_array_to_string(char** array)
 	int i = 0;
 	char* aux;
 	char* ret = string_new();
-	string_append(&ret, "[");
+	string_append(&ret, OPENING_SQUARE_BRACKET);
 	while (array[i] != NULL)
 	{
 		aux = array[i];
@@ -72,7 +74,7 @@ char* utils_array_to_string(char** array)
 		}
 		i++;
 	}
-	string_append(&ret, "]");
+	string_append(&ret, CLOSING_SQUARE_BRACKET);
 	return ret;
 }
 

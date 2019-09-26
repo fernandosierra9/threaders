@@ -1,11 +1,13 @@
 #ifndef LOGGER_MUSE_LOGGER_H_
 #define LOGGER_MUSE_LOGGER_H_
 
-#include <commons/log.h>
-#include "../../../shared-common/common/logger.h"
-#include <commons/string.h>
+
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <commons/string.h>
+#include <commons/log.h>
+#include "../../../shared-common/common/logger.h"
 
 #define LOG_FILE "muse.log"
 #define PROGRAM_NAME "MUSE"

@@ -20,7 +20,9 @@ void planificacion_logger_info(char* message, ...)
 {
 	va_list arguments;
 	va_start(arguments, message);
-	log_info(planificacion_log, string_from_vformat(message, arguments));
+	char* formated_message = string_from_vformat(message, arguments);
+	log_info(planificacion_log, formated_message);
+	free(formated_message);
 	va_end(arguments);
 }
 
@@ -28,7 +30,9 @@ void planificacion_logger_warn(char* message, ...)
 {
 	va_list arguments;
 	va_start(arguments, message);
-	log_warning(planificacion_log, string_from_vformat(message, arguments));
+	char* formated_message = string_from_vformat(message, arguments);
+	log_warning(planificacion_log, formated_message);
+	free(formated_message);
 	va_end(arguments);
 }
 
@@ -36,7 +40,9 @@ void planificacion_logger_error(char* message, ...)
 {
 	va_list arguments;
 	va_start(arguments, message);
-	log_error(planificacion_log, string_from_vformat(message, arguments));
+	char* formated_message = string_from_vformat(message, arguments);
+	log_error(planificacion_log, formated_message);
+	free(formated_message);
 	va_end(arguments);
 }
 

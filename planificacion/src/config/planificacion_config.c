@@ -14,9 +14,9 @@ int planificacion_config_load()
 
 void planificacion_config_free()
 {
-	utils_free_array(planificacion_config->sem_ids);
-	utils_free_array(planificacion_config->sem_init);
-	utils_free_array(planificacion_config->sem_max);
+//	utils_free_array(planificacion_config->sem_ids);
+//	utils_free_array(planificacion_config->sem_init);
+//	utils_free_array(planificacion_config->sem_max);
 	free(planificacion_config);
 }
 

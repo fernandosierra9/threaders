@@ -18,7 +18,9 @@ void muse_logger_info(char* message, ...)
 {
 	va_list arguments;
 	va_start(arguments, message);
-	log_info(muse_log, string_from_vformat(message, arguments));
+	char* formated_message = string_from_vformat(message, arguments);
+	log_info(muse_log, formated_message);
+	free(formated_message);
 	va_end(arguments);
 }
 
@@ -26,7 +28,9 @@ void muse_logger_warn(char* message, ...)
 {
 	va_list arguments;
 	va_start(arguments, message);
-	log_warning(muse_log, string_from_vformat(message, arguments));
+	char* formated_message = string_from_vformat(message, arguments);
+	log_warning(muse_log, formated_message);
+	free(formated_message);
 	va_end(arguments);
 }
 
@@ -34,7 +38,9 @@ void muse_logger_error(char* message, ...)
 {
 	va_list arguments;
 	va_start(arguments, message);
-	log_error(muse_log, string_from_vformat(message, arguments));
+	char* formated_message = string_from_vformat(message, arguments);
+	log_error(muse_log, formated_message);
+	free(formated_message);
 	va_end(arguments);
 }
 
