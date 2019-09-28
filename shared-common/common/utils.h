@@ -32,6 +32,7 @@ char* utils_get_file_name(char* path);
 bool utils_is_number(char* string);
 void utils_free_array(char** array);
 char* utils_array_to_string(char** array);
+void utils_delay(int seconds);
 void utils_buffer_create(t_package* package);
 t_package* utils_package_create(t_protocol code);
 void utils_package_add(t_package* package, void* value, int size);

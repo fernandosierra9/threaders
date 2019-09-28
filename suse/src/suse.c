@@ -1,7 +1,5 @@
 #include "suse.h"
 
-void suse_delay(int seconds);
-
 int main(void)
 {
 	int response = suse_logger_create();
@@ -34,20 +32,8 @@ void suse_run_scheduler()
 {
 	scheduler_init();
 	scheduler_init_semaphores();
-	while(1)
-	{
-		suse_delay(suse_get_metrics_timer());
-		scheduler_execute_metrics();
-	}
+	scheduler_execute_metrics();
 	pthread_exit(0);
-}
-
-void suse_delay(int seconds)
-{
-	int millis = 1000 * seconds;
-	clock_t start = clock();
-	while (clock() < start + millis)
-		;
 }
 
 void suse_exit_gracefully()

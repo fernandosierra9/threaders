@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "commons/collections/list.h"
 
 typedef enum
 {
@@ -24,7 +25,7 @@ typedef struct
 {
 	int pid;
 	e_states state;
-	t_thread* threads;
+	t_list* threads;
 } t_program;
 
 t_program* program_create(int pid);

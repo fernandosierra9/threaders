@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <commons/collections/list.h>
 #include "../program/suse_program.h"
 #include "../semaphore/suse_semaphore.h"

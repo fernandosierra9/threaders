@@ -7,11 +7,13 @@ t_semaphore* semaphore_create(char* id, int value, int max_value)
 	strcpy(sem->id, id);
 	sem->value = value;
 	sem->max_value = max_value;
+	sem->queue = queue_create();
 	return sem;
 }
 
 void semaphore_destroy(t_semaphore* sem)
 {
 	free(sem->id);
+	queue_destroy(sem->queue);
 	free(sem);
 }

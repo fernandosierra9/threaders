@@ -67,15 +67,23 @@ char* utils_array_to_string(char** array)
 	{
 		aux = array[i];
 		string_append(&ret, aux);
+		free(aux);
 		if (array[i + 1] != NULL)
 		{
 			string_append(&ret, COMMA);
 		}
 		i++;
 	}
-	free(aux);
 	string_append(&ret, CLOSING_SQUARE_BRACKET);
 	return ret;
+}
+
+void utils_delay(int seconds)
+{
+	int millis = 1000 * seconds;
+	clock_t start = clock();
+	while (clock() < start + millis)
+		;
 }
 
 void utils_buffer_create(t_package* package)

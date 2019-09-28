@@ -6,7 +6,6 @@
 #include <stdarg.h>
 #include <pthread.h>
 #include <assert.h>
-#include <time.h>
 #include <commons/config.h>
 #include <commons/bitarray.h>
 #include "common/sockets.h"

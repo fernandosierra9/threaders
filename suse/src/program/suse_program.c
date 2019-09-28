@@ -5,13 +5,13 @@ t_program* program_create(int pid)
 	t_program* program = malloc(sizeof(t_program));
 	program->pid = pid;
 	program->state = NEW;
-	program->threads = malloc(sizeof(t_thread));
+	program->threads = list_create();
 	return program;
 }
 
 void program_destroy(t_program* program)
 {
-	free(program->threads);
+	list_destroy_and_destroy_elements(program->threads, (void*)program_destroy_thread);
 	free(program);
 }
 

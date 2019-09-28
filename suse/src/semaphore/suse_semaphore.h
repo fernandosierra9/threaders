@@ -4,12 +4,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "commons/collections/queue.h"
 
 typedef struct
 {
 	char* id;
 	int value;
 	int max_value;
+	t_queue* queue;
 } t_semaphore;
 
 t_semaphore* semaphore_create(char* id, int value, int max_value);
