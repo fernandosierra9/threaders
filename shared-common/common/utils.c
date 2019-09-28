@@ -67,13 +67,13 @@ char* utils_array_to_string(char** array)
 	{
 		aux = array[i];
 		string_append(&ret, aux);
-		free(aux);
 		if (array[i + 1] != NULL)
 		{
 			string_append(&ret, COMMA);
 		}
 		i++;
 	}
+	free(aux);
 	string_append(&ret, CLOSING_SQUARE_BRACKET);
 	return ret;
 }

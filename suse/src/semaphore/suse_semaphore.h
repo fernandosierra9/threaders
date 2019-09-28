@@ -1,6 +1,10 @@
 #ifndef SEMAPHORE_SUSE_SEMAPHORE_H_
 #define SEMAPHORE_SUSE_SEMAPHORE_H_
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 typedef struct
 {
 	char* id;

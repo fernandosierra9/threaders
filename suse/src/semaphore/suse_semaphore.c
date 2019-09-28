@@ -3,7 +3,8 @@
 t_semaphore* semaphore_create(char* id, int value, int max_value)
 {
 	t_semaphore* sem = malloc(sizeof(t_semaphore));
-	strncpy(sem->id, id, sizeof(id));
+	sem->id = malloc(sizeof(id));
+	strcpy(sem->id, id);
 	sem->value = value;
 	sem->max_value = max_value;
 	return sem;

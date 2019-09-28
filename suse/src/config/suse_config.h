@@ -19,6 +19,7 @@ typedef struct {
 	char** sem_max;
 	double alpha_sjf;
 } t_suse_config;
+t_suse_config* suse_config;
 
 int suse_config_load();
 void suse_config_free();

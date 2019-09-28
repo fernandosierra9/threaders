@@ -4,7 +4,7 @@ t_suse_config* suse_config_reload();
 void read_config(t_config* config_file);
 void print_config();
 
-t_suse_config* suse_config;
+//t_suse_config* suse_config;
 
 int suse_config_load()
 {
