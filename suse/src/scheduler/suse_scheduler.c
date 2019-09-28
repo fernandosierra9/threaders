@@ -91,6 +91,53 @@ void scheduler_print_metrics()
 	suse_logger_info("********FIN DE METRICAS********");
 }
 
+float scheduler_calculate_exponential_mean(int burst_time)
+{
+	float tn = 0.0f;
+	float alpha = suse_get_alpha_sjf();
+	//tn+1 = α*tn + (1 - α)*tn
+	float next_tn = alpha * (float) burst_time + (1.0 - alpha) * tn;
+	return next_tn;
+}
+
+void scheduler_run_long_term_scheduler()
+{
+	int i;
+	for (i = 0; i < list_size(queue_new); i++)
+	{
+		t_thread* thread = list_get(queue_new, i);
+		if (list_size(queue_ready) <= suse_get_max_multiprog())
+		{
+			list_remove(queue_new, i);
+			list_add(queue_ready, thread);
+			suse_decrease_multiprog();
+		}
+	}
+}
+
+t_thread* _scheduler_get_sjf(t_thread* th1, t_thread* th2) {
+	float f1 = scheduler_calculate_exponential_mean(th1->cpu_time);
+	float f2 = scheduler_calculate_exponential_mean(th2->cpu_time);
+	return f1 <= f2 ? th1 : th2;
+}
+
+void scheduler_run_short_term_scheduler()
+{
+	int i;
+	for (i = 0; i < list_size(queue_ready); i++)
+	{
+		t_thread* thread = list_get(queue_ready, i);
+		t_thread* sjf_thread = (t_thread*) list_fold(queue_ready, thread, (void*) _scheduler_get_sjf);
+		if (thread == sjf_thread)
+		{
+			list_remove(queue_ready, i);
+			scheduler_execute_thread(sjf_thread);
+			suse_increase_multiprog();
+			return;
+		}
+	}
+}
+
 /**
  * PROGRAMS
  * */

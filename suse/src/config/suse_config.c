@@ -55,6 +55,16 @@ double suse_get_alpha_sjf()
 	return suse_config->alpha_sjf;
 }
 
+void suse_decrease_multiprog()
+{
+	suse_config->max_multiprog--;
+}
+
+void suse_increase_multiprog()
+{
+	suse_config->max_multiprog++;
+}
+
 t_suse_config* suse_config_reload()
 {
 	suse_config_free();

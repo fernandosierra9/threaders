@@ -29,5 +29,7 @@ char** suse_get_sem_ids();
 char** suse_get_sem_init();
 char** suse_get_sem_max();
 double suse_get_alpha_sjf();
+void suse_decrease_multiprog();
+void suse_increase_multiprog();
 
 #endif /* CONFIG_SUSE_CONFIG_H_ */
