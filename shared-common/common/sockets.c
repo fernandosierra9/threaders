@@ -13,8 +13,9 @@ int socket_create_listener(char* ip, int port)
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_flags = AI_PASSIVE;
 	hints.ai_socktype = SOCK_STREAM;
-
-	getaddrinfo(ip, string_itoa(port), &hints, &server_info);
+	char* port_char = string_itoa(port);
+	getaddrinfo(ip, port_char, &hints, &server_info);
+	free(port_char);
 
 	int server_socket = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
 
@@ -47,7 +48,9 @@ int socket_connect_to_server(char* ip, int port)
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 
-	getaddrinfo(ip, string_itoa(port), &hints, &server_info);
+	char* port_char = string_itoa(port);
+	getaddrinfo(ip, port_char, &hints, &server_info);
+	free(port_char);
 
 	int server_socket = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
 

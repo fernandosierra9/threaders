@@ -5,8 +5,10 @@ typedef struct
 {
 	char* id;
 	int value;
-}t_semaphore;
+	int max_value;
+} t_semaphore;
 
-t_semaphore* semaphore_create(char* id, int value);
+t_semaphore* semaphore_create(char* id, int value, int max_value);
+void semaphore_destroy(t_semaphore* sem);
 
 #endif /* SEMAPHORE_SUSE_SEMAPHORE_H_ */

@@ -12,6 +12,9 @@
 #include "common/sockets.h"
 #include "config/suse_config.h"
 #include "logger/suse_logger.h"
+#include "scheduler/suse_scheduler.h"
+
+#define SUSE_IP "127.0.0.1"
 
 pthread_t main_thread;
 pthread_t scheduler_thread;

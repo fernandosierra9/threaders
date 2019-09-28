@@ -79,8 +79,14 @@ void print_config()
 	suse_logger_info("LISTEN_PORT: %d", suse_config->listen_port);
 	suse_logger_info("METRICS_TIMER: %d", suse_config->metrics_timer);
 	suse_logger_info("MAX_MULTIPROG: %d", suse_config->max_multiprog);
-	suse_logger_info("SEM_IDS: %s", utils_array_to_string(suse_config->sem_ids));
-	suse_logger_info("SEM_INIT: %s", utils_array_to_string(suse_config->sem_init));
-	suse_logger_info("SEM_MAX: %s", utils_array_to_string(suse_config->sem_max));
+	char* sem_ids =  utils_array_to_string(suse_config->sem_ids);
+	suse_logger_info("SEM_IDS: %s", sem_ids);
+	free(sem_ids);
+	char* sem_init = utils_array_to_string(suse_config->sem_init);
+	suse_logger_info("SEM_INIT: %s", sem_init);
+	free(sem_init);
+	char* sem_max =  utils_array_to_string(suse_config->sem_max);
+	suse_logger_info("SEM_MAX: %s", sem_max);
+	free(sem_max);
 	suse_logger_info("ALPHA_SJF: %f", suse_config->alpha_sjf);
 }

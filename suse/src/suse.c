@@ -1,6 +1,6 @@
 #include "suse.h"
 
-void suse_delay(int number_of_seconds);
+void suse_delay(int seconds);
 
 int main(void)
 {
@@ -16,10 +16,9 @@ int main(void)
 	}
 
 	pthread_create(&main_thread, NULL, (void*) suse_init, NULL);
-//	pthread_create(&scheduler_thread, NULL, (void*) suse_run_scheduler, NULL);
+	pthread_create(&scheduler_thread, NULL, (void*) suse_run_scheduler, NULL);
 
-	pthread_cancel(main_thread);
-//	pthread_cancel(scheduler_thread);
+	pthread_join(scheduler_thread, NULL);
 
 	suse_exit_gracefully();
 	return EXIT_SUCCESS;
@@ -27,39 +26,33 @@ int main(void)
 
 void suse_init()
 {
-//	socket_start_listening_select("127.0.0.1", suse_get_listen_port());
-	while(1)
-	{
-		suse_delay(suse_get_metrics_timer());
-		suse_logger_info("Printing metrics");
-	}
+	socket_start_listening_select(SUSE_IP, suse_get_listen_port());
 	pthread_exit(0);
 }
 
 void suse_run_scheduler()
 {
+	scheduler_init();
+	scheduler_init_semaphores();
 	while(1)
 	{
-
+		suse_delay(suse_get_metrics_timer());
+		scheduler_execute_metrics();
 	}
 	pthread_exit(0);
 }
 
-void suse_delay(int number_of_seconds)
+void suse_delay(int seconds)
 {
-    // Converting time into milli_seconds
-    int milli_seconds = 1000 * number_of_seconds;
-
-    // Stroing start time
-    clock_t start_time = clock();
-
-    // looping till required time is not achieved
-    while (clock() < start_time + milli_seconds)
-        ;
+	int millis = 1000 * seconds;
+	clock_t start = clock();
+	while (clock() < start + millis)
+		;
 }
 
 void suse_exit_gracefully()
 {
+	scheduler_destroy();
 	suse_config_free();
 	suse_logger_destroy();
 	exit(0);
