@@ -3,4 +3,6 @@
 
 #include "../../sac_server.h"
 
+int path_size(const char* path);
+
 #endif /* SAC_WRITE_H_ */

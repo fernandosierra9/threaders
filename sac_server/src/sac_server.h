@@ -33,9 +33,23 @@
 #define BLOCK_SIZE 4096
 #define PTR_BLOCK_SIZE 1024
 
+
+// Utils de Bloques
+#define NODE_TABLE_SIZE 1024
+#define DISC_PATH fuse_disc_path
+#define DISC_SIZE_B(p) path_size_in_bytes(p)
+#define ACTUAL_DISC_SIZE_B fuse_disc_size
+#define BITMAP_BLOCK_SIZE header_data.size_bitmap
+
+
 typedef uint32_t ptr_sac_block;
 
 typedef ptr_sac_block pointer_data_block [PTR_BLOCK_SIZE];
+
+// Ruta del disco.
+char fuse_disc_path[1000];
+// Tamaño del disco.
+int fuse_disc_size;
 
 /*
  * Esta Macro sirve para definir nuestros propios parametros que queremos que
@@ -64,5 +78,10 @@ typedef struct sac_file_t {
 	uint64_t modified_date;
 	ptr_sac_block block_indirect[BLOCK_INDIRECT];
 } SFile;
+
+
+// Utilizadas para mmap
+struct sac_header_t *header_start;
+struct sac_file_t *node_table_start, *data_block_start, *bitmap_start;
 
 #endif /* SAC_SERVER_H_ */
