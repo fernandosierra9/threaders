@@ -63,6 +63,9 @@ void muse_server_init()
 			case MALLOC:
 			{
 				muse_logger_info("Recibi malloc de libmuse");
+				t_malloc *malloc_recive =  utils_receive_and_deserialize(libmuse_fd,protocol);
+				muse_logger_info("MALLOC_TAM: %d", malloc_recive->memoria);
+				muse_logger_info("ID_LIBMUSE: %d", malloc_recive->id_libmuse);
 				break;
 			}
 			case FREE_MALLOC:

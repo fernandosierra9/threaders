@@ -130,7 +130,7 @@ void utils_package_send_to(t_package* t_package, int client_socket)
 	free(to_send);
 }
 
-void utils_serialize_and_send(int socket, int package_type, void* package)
+void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 {
 	switch (package_type)
 	{
@@ -141,7 +141,14 @@ void utils_serialize_and_send(int socket, int package_type, void* package)
 		case MALLOC:
 		{
 			t_package* package = utils_package_create(package_type);
-			utils_package_add(package, &((t_malloc*) package)->memoria,sizeof(t_buffer));
+			utils_package_add(package, &((t_malloc*) package_recv)->memoria,sizeof(uint32_t));
+			printf("\n enviado tamaño %d:",sizeof(uint32_t));
+			printf("\n enviado %d:",((t_malloc*) package_recv)->memoria);
+			printf("\n tamaño del paqute a enviar %d:",package->buffer->size);
+			utils_package_add(package, &((t_malloc*) package_recv)->id_libmuse,sizeof(int));
+			printf("\n enviado tamaño %d:",sizeof(int));
+			printf("\n enviado %d:",((t_malloc*) package_recv)->id_libmuse);
+			printf("\n tamaño del paqute a enviar %d:",package->buffer->size);
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
@@ -159,7 +166,15 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 
 			int size;
 			recv(socket, &size, sizeof(int), MSG_WAITALL);
+			printf("\n primer size recibido %d:",size);
 			recv(socket, &malloc_request->memoria, size, MSG_WAITALL);
+			printf("\n primer memoria recibido %d:",malloc_request->memoria);
+
+
+			recv(socket, &size, sizeof(int), MSG_WAITALL);
+			printf("\n segundo size recibido %d:",size);
+			recv(socket, &malloc_request->id_libmuse, size, MSG_WAITALL);
+			printf("\n id_libmuse recibido %d:",malloc_request->id_libmuse);
 
 			return malloc_request;
 		}

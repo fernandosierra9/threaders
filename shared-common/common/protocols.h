@@ -25,6 +25,7 @@ typedef struct
 typedef struct
 {
 	uint32_t memoria;
+	int id_libmuse;
 } t_malloc;
 
 #endif /* COMMON_PROTOCOLS_H_ */
