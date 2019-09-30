@@ -17,6 +17,7 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/mman.h>
 #include <commons/config.h>
 #include <commons/bitarray.h>
 #include "config/sac_server_config.h"
@@ -83,5 +84,7 @@ typedef struct sac_file_t {
 // Utilizadas para mmap
 struct sac_header_t *header_start;
 struct sac_file_t *node_table_start, *data_block_start, *bitmap_start;
+
+int discDescriptor;
 
 #endif /* SAC_SERVER_H_ */

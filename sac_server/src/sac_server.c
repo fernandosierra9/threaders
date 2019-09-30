@@ -77,26 +77,31 @@ int main(int argc, char *argv[]) {
 	fuse_disc_size = path_size(DISC_PATH);
 
 	printf("\n DISC SIZE %d\n", fuse_disc_size);
+	printf("\n DISC PATH %s\n", DISC_PATH);
 
 	/*
 	BitArray
 	*/
 
-	if ((fd = open(DISC_PATH, O_RDWR, 0)) == -1) {
+	if ((discDescriptor = fd = open(DISC_PATH, O_RDWR, 0)) == -1) {
 		sac_server_logger_error("Error");
 	}
-	
 	header_start = (struct sac_header_t*) mmap(NULL, ACTUAL_DISC_SIZE_B , PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, fd, 0);
 	header_data = *header_start;
 	bitmap_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS];
 	node_table_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS + BITMAP_BLOCK_SIZE];
 	data_block_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS + BITMAP_BLOCK_SIZE + NODE_TABLE_SIZE];
-	// Esta es la funcion principal de FUSE, es la que se encarga
-	// de realizar el montaje, comuniscarse con el kernel, delegar todo
-	// en varios threads
+	
+
+
+	// Esta es la funcion principal de FUSE
 	res = fuse_main(args.argc, args.argv, &sac_operations, NULL);
 
+
 	sac_server_logger_destroy();
+	if (munmap(header_start, ACTUAL_DISC_SIZE_B ) == -1) printf("ERROR");
+
+	close(fd);
 
 	return res;
 }
