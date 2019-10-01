@@ -158,26 +158,101 @@ void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 
 void* utils_receive_and_deserialize(int socket, int package_type)
 {
+	void iterator(uint32_t* value)
+	{
+		printf("%lu\n", (unsigned long)value);
+	}
 	switch (package_type)
 	{
 		case MALLOC:
 		{
+			//t_list *lista = utils_receive_package(socket);
+			//printf("Me llegaron los siguientes valores:\n");
+			//list_iterate(lista, (void*) iterator);
 			t_malloc *malloc_request = malloc(sizeof(t_malloc));
 
 			int size;
+
+			/*
+			 void * receive = malloc(size);
+			recv(socket, &receive, size, MSG_WAITALL);
+			int desplazamiento = 0;
+			//while(desplazamiento < size)
+			//{
+				    int tamanio = sizeof(int);
+					//memcpy(&tamanio, receive + desplazamiento, sizeof(int));
+					//desplazamiento+=sizeof(int);
+
+				    int recivido;
+					memcpy(&recivido, receive+desplazamiento, tamanio);
+					printf("%d lago:",recivido);
+					desplazamiento+=tamanio;
+
+					memcpy(&tamanio, receive + desplazamiento, sizeof(int));
+					desplazamiento+=sizeof(int);
+					memcpy(&malloc_request->id_libmuse, receive+desplazamiento, tamanio);
+
+			//}
+*/
 			recv(socket, &size, sizeof(int), MSG_WAITALL);
 			printf("\n primer size recibido %d:",size);
-			recv(socket, &malloc_request->memoria, size, MSG_WAITALL);
-			printf("\n primer memoria recibido %d:",malloc_request->memoria);
 
+			recv(socket,&malloc_request->memoria ,sizeof(int), MSG_WAITALL);
+			printf("\n primer memoria recibido %d:",malloc_request->memoria);
 
 			recv(socket, &size, sizeof(int), MSG_WAITALL);
 			printf("\n segundo size recibido %d:",size);
-			recv(socket, &malloc_request->id_libmuse, size, MSG_WAITALL);
+
+			recv(socket, &malloc_request->id_libmuse, sizeof(int), MSG_WAITALL);
+
 			printf("\n id_libmuse recibido %d:",malloc_request->id_libmuse);
 
+
+			recv(socket, &size, sizeof(int), MSG_WAITALL);
+			printf("\n tercer size recibido %d:",size);
+
+		    recv(socket, &malloc_request->id_libmuse, sizeof(int), MSG_WAITALL);
+			printf("\n algo recibido %d:",malloc_request->id_libmuse);
+
+
+
 			return malloc_request;
+
 		}
 	}
+	return NULL;
+}
+
+void* utils_receive_buffer(int* size, int socket_cliente)
+{
+	void * buffer;
+
+	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
+	buffer = malloc(*size);
+	recv(socket_cliente, buffer, *size, MSG_WAITALL);
+
+	return buffer;
+}
+
+t_list* utils_receive_package(int socket_cliente)
+{
+	int size;
+	int desplazamiento = 0;
+	void * buffer;
+	t_list* valores = list_create();
+	int tamanio;
+
+	buffer = utils_receive_buffer(&size, socket_cliente);
+	while(desplazamiento < size)
+	{
+		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
+		desplazamiento+=sizeof(int);
+		uint32_t* valor = malloc(tamanio);
+		memcpy(valor, buffer+desplazamiento, tamanio);
+		desplazamiento+=tamanio;
+		list_add(valores, valor);
+	}
+	free(buffer);
+	return valores;
 	return NULL;
 }

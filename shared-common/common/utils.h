@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <commons/string.h>
+#include <commons/collections/list.h>
 #include "sockets.h"
 #include "protocols.h"
 #include "serializer.h"
@@ -40,5 +41,7 @@ void utils_package_destroy(t_package* package);
 void utils_package_send_to(t_package* t_package, int client_socket);
 void utils_serialize_and_send(int socket, int package_type, void* package);
 void* utils_receive_and_deserialize(int socket, int package_type);
+t_list* utils_receive_package(int socket_cliente);
+void* utils_receive_buffer(int* size, int socket_cliente);
 
 #endif /* CUSTOM_UTILITARIA_H_ */
