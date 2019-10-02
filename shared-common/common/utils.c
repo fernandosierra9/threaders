@@ -158,9 +158,12 @@ void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 
 void* utils_receive_and_deserialize(int socket, int package_type)
 {
-	void iterator(uint32_t* value)
+	void iterator(t_buffer* value)
 	{
-		printf("%lu\n", (unsigned long)value);
+		printf("%d \n", value->size);
+		int recivido;
+		memcpy(&recivido,value->stream,value->size);
+		printf("%d \n", recivido);
 	}
 	switch (package_type)
 	{
@@ -171,6 +174,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 
 			int size;
 
+			/*
 			recv(socket, &size, sizeof(int), MSG_WAITALL);
 			printf("\n tamaño total size recibido %d:",size);
 
@@ -188,11 +192,17 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 			recv(socket, &malloc_request->id_libmuse, sizeof(int), MSG_WAITALL);
 			printf("\n libmuse id %d:",malloc_request->id_libmuse);
 
-		    recv(socket, &size, sizeof(int), MSG_WAITALL);
-			printf("\n algo que quedo recibido %d: ",size);
+		    //recv(socket, &size, sizeof(int), MSG_WAITALL);
+			//printf("\n algo que quedo recibido %d: ",size);
 			printf("\n");
-
-
+			 */
+			t_list* list = utils_receive_package(socket);
+			list_iterate(list, (void*) iterator);
+			t_buffer *buffer;
+			buffer=list_get(list,0);
+			memcpy(&malloc_request->memoria,buffer->stream,buffer->size);
+			buffer=list_get(list,1);
+			memcpy(&malloc_request->id_libmuse,buffer->stream,buffer->size);
 			return malloc_request;
 
 		}
@@ -224,8 +234,10 @@ t_list* utils_receive_package(int socket_cliente)
 	{
 		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
-		uint32_t* valor = malloc(tamanio);
-		memcpy(valor, buffer+desplazamiento, tamanio);
+		t_buffer* valor = malloc(sizeof(t_buffer));
+		valor->stream = malloc(tamanio);
+		valor->size = tamanio;
+		memcpy(valor->stream, buffer+desplazamiento, tamanio);
 		desplazamiento+=tamanio;
 		list_add(valores, valor);
 	}

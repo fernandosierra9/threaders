@@ -25,6 +25,7 @@ int muse_init(int id)
 	malloc_send->id_libmuse = id;
 	t_protocol malloc_protocol = MALLOC;
 	utils_serialize_and_send(muse_fd, malloc_protocol, malloc_send);
+	utils_serialize_and_send(muse_fd, malloc_protocol, malloc_send);
 
 	return 0;
 }
