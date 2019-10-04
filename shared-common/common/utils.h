@@ -43,5 +43,7 @@ void utils_serialize_and_send(int socket, int package_type, void* package);
 void* utils_receive_and_deserialize(int socket, int package_type);
 t_list* utils_receive_package(int socket_cliente);
 void* utils_receive_buffer(int* size, int socket_cliente);
+void utils_get_from_list_to(void *parameter,t_list *list,int index);
+static void utils_destroy_list(t_buffer *self);
 
 #endif /* CUSTOM_UTILITARIA_H_ */

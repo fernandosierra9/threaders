@@ -153,6 +153,25 @@ void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 			utils_package_destroy(package);
 			break;
 		}
+		case FREE_MALLOC:
+		{
+					t_package* package = utils_package_create(package_type);
+					utils_package_add(package, &((t_malloc*) package_recv)->memoria,sizeof(uint32_t));
+					utils_package_add(package, &((t_malloc*) package_recv)->id_libmuse,sizeof(int));
+					utils_package_send_to(package,socket);
+					utils_package_destroy(package);
+					break;
+		}
+		case GET:
+		{
+			t_package* package = utils_package_create(package_type);
+			utils_package_add(package, &((t_get*) package_recv)->src,sizeof(uint32_t));
+			utils_package_add(package, &((t_get*) package_recv)->id_libmuse,sizeof(int));
+			utils_package_add(package, &((t_get*) package_recv)->size,sizeof(int));
+			utils_package_send_to(package,socket);
+			utils_package_destroy(package);
+			break;
+		}
 	}
 }
 
@@ -171,43 +190,56 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		{
 
 			t_malloc *malloc_request = malloc(sizeof(t_malloc));
-
-			int size;
-
-			/*
-			recv(socket, &size, sizeof(int), MSG_WAITALL);
-			printf("\n tamaño total size recibido %d:",size);
-
-			recv(socket,&size ,sizeof(int), MSG_WAITALL);
-			printf("\n primer tamaño de size de memoria recibido %d:",size);
-
-			recv(socket, &malloc_request->memoria, sizeof(int), MSG_WAITALL);
-			printf("\n tamaño de memoria %d:",malloc_request->memoria);
-
-
-			recv(socket, &size, sizeof(int), MSG_WAITALL);
-			printf("\n tamaño de id_lizemuse recibido %d:",size);
-
-
-			recv(socket, &malloc_request->id_libmuse, sizeof(int), MSG_WAITALL);
-			printf("\n libmuse id %d:",malloc_request->id_libmuse);
-
-		    //recv(socket, &size, sizeof(int), MSG_WAITALL);
-			//printf("\n algo que quedo recibido %d: ",size);
-			printf("\n");
-			 */
+			//Recibe los parametros en una lista
 			t_list* list = utils_receive_package(socket);
+			//Muestra el resultado obtenido
 			list_iterate(list, (void*) iterator);
-			t_buffer *buffer;
-			buffer=list_get(list,0);
-			memcpy(&malloc_request->memoria,buffer->stream,buffer->size);
-			buffer=list_get(list,1);
-			memcpy(&malloc_request->id_libmuse,buffer->stream,buffer->size);
+			//obtiene y guarda en un puntero desde un nodo de la lista dado un index
+			utils_get_from_list_to(&malloc_request->memoria,list,0);
+			utils_get_from_list_to(&malloc_request->id_libmuse,list,1);
+			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 			return malloc_request;
 
+
 		}
+		case FREE_MALLOC:
+		{
+			        t_malloc *free_request = malloc(sizeof(t_malloc));
+		            t_list* list = utils_receive_package(socket);
+					utils_get_from_list_to(&free_request->memoria,list,0);
+					utils_get_from_list_to(&free_request->id_libmuse,list,1);
+					list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
+					return free_request;
+
+
+		}
+		case GET:
+				{
+					        t_get *get_request = malloc(sizeof(t_get));
+				            t_list* list = utils_receive_package(socket);
+							utils_get_from_list_to(&get_request->src,list,0);
+							utils_get_from_list_to(&get_request->id_libmuse,list,1);
+							utils_get_from_list_to(&get_request->size,list,2);
+							list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
+							return get_request;
+
+
+				}
+
+
 	}
 	return NULL;
+}
+
+
+static void utils_destroy_list(t_buffer *self) {
+    free(self->stream);
+    free(self);
+}
+
+void utils_get_from_list_to(void *parameter,t_list *list,int index){
+	t_buffer *buffer; buffer=list_get(list,index);
+	memcpy(parameter,buffer->stream,buffer->size);
 }
 
 void* utils_receive_buffer(int* size, int socket_cliente)
