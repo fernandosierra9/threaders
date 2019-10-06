@@ -20,6 +20,7 @@ static struct fuse_operations sac_operations = {
 		.readdir = sac_readdir,
 		.open = sac_open,
 		.read = sac_read,
+		.mkdir = sac_create_directory,
 };
 
 /** keys for FUSE_OPT_ options */
@@ -86,19 +87,24 @@ int main(int argc, char *argv[]) {
 	if ((discDescriptor = fd = open(DISC_PATH, O_RDWR, 0)) == -1) {
 		sac_server_logger_error("Error");
 	}
+	
 	header_start = (struct sac_header_t*) mmap(NULL, ACTUAL_DISC_SIZE_B , PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, fd, 0);
 	header_data = *header_start;
 	bitmap_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS];
 	node_table_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS + BITMAP_BLOCK_SIZE];
 	data_block_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS + BITMAP_BLOCK_SIZE + NODE_TABLE_SIZE];
 	
-
+	mlock(bitmap_start, BITMAP_BLOCK_SIZE * BLOCK_SIZE);
+	mlock(node_table_start, NODE_TABLE_SIZE * BLOCK_SIZE);
+	madvise(header_start, ACTUAL_DISC_SIZE_B , MADV_RANDOM);
 
 	// Esta es la funcion principal de FUSE
 	res = fuse_main(args.argc, args.argv, &sac_operations, NULL);
 
-
+	fdatasync(discDescriptor);
 	sac_server_logger_destroy();
+	munlockall(); /* Desbloquea todas las paginas que tenia bloqueadas */
+
 	if (munmap(header_start, ACTUAL_DISC_SIZE_B ) == -1) printf("ERROR");
 
 	close(fd);

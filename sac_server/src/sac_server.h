@@ -22,9 +22,11 @@
 #include <commons/bitarray.h>
 #include "config/sac_server_config.h"
 #include "logger/sac_server_logger.h"
-#include "operations/read/sac_read.h"
-#include "operations/write/sac_write.h"
-#include "operations/operate/sac_operate.h"
+#include "../../shared-common/common/utils.h"
+
+#define DEFAULT_FILE_CONTENT "Hello World!\n"
+#define DEFAULT_FILE_NAME "hello"
+#define DEFAULT_FILE_PATH "/" DEFAULT_FILE_NAME
 
 #define SAC_FILE_BY_TABLE 1024
 #define SAC_FILE_BY_BLOCK 1
@@ -34,7 +36,6 @@
 #define BLOCK_SIZE 4096
 #define PTR_BLOCK_SIZE 1024
 
-
 // Utils de Bloques
 #define NODE_TABLE_SIZE 1024
 #define DISC_PATH fuse_disc_path
@@ -42,10 +43,14 @@
 #define ACTUAL_DISC_SIZE_B fuse_disc_size
 #define BITMAP_BLOCK_SIZE header_data.size_bitmap
 
+// Definiciones de tipo de bloque borrado(0), archivo(1), directorio(2)
+#define DELETED_T ((int) 0)
+#define FILE_T ((int) 1)
+#define DIRECTORY_T ((int) 2)
 
-typedef uint32_t ptr_sac_block;
+typedef uint32_t pointerSACBlock;
 
-typedef ptr_sac_block pointer_data_block [PTR_BLOCK_SIZE];
+typedef pointerSACBlock pointer_data_block [PTR_BLOCK_SIZE];
 
 // Ruta del disco.
 char fuse_disc_path[1000];
@@ -77,7 +82,7 @@ typedef struct sac_file_t {
 	uint32_t file_size;
 	uint64_t creation_date;
 	uint64_t modified_date;
-	ptr_sac_block block_indirect[BLOCK_INDIRECT];
+	pointerSACBlock block_indirect[BLOCK_INDIRECT];
 } SFile;
 
 
@@ -86,5 +91,20 @@ struct sac_header_t *header_start;
 struct sac_file_t *node_table_start, *data_block_start, *bitmap_start;
 
 int discDescriptor;
+
+// Funciones auxiliares
+int path_size(const char* path);
+pointerSACBlock determinar_nodo(const char* path);
+int split_path(const char* path, char** super_path, char** name);
+
+// Funciones de escritura
+int sac_create_directory(const char *path, mode_t mode);
+
+// Funciones de lectura
+int sac_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi);
+int sac_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
+int sac_open(const char *path, struct fuse_file_info *fi);
+int sac_getattr(const char *path, struct stat *stbuf);
+
 
 #endif /* SAC_SERVER_H_ */
