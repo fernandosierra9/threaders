@@ -12,5 +12,6 @@
 #include "config/muse_config.h"
 #include "logger/muse_logger.h"
 #include "../../shared-common/common/sockets.h"
+#include "../../shared-common/common/utils.h"
 int muse_socket;
 #endif /* MUSE_H_ */
