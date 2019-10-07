@@ -47,7 +47,7 @@ pointerSACBlock determinar_nodo(const char* path){
 	unsigned char *node_name;
 
 	split_path(path, &super_path, &nombre);
-	nodo_anterior = determinar_nodo(super_path);m
+	nodo_anterior = determinar_nodo(super_path);
 	sac_server_logger_info("\n nodo_anterior: %d", nodo_anterior);
 	//pthread_rwlock_rdlock(&rwlock); //Toma un lock de lectura.
 	//log_lock_trace(logger, "Determinar_nodo: Toma lock lectura. Cantidad de lectores: %d", rwlock.__data.__nr_readers);

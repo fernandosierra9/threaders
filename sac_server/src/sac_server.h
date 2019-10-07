@@ -1,9 +1,10 @@
 #ifndef SAC_SERVER_H_
 #define SAC_SERVER_H_
 
-/* Opciones de FUSE. Esta redefinicion le indica cuales son las opciones que se utilizaran. */
+// ELIMINAR ESTO
 #define FUSE_USE_VERSION 27
 #define _FILE_OFFSET_BITS 64
+#include <fuse.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,7 +13,6 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <fuse.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -23,6 +23,7 @@
 #include "config/sac_server_config.h"
 #include "logger/sac_server_logger.h"
 #include "../../shared-common/common/utils.h"
+#include "../../shared-common/common/sockets.h"
 
 #define DEFAULT_FILE_CONTENT "Hello World!\n"
 #define DEFAULT_FILE_NAME "hello"
@@ -56,13 +57,6 @@ typedef pointerSACBlock pointer_data_block [PTR_BLOCK_SIZE];
 char fuse_disc_path[1000];
 // Tamaño del disco.
 int fuse_disc_size;
-
-/*
- * Esta Macro sirve para definir nuestros propios parametros que queremos que
- * FUSE interprete. Esta va a ser utilizada mas abajo para completar el campos
- * welcome_msg de la variable runtime_options
- */
-#define CUSTOM_FUSE_OPT_KEY(t, p, v) { t, offsetof(struct t_runtime_options, p), v }
 
 //Un bloque
 typedef struct sac_header_t {

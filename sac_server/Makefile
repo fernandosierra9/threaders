@@ -3,7 +3,7 @@ RM = rm -f
 
 TARGET = sac_server.exe
 SRC = $(wildcard *.c) $(wildcard */*.c) $(wildcard */*/*.c) $(wildcard */*/*/*.c)
-SRC += ../shared-common/common/config.c ../shared-common/common/logger.c
+SRC += ../shared-common/common/config.c ../shared-common/common/logger.c ../shared-common/common/sockets.c
 OBJ = $(SRC:.c=.o)
 HEADER = $(SRC:.c=.h) defines.h
 LIB = -lcommons -lpthread -lfuse

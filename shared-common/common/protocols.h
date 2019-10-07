@@ -13,7 +13,12 @@ typedef struct
 
 typedef enum
 {
-	HANDSHAKE, MALLOC, FREE_MALLOC, COPY, GET
+	HANDSHAKE,
+	MALLOC,
+	FREE_MALLOC,
+	COPY,
+	GET,
+	OPEN
 } t_protocol;
 
 typedef struct

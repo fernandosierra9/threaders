@@ -1,18 +1,49 @@
 #ifndef SAC_CLI_H_
 #define SAC_CLI_H_
 
-    #include <stdint.h>
-    #include <stddef.h>
-	#include "../shared-common/common/sockets.h"
-	#include "../shared-common/common/utils.h"
+/* Opciones de FUSE. Esta redefinicion le indica cuales son las opciones que se utilizaran. */
+#define FUSE_USE_VERSION 27
+#define _FILE_OFFSET_BITS 64
 
-    int muse_init(int id);
-    void muse_close();
-    uint32_t muse_alloc(uint32_t tam);
-    void muse_free(uint32_t dir);
-    int muse_get(void* dst, uint32_t src, size_t n);
-    int muse_cpy(uint32_t dst, void* src, int n);
-    uint32_t muse_map(char *path, size_t length, int flags);
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <pthread.h>
+#include <assert.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <fuse.h>
+#include <string.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <stddef.h>
+#include "../shared-common/common/sockets.h"
+#include "../shared-common/common/utils.h"
 
 
+
+// Ruta del disco.
+char fuse_disc_path[1000];
+
+#define DEFAULT_FILE_CONTENT "Hello World!\n"
+#define DEFAULT_FILE_NAME "hello"
+#define DEFAULT_FILE_PATH "/" DEFAULT_FILE_NAME
+
+/*
+ * Esta Macro sirve para definir nuestros propios parametros que queremos que
+ * FUSE interprete. Esta va a ser utilizada mas abajo para completar el campos
+ * welcome_msg de la variable runtime_options
+ */
+#define CUSTOM_FUSE_OPT_KEY(t, p, v) { t, offsetof(struct t_runtime_options, p), v }
+
+
+void sac_cli_init();
+int sac_create_directory(const char *path, mode_t mode);
+int sac_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi);
+int sac_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
+int sac_open(const char *path, struct fuse_file_info *fi);
+int sac_getattr(const char *path, struct stat *stbuf);
+    
 #endif

@@ -1,90 +1,30 @@
 #include "sac_server.h"
 
-/*
- * Esta es una estructura auxiliar utilizada para almacenar parametros
- * que nosotros le pasemos por linea de comando a la funcion principal
- * de FUSE
- */
-struct t_runtime_options {
-	char* disc_path;
-} runtime_options;
 
-/*
- * Esta es la estructura principal de FUSE con la cual nosotros le decimos a
- * biblioteca que funciones tiene que invocar segun que se le pida a FUSE.
- * Como se observa la estructura contiene punteros a funciones.
- */
+/* Local functions */
+static void init_server(int port);
+static void *handle_connection(void *arg);
+static void exit_gracefully(int status);
 
-static struct fuse_operations sac_operations = {
-		.getattr = sac_getattr,
-		.readdir = sac_readdir,
-		.open = sac_open,
-		.read = sac_read,
-		.mkdir = sac_create_directory,
-};
-
-/** keys for FUSE_OPT_ options */
-enum {
-	KEY_VERSION,
-	KEY_HELP,
-};
-
-/*
- * Esta estructura es utilizada para decirle a la biblioteca de FUSE que
- * parametro puede recibir y donde tiene que guardar el valor de estos
- */
-static struct fuse_opt fuse_options[] = {
-		// Si se le manda el parametro "--Disc-Path", lo utiliza:
-		CUSTOM_FUSE_OPT_KEY("--Disc-Path=%s", disc_path, 0),
-		// Estos son parametros por defecto que ya tiene FUSE
-		FUSE_OPT_KEY("-V", KEY_VERSION),
-		FUSE_OPT_KEY("--version", KEY_VERSION),
-		FUSE_OPT_KEY("-h", KEY_HELP),
-		FUSE_OPT_KEY("--help", KEY_HELP),
-		FUSE_OPT_END,
-};
-
-
-// Init  ./sac_server.exe -d -o direct_io -s ./fuse_test
-// Dentro de los argumentos que recibe nuestro programa obligatoriamente
-// debe estar el path al directorio donde vamos a montar nuestro FS
 int main(int argc, char *argv[]) {
-	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
 
-	int res, fd;
-	// Limpio la estructura que va a contener los parametros
-	memset(&runtime_options, 0, sizeof(struct t_runtime_options));
-
-	// Esta funcion de FUSE lee los parametros recibidos y los intepreta
-	if (fuse_opt_parse(&args, &runtime_options, fuse_options, NULL) == -1){
-		/** error parsing options */
-		perror("Invalid arguments!");
-		return EXIT_FAILURE;
-	}
-
-	// Setea el path del disco
-	if (runtime_options.disc_path != NULL){
-		strcpy(fuse_disc_path, runtime_options.disc_path);
-	} else {
-		printf("Mountpoint not specified: Unloading modules.");
-		exit(0);
-	}
-
-	// Creo logger y leo config
 	sac_server_logger_create();
 	sac_server_config_load();
 
-	// Obiene el tamanio del disco
-	fuse_disc_size = path_size(DISC_PATH);
+	init_server(sac_server_get_listen_port());
 
-	printf("\n DISC SIZE %d\n", fuse_disc_size);
-	printf("\n DISC PATH %s\n", DISC_PATH);
+	sac_server_logger_destroy();
+	exit_gracefully(EXIT_FAILURE);
+	
+	//int fd;
+	// Obiene el tamanio del disco
+	//fuse_disc_size = path_size(DISC_PATH);
 
 	/*
 	BitArray
 	*/
 
-	if ((discDescriptor = fd = open(DISC_PATH, O_RDWR, 0)) == -1) {
+/* 	if ((discDescriptor = fd = open(DISC_PATH, O_RDWR, 0)) == -1) {
 		sac_server_logger_error("Error");
 	}
 	
@@ -96,18 +36,91 @@ int main(int argc, char *argv[]) {
 	
 	mlock(bitmap_start, BITMAP_BLOCK_SIZE * BLOCK_SIZE);
 	mlock(node_table_start, NODE_TABLE_SIZE * BLOCK_SIZE);
-	madvise(header_start, ACTUAL_DISC_SIZE_B , MADV_RANDOM);
+	madvise(header_start, ACTUAL_DISC_SIZE_B , MADV_RANDOM); */
 
-	// Esta es la funcion principal de FUSE
-	res = fuse_main(args.argc, args.argv, &sac_operations, NULL);
+	//fdatasync(discDescriptor);
+	
+	//munlockall(); /* Desbloquea todas las paginas que tenia bloqueadas */
 
-	fdatasync(discDescriptor);
-	sac_server_logger_destroy();
-	munlockall(); /* Desbloquea todas las paginas que tenia bloqueadas */
+	//if (munmap(header_start, ACTUAL_DISC_SIZE_B ) == -1) printf("ERROR");
 
-	if (munmap(header_start, ACTUAL_DISC_SIZE_B ) == -1) printf("ERROR");
+	//close(fd);
+}
 
-	close(fd);
+static void init_server(int port) {
+	
+	
+	int sac_server_socket = socket_create_listener("127.0.0.1", port);
 
-	return res;
+	if (sac_server_socket < 0) {
+		sac_server_logger_error("Error al crear SAC_SERVER");
+		return;
+	}
+
+	sac_server_logger_info("Esperando conexion de SAC_CLI");
+
+	int listener_fd = socket_accept_conection(sac_server_socket);
+
+	if (listener_fd < 0) {
+		switch (listener_fd) {
+		case NO_FD_ERROR:
+			sac_server_logger_error("No hay file descriptor disponible para el listener.");
+			break;
+		case BIND_ERROR:
+			sac_server_logger_error("Error al intentar bindear.");
+			break;
+		case LISTEN_ERROR:
+			sac_server_logger_error("Error al intentar crear cola de escucha.");
+			break;
+		}
+		exit_gracefully(EXIT_FAILURE);
+	} else {
+		sac_server_logger_info("Escuchando en el socket %d", listener_fd);
+
+		struct sockaddr_in client_info;
+		socklen_t addrlen = sizeof client_info;
+
+		pthread_attr_t attrs;
+		pthread_attr_init(&attrs);
+		pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED);
+
+		for (;;) {
+			int *accepted_fd = malloc(sizeof(int));
+			*accepted_fd = accept(listener_fd, (struct sockaddr *) &client_info, &addrlen);
+
+			sac_server_logger_info("Creando un hilo para atender una conexión en el socket %d", *accepted_fd);
+
+			pthread_t tid;
+			pthread_create(&tid, &attrs, handle_connection, accepted_fd);
+		}
+
+		pthread_attr_destroy(&attrs);
+	}
+}
+
+static void *handle_connection(void *arg) {
+	int received_bytes;
+	int protocol;
+
+	int fd = *((int *)arg);
+	free(arg);
+
+	received_bytes = recv(fd, &protocol, sizeof(int), 0);
+
+	if (received_bytes <= 0){
+		sac_server_logger_error("Error al recibir la operacion del SAC_CLI");
+		sac_server_logger_error("Se desconecto SAC_CLI");
+		exit(1);
+	}
+
+	switch (protocol){
+		case OPEN: {
+			sac_server_logger_info("Recibi OPEN de SAC_CLI");
+			break;
+		}
+	}
+}
+
+static void exit_gracefully(int status) {
+	exit(status);
 }
