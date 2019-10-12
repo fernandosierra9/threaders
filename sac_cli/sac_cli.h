@@ -22,7 +22,13 @@
 #include "../shared-common/common/sockets.h"
 #include "../shared-common/common/utils.h"
 
+// INIT:  ./sac_cli.exe -d -o direct_io -s --Disc-Path=/media/sf_tp-2019-2c-threaders/sac_server/disc.bin ./fuse_test
+// UNMOUNT: fusermount -u /media/sf_tp-2019-2c-threaders/sac_cli/fuse_test
 
+
+char *ip_sac_server = "127.0.0.1";
+int puerto_sac = 8003;
+int sac_cli_fd;
 
 // Ruta del disco.
 char fuse_disc_path[1000];

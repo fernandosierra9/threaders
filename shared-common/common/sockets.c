@@ -67,6 +67,7 @@ int socket_accept_conection(int server_socket)
 	socklen_t addrlen = sizeof(addr);
 
 	int client_socket = accept(server_socket, (struct sockaddr *) &addr, &addrlen);
+	printf("%d", client_socket);
 	if (client_socket < 0)
 	{
 		perror("Error al aceptar cliente");

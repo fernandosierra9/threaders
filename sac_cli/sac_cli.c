@@ -44,20 +44,18 @@ static struct fuse_opt fuse_options[] = {
 		FUSE_OPT_END,
 };
 
-// INIT:  ./sac_cli.exe -d -o direct_io -s --Disc-Path=/media/sf_tp-2019-2c-threaders/sac_server/disc.bin ./fuse_test
-// UNMOUNT: fusermount -u /media/sf_tp-2019-2c-threaders/sac_cli/fuse_test
 
 // Dentro de los argumentos que recibe nuestro programa obligatoriamente
 // debe estar el path al directorio donde vamos a montar nuestro FS
 int main(int argc, char *argv[]) {
-	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+/* 	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
 
 	// Limpio la estructura que va a contener los parametros
 	memset(&runtime_options, 0, sizeof(struct t_runtime_options));
 
 	// Esta funcion de FUSE lee los parametros recibidos y los intepreta
 	if (fuse_opt_parse(&args, &runtime_options, fuse_options, NULL) == -1){
-		/** error parsing options */
+		
 		perror("Invalid arguments!");
 		return EXIT_FAILURE;
 	}
@@ -71,7 +69,23 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Esta es la funcion principal de FUSE
-	return fuse_main(args.argc, args.argv, &sac_operations, NULL);
+	return fuse_main(args.argc, args.argv, &sac_operations, NULL); */
+
+	sac_cli_fd = socket_connect_to_server(ip_sac_server, puerto_sac);
+
+	if (sac_cli_fd < 0) {
+		printf("There was an error");
+		socket_close_conection(sac_cli_fd);
+		return -1;
+	}
+
+	printf("Conexion con SAC_SERVER establecida");
+	t_read_dir *read_dir_send = malloc(sizeof(t_read_dir));
+	read_dir_send->id_sac_cli = 123;
+	read_dir_send->pathname = "/";
+	t_protocol read_dir_protocol = READ_DIR;
+	utils_serialize_and_send(sac_cli_fd, read_dir_protocol, read_dir_send);
+	return 0;
 }
 
 

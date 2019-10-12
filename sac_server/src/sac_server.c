@@ -49,20 +49,12 @@ int main(int argc, char *argv[]) {
 
 static void init_server(int port) {
 	
-	
 	int sac_server_socket = socket_create_listener("127.0.0.1", port);
 
+	sac_server_logger_info("Esperando conexion de SAC_CLI: %d", sac_server_socket);
+
 	if (sac_server_socket < 0) {
-		sac_server_logger_error("Error al crear SAC_SERVER");
-		return;
-	}
-
-	sac_server_logger_info("Esperando conexion de SAC_CLI");
-
-	int listener_fd = socket_accept_conection(sac_server_socket);
-
-	if (listener_fd < 0) {
-		switch (listener_fd) {
+		switch (sac_server_socket) {
 		case NO_FD_ERROR:
 			sac_server_logger_error("No hay file descriptor disponible para el listener.");
 			break;
@@ -75,7 +67,7 @@ static void init_server(int port) {
 		}
 		exit_gracefully(EXIT_FAILURE);
 	} else {
-		sac_server_logger_info("Escuchando en el socket %d", listener_fd);
+		sac_server_logger_info("Escuchando en el socket %d", sac_server_socket);
 
 		struct sockaddr_in client_info;
 		socklen_t addrlen = sizeof client_info;
@@ -86,7 +78,7 @@ static void init_server(int port) {
 
 		for (;;) {
 			int *accepted_fd = malloc(sizeof(int));
-			*accepted_fd = accept(listener_fd, (struct sockaddr *) &client_info, &addrlen);
+			*accepted_fd = accept(sac_server_socket, (struct sockaddr *) &client_info, &addrlen);
 
 			sac_server_logger_info("Creando un hilo para atender una conexión en el socket %d", *accepted_fd);
 
@@ -114,8 +106,11 @@ static void *handle_connection(void *arg) {
 	}
 
 	switch (protocol){
-		case OPEN: {
+		case READ_DIR: {
 			sac_server_logger_info("Recibi OPEN de SAC_CLI");
+			t_malloc *malloc_recive = utils_receive_and_deserialize(fd, protocol);
+			sac_server_logger_info("MALLOC_TAM: %d", malloc_recive->memoria);
+			sac_server_logger_info("ID_LIBMUSE: %d", malloc_recive->id_libmuse);
 			break;
 		}
 	}

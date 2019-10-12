@@ -18,7 +18,8 @@ typedef enum
 	FREE_MALLOC,
 	COPY,
 	GET,
-	OPEN
+	OPEN,
+	READ_DIR
 } t_protocol;
 
 typedef struct
@@ -40,5 +41,10 @@ typedef struct
 	int size;
 } t_get;
 
+typedef struct
+{
+	char* pathname;
+	int id_sac_cli;
+} t_read_dir;
 
 #endif /* COMMON_PROTOCOLS_H_ */

@@ -155,12 +155,12 @@ void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 		}
 		case FREE_MALLOC:
 		{
-					t_package* package = utils_package_create(package_type);
-					utils_package_add(package, &((t_malloc*) package_recv)->memoria,sizeof(uint32_t));
-					utils_package_add(package, &((t_malloc*) package_recv)->id_libmuse,sizeof(int));
-					utils_package_send_to(package,socket);
-					utils_package_destroy(package);
-					break;
+			t_package* package = utils_package_create(package_type);
+			utils_package_add(package, &((t_malloc*) package_recv)->memoria,sizeof(uint32_t));
+			utils_package_add(package, &((t_malloc*) package_recv)->id_libmuse,sizeof(int));
+			utils_package_send_to(package,socket);
+			utils_package_destroy(package);
+			break;
 		}
 		case GET:
 		{
@@ -168,6 +168,15 @@ void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 			utils_package_add(package, &((t_get*) package_recv)->src,sizeof(uint32_t));
 			utils_package_add(package, &((t_get*) package_recv)->id_libmuse,sizeof(int));
 			utils_package_add(package, &((t_get*) package_recv)->size,sizeof(int));
+			utils_package_send_to(package,socket);
+			utils_package_destroy(package);
+			break;
+		}
+		case READ_DIR:
+		{
+			t_package* package = utils_package_create(package_type);
+			utils_package_add(package, &((t_read_dir*) package_recv)->id_sac_cli,sizeof(uint32_t));
+			utils_package_add(package, &((t_read_dir*) package_recv)->pathname,sizeof(char));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
@@ -204,27 +213,31 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		}
 		case FREE_MALLOC:
 		{
-			        t_malloc *free_request = malloc(sizeof(t_malloc));
-		            t_list* list = utils_receive_package(socket);
-					utils_get_from_list_to(&free_request->memoria,list,0);
-					utils_get_from_list_to(&free_request->id_libmuse,list,1);
-					list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
-					return free_request;
-
-
+			t_malloc *free_request = malloc(sizeof(t_malloc));
+			t_list* list = utils_receive_package(socket);
+			utils_get_from_list_to(&free_request->memoria,list,0);
+			utils_get_from_list_to(&free_request->id_libmuse,list,1);
+			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
+			return free_request;
 		}
 		case GET:
-				{
-					        t_get *get_request = malloc(sizeof(t_get));
-				            t_list* list = utils_receive_package(socket);
-							utils_get_from_list_to(&get_request->src,list,0);
-							utils_get_from_list_to(&get_request->id_libmuse,list,1);
-							utils_get_from_list_to(&get_request->size,list,2);
-							list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
-							return get_request;
-
-
-				}
+		{
+			t_get *get_request = malloc(sizeof(t_get));
+			t_list* list = utils_receive_package(socket);
+			utils_get_from_list_to(&get_request->src,list,0);
+			utils_get_from_list_to(&get_request->id_libmuse,list,1);
+			utils_get_from_list_to(&get_request->size,list,2);
+			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
+			return get_request;
+		}
+		case READ_DIR:
+		{
+			t_read_dir *get_request = malloc(sizeof(t_read_dir));
+			t_list* list = utils_receive_package(socket);
+			utils_get_from_list_to(&get_request->id_sac_cli,list,0);
+			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
+			return get_request;
+		}
 
 
 	}
