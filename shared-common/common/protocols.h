@@ -13,8 +13,22 @@ typedef struct
 
 typedef enum
 {
-	HANDSHAKE, MALLOC, FREE_MALLOC, COPY, GET
+	HANDSHAKE, MALLOC, FREE_MALLOC, COPY, GET, MAP, UNMAP, SYNC, MALLOC_OK, FREE_OK, GET_OK,
+	MAP_OK, UNMAP_OK, SYNC_OK, SEG_FAULT
 } t_protocol;
+
+typedef struct
+{
+	uint32_t ptr;
+} t_malloc_ok;
+
+typedef struct
+{
+	void * res;
+	int tamres;
+} t_get_ok;
+
+// TODO: Implement the rest of the functions
 
 typedef struct
 {
@@ -24,7 +38,7 @@ typedef struct
 
 typedef struct
 {
-	uint32_t memoria;
+	uint32_t tam;
 	int id_libmuse;
 } t_malloc;
 
