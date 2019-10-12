@@ -88,4 +88,16 @@
 	int lib_get_time();
 	void lib_summarize_burst();
 
+	/* SUSE functions*/
+
+
+	int suse_init();
+	int suse_create(pthread_t *, const pthread_attr_t *, void *(*)(void *), void *);
+	int suse_schedule_next();
+	int suse_wait();
+	int suse_signal();
+	int suse_join();
+
+
+
 #endif // hilolay_h__
