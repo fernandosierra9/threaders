@@ -1,4 +1,4 @@
-#include "../../hilolay/hilolay.h"
+#include <hilolay_old.h>
 #include "../../libmuse/libmuse.h"
 
 void recursiva(int cant)
