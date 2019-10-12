@@ -49,8 +49,7 @@ pointerSACBlock determinar_nodo(const char* path){
 	split_path(path, &super_path, &nombre);
 	nodo_anterior = determinar_nodo(super_path);
 	sac_server_logger_info("\n nodo_anterior: %d", nodo_anterior);
-	//pthread_rwlock_rdlock(&rwlock); //Toma un lock de lectura.
-	//log_lock_trace(logger, "Determinar_nodo: Toma lock lectura. Cantidad de lectores: %d", rwlock.__data.__nr_readers);
+	
 
 	sac_server_logger_info("\n node_table_start");
 	node = node_table_start;
@@ -69,9 +68,7 @@ pointerSACBlock determinar_nodo(const char* path){
 		node_name = &(node->file_name[0]);
 	}
 
-	// Cierra conexiones y libera memoria. Contempla casos de error.
-	//pthread_rwlock_unlock(&rwlock);
-	//log_lock_trace(logger, "Determinar_nodo: Libera lock lectura. Cantidad de lectores: %d", rwlock.__data.__nr_readers);
+	
 	free(start);
 	free(start_super_path);
 	if (err != 0) return err;
