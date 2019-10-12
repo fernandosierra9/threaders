@@ -107,10 +107,10 @@ static void *handle_connection(void *arg) {
 
 	switch (protocol){
 		case READ_DIR: {
-			sac_server_logger_info("Recibi OPEN de SAC_CLI");
-			t_malloc *malloc_recive = utils_receive_and_deserialize(fd, protocol);
-			sac_server_logger_info("MALLOC_TAM: %d", malloc_recive->memoria);
-			sac_server_logger_info("ID_LIBMUSE: %d", malloc_recive->id_libmuse);
+			sac_server_logger_info("Recibi READ_DIR de SAC_CLI");
+			t_read_dir *read_dir = utils_receive_and_deserialize(fd, protocol);
+			sac_server_logger_info("PATHNAME: %d", read_dir->pathname);
+			sac_server_logger_info("ID_SAC_CLI: %d", read_dir->id_sac_cli);
 			break;
 		}
 	}
