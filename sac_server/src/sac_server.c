@@ -16,35 +16,7 @@ int main(int argc, char *argv[]) {
 	sac_server_logger_destroy();
 	exit_gracefully(EXIT_FAILURE);
 	
-	//int fd;
-	// Obiene el tamanio del disco
-	//fuse_disc_size = path_size(DISC_PATH);
 
-	/*
-	BitArray
-	*/
-
-/* 	if ((discDescriptor = fd = open(DISC_PATH, O_RDWR, 0)) == -1) {
-		sac_server_logger_error("Error");
-	}
-	
-	header_start = (struct sac_header_t*) mmap(NULL, ACTUAL_DISC_SIZE_B , PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, fd, 0);
-	header_data = *header_start;
-	bitmap_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS];
-	node_table_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS + BITMAP_BLOCK_SIZE];
-	data_block_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS + BITMAP_BLOCK_SIZE + NODE_TABLE_SIZE];
-	
-	mlock(bitmap_start, BITMAP_BLOCK_SIZE * BLOCK_SIZE);
-	mlock(node_table_start, NODE_TABLE_SIZE * BLOCK_SIZE);
-	madvise(header_start, ACTUAL_DISC_SIZE_B , MADV_RANDOM); */
-
-	//fdatasync(discDescriptor);
-	
-	//munlockall(); /* Desbloquea todas las paginas que tenia bloqueadas */
-
-	//if (munmap(header_start, ACTUAL_DISC_SIZE_B ) == -1) printf("ERROR");
-
-	//close(fd);
 }
 
 static void init_server(int port) {
