@@ -52,6 +52,9 @@ int main(void)
     uint32_t ptr = muse_alloc(200);
     int dst;
     muse_get(&dst, ptr, 4);
+    muse_free(120);
+    int src;
+    muse_cpy(ptr, &src, 12);
     muse_close();
 	//th_return(0);
 	return 0;

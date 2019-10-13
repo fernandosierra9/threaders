@@ -24,10 +24,9 @@ void muse_close() {
 }
 
 uint32_t muse_alloc(uint32_t tam) {
-
 	t_malloc *malloc_send = malloc(sizeof(t_malloc));
 	malloc_send->tam = tam;
-	malloc_send->id_libmuse = 11;
+	malloc_send->id_libmuse = getpid();
 	t_protocol malloc_protocol = MALLOC;
 	utils_serialize_and_send(muse_fd, malloc_protocol, malloc_send);
 
@@ -46,13 +45,31 @@ uint32_t muse_alloc(uint32_t tam) {
 }
 
 void muse_free(uint32_t dir) {
-	free((void*) dir);
+	t_free* free_req = malloc(sizeof(t_free));
+	free_req->dir = dir;
+	free_req->self_id = getpid();
+	t_protocol free_protocol = MEMFREE;
+	utils_serialize_and_send(muse_fd, free_protocol, free_req);
+
+	int response = recv(muse_fd, &free_protocol, sizeof(t_protocol), 0);
+
+	t_free_response* deserialized_response = utils_receive_and_deserialize(
+			muse_fd, free_protocol);
+
+	if (deserialized_response->res == 1) {
+		free((void*) dir);
+		puts("Operation has been successful");
+	}
+
+	else
+		puts("Operation failed");
+	return;
 }
 
 int muse_get(void* dst, uint32_t src, size_t n) {
 
 	t_get* get_send = malloc(sizeof(t_get));
-	get_send->id_libmuse = 11;
+	get_send->id_libmuse = getpid();
 	get_send->size = n;
 	get_send->src = src;
 	t_protocol get_protocol = GET;
@@ -60,25 +77,42 @@ int muse_get(void* dst, uint32_t src, size_t n) {
 
 	int response = recv(muse_fd, &get_protocol, sizeof(t_protocol), 0);
 
-	switch(get_protocol)
-	{
-		case GET_OK:
-		{
-			t_get_ok* get = utils_receive_and_deserialize(muse_fd, get_protocol);
-			memcpy(dst, get->res, get->tamres);
-			return 0;
-		}
+	switch (get_protocol) {
+	case GET_OK: {
+		t_get_ok* get = utils_receive_and_deserialize(muse_fd, get_protocol);
+		memcpy(dst, get->res, get->tamres);
+		return 0;
+	}
 
-		case SEG_FAULT:
-		{
-			return -1;
-		}
+	case SEG_FAULT: {
+		return -1;
+	}
 	}
 }
 
 int muse_cpy(uint32_t dst, void* src, int n) {
-	memcpy((void*) dst, src, n);
-	return 0;
+
+	t_copy* copy_send = malloc(sizeof(t_copy));
+	copy_send->self_id = getpid();
+	copy_send->size = n;
+	copy_send->dst = dst;
+	t_protocol copy_protocol = COPY;
+	utils_serialize_and_send(muse_fd, copy_protocol, copy_send);
+
+	int response = recv(muse_fd, &copy_protocol, sizeof(t_protocol), 0);
+
+	t_copy_response* deserialized_res = utils_receive_and_deserialize(muse_fd,
+			copy_protocol);
+
+	if (deserialized_res->res == 1) {
+		puts("Operation has been successful");
+		memcpy((void*) dst, src, n);
+		return 0;
+	}
+
+	else
+		puts("Operation failed");
+	return -1;
 }
 
 /////////////////////////////////////////////////////////////////////////////
