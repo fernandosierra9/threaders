@@ -48,13 +48,14 @@ int main(void)
 	//th_create(test2);
 
 	/* MUSE CLIENTS */
-    muse_init((int)getpid(), "127.0.0.1", 5003);
+    muse_init((int)getpid(),
+    		"127.0.0.1", 5003);
     uint32_t ptr = muse_alloc(200);
     int dst;
     muse_get(&dst, ptr, 4);
-    muse_free(120);
     int src;
     muse_cpy(ptr, &src, 12);
+    muse_free(ptr);
     muse_close();
 	//th_return(0);
 	return 0;

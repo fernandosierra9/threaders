@@ -254,7 +254,7 @@ void* utils_receive_and_deserialize(int socket, int package_type) {
 		t_get_ok* get_recv = malloc(sizeof(t_get_ok));
 		t_list* list = utils_receive_package(socket);
 		utils_get_from_list_to(&get_recv->res, list, 0);
-		utils_get_from_list_to(&get_recv->tamres, list, 0);
+		utils_get_from_list_to(&get_recv->tamres, list, 1);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_recv;
 	}

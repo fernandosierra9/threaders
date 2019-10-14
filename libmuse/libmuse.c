@@ -53,17 +53,20 @@ void muse_free(uint32_t dir) {
 
 	int response = recv(muse_fd, &free_protocol, sizeof(t_protocol), 0);
 
-	t_free_response* deserialized_response = utils_receive_and_deserialize(
-			muse_fd, free_protocol);
+	if (free_protocol == FREE_RESPONSE) {
 
-	if (deserialized_response->res == 1) {
-		free((void*) dir);
-		puts("Operation has been successful");
+		t_free_response* deserialized_response = utils_receive_and_deserialize(
+				muse_fd, free_protocol);
+		if (deserialized_response->res == 1) {
+			// FREE FROM MUSE
+			puts("Operation has been successful");
+			return;
+		}
+
+		else
+			puts("Operation failed");
+		return;
 	}
-
-	else
-		puts("Operation failed");
-	return;
 }
 
 int muse_get(void* dst, uint32_t src, size_t n) {
@@ -80,7 +83,7 @@ int muse_get(void* dst, uint32_t src, size_t n) {
 	switch (get_protocol) {
 	case GET_OK: {
 		t_get_ok* get = utils_receive_and_deserialize(muse_fd, get_protocol);
-		memcpy(dst, get->res, get->tamres);
+		memcpy(dst, &get->res, get->tamres);
 		return 0;
 	}
 
@@ -105,8 +108,8 @@ int muse_cpy(uint32_t dst, void* src, int n) {
 			copy_protocol);
 
 	if (deserialized_res->res == 1) {
+		// COPY TO MUSE
 		puts("Operation has been successful");
-		memcpy((void*) dst, src, n);
 		return 0;
 	}
 

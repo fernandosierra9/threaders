@@ -81,9 +81,10 @@ void muse_server_init() {
 			muse_logger_info("%d bytes will be transfered starting at direction: %d", get_receive->size, get_receive->src);
 			// Response logic
 			t_get_ok* response = malloc(sizeof(t_get_ok));
-			response->res = 120;
-			response->tamres = 4;
-			utils_serialize_and_send(libmuse_fd, protocol, response);
+			response->res = 8;
+			response->tamres = get_receive->size;
+			t_protocol get_protocol = GET_OK;
+			utils_serialize_and_send(libmuse_fd, get_protocol, response);
 			break;
 		}
 		case COPY: {
@@ -94,7 +95,8 @@ void muse_server_init() {
 			// Response logic
 			t_copy_response* copy_res = malloc(sizeof(t_copy_response));
 			copy_res->res = 1;
-			utils_serialize_and_send(libmuse_fd, protocol, copy_res);
+			t_protocol cpy_protocol = GET_OK;
+			utils_serialize_and_send(libmuse_fd, cpy_protocol, copy_res);
 			break;
 		}
 		case SYNC: {
