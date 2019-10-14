@@ -1,9 +1,10 @@
 #ifndef SAC_SERVER_H_
 #define SAC_SERVER_H_
 
-/* Opciones de FUSE. Esta redefinicion le indica cuales son las opciones que se utilizaran. */
+// ELIMINAR ESTO
 #define FUSE_USE_VERSION 27
 #define _FILE_OFFSET_BITS 64
+#include <fuse.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,18 +13,21 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <fuse.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/mman.h>
 #include <commons/config.h>
 #include <commons/bitarray.h>
 #include "config/sac_server_config.h"
 #include "logger/sac_server_logger.h"
-#include "operations/read/sac_read.h"
-#include "operations/write/sac_write.h"
-#include "operations/operate/sac_operate.h"
+#include "../../shared-common/common/utils.h"
+#include "../../shared-common/common/sockets.h"
+
+#define DEFAULT_FILE_CONTENT "Hello World!\n"
+#define DEFAULT_FILE_NAME "hello"
+#define DEFAULT_FILE_PATH "/" DEFAULT_FILE_NAME
 
 #define SAC_FILE_BY_TABLE 1024
 #define SAC_FILE_BY_BLOCK 1
@@ -33,16 +37,26 @@
 #define BLOCK_SIZE 4096
 #define PTR_BLOCK_SIZE 1024
 
-typedef uint32_t ptr_sac_block;
+// Utils de Bloques
+#define NODE_TABLE_SIZE 1024
+#define DISC_PATH fuse_disc_path
+#define DISC_SIZE_B(p) path_size_in_bytes(p)
+#define ACTUAL_DISC_SIZE_B fuse_disc_size
+#define BITMAP_BLOCK_SIZE header_data.size_bitmap
 
-typedef ptr_sac_block pointer_data_block [PTR_BLOCK_SIZE];
+// Definiciones de tipo de bloque borrado(0), archivo(1), directorio(2)
+#define DELETED_T ((int) 0)
+#define FILE_T ((int) 1)
+#define DIRECTORY_T ((int) 2)
 
-/*
- * Esta Macro sirve para definir nuestros propios parametros que queremos que
- * FUSE interprete. Esta va a ser utilizada mas abajo para completar el campos
- * welcome_msg de la variable runtime_options
- */
-#define CUSTOM_FUSE_OPT_KEY(t, p, v) { t, offsetof(struct t_runtime_options, p), v }
+typedef uint32_t pointerSACBlock;
+
+typedef pointerSACBlock pointer_data_block [PTR_BLOCK_SIZE];
+
+// Ruta del disco.
+char fuse_disc_path[1000];
+// Tamaño del disco.
+int fuse_disc_size;
 
 //Un bloque
 typedef struct sac_header_t {
@@ -62,7 +76,29 @@ typedef struct sac_file_t {
 	uint32_t file_size;
 	uint64_t creation_date;
 	uint64_t modified_date;
-	ptr_sac_block block_indirect[BLOCK_INDIRECT];
+	pointerSACBlock block_indirect[BLOCK_INDIRECT];
 } SFile;
+
+
+// Utilizadas para mmap
+struct sac_header_t *header_start;
+struct sac_file_t *node_table_start, *data_block_start, *bitmap_start;
+
+int discDescriptor;
+
+// Funciones auxiliares
+int path_size(const char* path);
+pointerSACBlock determinar_nodo(const char* path);
+int split_path(const char* path, char** super_path, char** name);
+
+// Funciones de escritura
+int sac_create_directory(const char *path, mode_t mode);
+
+// Funciones de lectura
+int sac_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi);
+int sac_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
+int sac_open(const char *path, struct fuse_file_info *fi);
+int sac_getattr(const char *path, struct stat *stbuf);
+
 
 #endif /* SAC_SERVER_H_ */
