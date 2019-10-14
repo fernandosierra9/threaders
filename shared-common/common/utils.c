@@ -188,65 +188,65 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 		break;
 	}
   		case READ_DIR: {
-			t_package* package = utils_package_create(package_type);
-			utils_package_add(package, &((t_read_dir*) package_recv)->id_sac_cli,sizeof(uint32_t));
-			utils_package_add(package, &((t_read_dir*) package_recv)->pathname,sizeof(char));
+			t_package* package = utils_package_create(protocol);
+			utils_package_add(package, &((t_read_dir*) package_send)->id_sac_cli,sizeof(uint32_t));
+			utils_package_add(package, &((t_read_dir*) package_send)->pathname,sizeof(char));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
 		}
 		case READ: {
-			t_package* package = utils_package_create(package_type);
-			utils_package_add(package, &((t_read*) package_recv)->id_sac_cli,sizeof(uint32_t));
-			utils_package_add(package, &((t_read*) package_recv)->pathname,sizeof(char));
+			t_package* package = utils_package_create(protocol);
+			utils_package_add(package, &((t_read*) package_send)->id_sac_cli,sizeof(uint32_t));
+			utils_package_add(package, &((t_read*) package_send)->pathname,sizeof(char));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
 		}
 		case OPEN: {
-			t_package* package = utils_package_create(package_type);
-			utils_package_add(package, &((t_open*) package_recv)->id_sac_cli,sizeof(uint32_t));
-			utils_package_add(package, &((t_open*) package_recv)->pathname,sizeof(char));
+			t_package* package = utils_package_create(protocol);
+			utils_package_add(package, &((t_open*) package_send)->id_sac_cli,sizeof(uint32_t));
+			utils_package_add(package, &((t_open*) package_send)->pathname,sizeof(char));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
 		}
 		case GET_ATTR: {
-			t_package* package = utils_package_create(package_type);
-			utils_package_add(package, &((t_get_attr*) package_recv)->id_sac_cli,sizeof(uint32_t));
-			utils_package_add(package, &((t_get_attr*) package_recv)->pathname,sizeof(char));
+			t_package* package = utils_package_create(protocol);
+			utils_package_add(package, &((t_get_attr*) package_send)->id_sac_cli,sizeof(uint32_t));
+			utils_package_add(package, &((t_get_attr*) package_send)->pathname,sizeof(char));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
 		}
 		case CREATE_DIR: {
-			t_package* package = utils_package_create(package_type);
-			utils_package_add(package, &((t_create_directory*) package_recv)->id_sac_cli,sizeof(uint32_t));
-			utils_package_add(package, &((t_create_directory*) package_recv)->pathname,sizeof(char));
+			t_package* package = utils_package_create(protocol);
+			utils_package_add(package, &((t_create_directory*) package_send)->id_sac_cli,sizeof(uint32_t));
+			utils_package_add(package, &((t_create_directory*) package_send)->pathname,sizeof(char));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
 		}
 		case WRITE: {
-			t_package* package = utils_package_create(package_type);
-			utils_package_add(package, &((t_write*) package_recv)->id_sac_cli,sizeof(uint32_t));
-			utils_package_add(package, &((t_write*) package_recv)->pathname,sizeof(char));
+			t_package* package = utils_package_create(protocol);
+			utils_package_add(package, &((t_write*) package_send)->id_sac_cli,sizeof(uint32_t));
+			utils_package_add(package, &((t_write*) package_send)->pathname,sizeof(char));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
 		}
 		case RM_DIR: {
-			t_package* package = utils_package_create(package_type);
-			utils_package_add(package, &((t_rm_directory*) package_recv)->id_sac_cli,sizeof(uint32_t));
-			utils_package_add(package, &((t_rm_directory*) package_recv)->pathname,sizeof(char));
+			t_package* package = utils_package_create(protocol);
+			utils_package_add(package, &((t_rm_directory*) package_send)->id_sac_cli,sizeof(uint32_t));
+			utils_package_add(package, &((t_rm_directory*) package_send)->pathname,sizeof(char));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
 		}
 		case MK_DIR: {
-			t_package* package = utils_package_create(package_type);
-			utils_package_add(package, &((t_mk_directory*) package_recv)->id_sac_cli,sizeof(uint32_t));
-			utils_package_add(package, &((t_mk_directory*) package_recv)->pathname,sizeof(char));
+			t_package* package = utils_package_create(protocol);
+			utils_package_add(package, &((t_mk_directory*) package_send)->id_sac_cli,sizeof(uint32_t));
+			utils_package_add(package, &((t_mk_directory*) package_send)->pathname,sizeof(char));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
