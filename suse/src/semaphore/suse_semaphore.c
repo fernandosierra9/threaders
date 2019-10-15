@@ -11,6 +11,16 @@ t_semaphore* semaphore_create(char* id, int value, int max_value)
 	return sem;
 }
 
+void semaphore_lock_thread(t_semaphore* sem, t_thread* thread)
+{
+	queue_push(sem->queue, thread);
+}
+
+t_thread* semaphore_unlock_thread(t_semaphore* sem)
+{
+	return queue_pop(sem->queue);
+}
+
 void semaphore_destroy(t_semaphore* sem)
 {
 	free(sem->id);

@@ -6,6 +6,7 @@
 #include <string.h>
 #include <time.h>
 #include <commons/collections/list.h>
+#include <commons/config.h>
 #include "../program/suse_program.h"
 #include "../semaphore/suse_semaphore.h"
 #include "../config/suse_config.h"
@@ -13,6 +14,7 @@
 
 void scheduler_init();
 void scheduler_init_semaphores();
+void scheduler_add_new_program(t_program* program);
 void scheduler_execute_metrics();
 void scheduler_destroy();
 

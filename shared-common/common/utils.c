@@ -231,8 +231,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 	return NULL;
 }
 
-
-static void utils_destroy_list(t_buffer *self) {
+void utils_destroy_list(t_buffer *self) {
     free(self->stream);
     free(self);
 }
