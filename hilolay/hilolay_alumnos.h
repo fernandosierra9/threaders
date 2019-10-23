@@ -1,6 +1,7 @@
 #ifndef hilolay_alumnos_h__
 	#define hilolay_alumnos_h__
-
+	#include "../shared-common/common/sockets.h"
+	#include "../shared-common/common/utils.h"
 
 	char *ip_suse = "127.0.0.1";
 	int puerto_suse = 5003;

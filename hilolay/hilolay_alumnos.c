@@ -9,7 +9,7 @@ int max_tid = 0;
 int suse_create(int tid){
 	if (tid > max_tid) max_tid = tid;
 
-	printf("HELLO MUSE");
+	printf("HELLO SUSE");
 	suse_fd = socket_connect_to_server(ip_suse, puerto_suse);
 
 	if (suse_fd < 0)
@@ -20,20 +20,12 @@ int suse_create(int tid){
 	puts("Conexion con Suse establecida");
 
 	t_malloc *malloc_send = malloc(sizeof(t_malloc));
-	malloc_send->memoria = 2000;
-	malloc_send->id_libmuse = id;
-	t_protocol malloc_protocol = MALLOC;
+	malloc_send->pid = 2000;
+	malloc_send->tid = tid;
+	t_protocol malloc_protocol = HANDSHAKE;
 
 	utils_serialize_and_send(suse_fd, malloc_protocol, malloc_send);
 	utils_serialize_and_send(suse_fd, malloc_protocol, malloc_send);
-
-	t_get *get_send = malloc(sizeof(t_get));
-
-	get_send->id_libmuse = id;
-	get_send->size = 30;
-	get_send->src = 3000;
-	t_protocol get_protocol = GET;
-	utils_serialize_and_send(suse_fd, get_protocol, get_send);
 
 	return 0;
 
