@@ -22,6 +22,18 @@ int main(void)
 	return EXIT_SUCCESS;
 }
 
+void suse_accept_incoming_program()
+{
+	int pid = scheduler_get_next_pid();
+	t_program* program = program_create(pid);
+	scheduler_add_new_program(program);
+}
+
+void suse_handle_command()
+{
+
+}
+
 void suse_init()
 {
 	socket_start_listening_select(SUSE_IP, suse_get_listen_port());

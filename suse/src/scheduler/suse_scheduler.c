@@ -91,6 +91,65 @@ void scheduler_print_metrics()
 	suse_logger_info("********FIN DE METRICAS********");
 }
 
+/**
+ * PROGRAMS
+ * */
+
+t_program* _scheduler_find_program_by_id(int id) {
+	int _is_the_program(t_program *p) {
+		return id == p->pid;
+	}
+
+	return list_find(programs, (void*) _is_the_program);
+}
+
+void scheduler_add_new_program(t_program* program)
+{
+	list_add(queue_new, program);
+}
+
+void scheduler_execute_program(t_program* program)
+{
+	program->state = EXEC;
+	program_exec = program;
+}
+
+void scheduler_finish_program(t_program* program)
+{
+	program->state = EXIT;
+	list_add(queue_exit, program);
+}
+
+/**
+ * THREADS
+ * */
+
+void scheduler_set_ready_thread(t_thread* thread)
+{
+	thread->state = READY;
+	list_add(queue_ready, thread);
+}
+
+void scheduler_execute_thread(t_thread* thread)
+{
+	thread->state = EXEC;
+	thread_exec = thread;
+}
+
+void scheduler_block_thread(t_thread* thread)
+{
+	thread->state = BLOCKED;
+	list_add(queue_blocked, thread);
+}
+
+void scheduler_finish_thread(t_thread* thread)
+{
+	thread->state = EXIT;
+	t_program* program = _scheduler_find_program_by_id(thread->pid);
+	scheduler_finish_program(program);
+	scheduler_print_metrics();
+}
+
 float scheduler_calculate_exponential_mean(int burst_time)
 {
 	float tn = 0.0f;
@@ -136,60 +195,6 @@ void scheduler_run_short_term_scheduler()
 			return;
 		}
 	}
-}
-
-/**
- * PROGRAMS
- * */
-
-t_program* _scheduler_find_program_by_id(int id) {
-	int _is_the_program(t_program *p) {
-		return id == p->pid;
-	}
-
-	return list_find(programs, (void*) _is_the_program);
-}
-
-void scheduler_execute_program(t_program* program)
-{
-	program->state = EXEC;
-	program_exec = program;
-}
-
-void scheduler_finish_program(t_program* program)
-{
-	program->state = EXIT;
-	list_add(queue_exit, program);
-}
-
-/**
- * THREADS
- * */
-
-void scheduler_set_ready_thread(t_thread* thread)
-{
-	thread->state = READY;
-	list_add(queue_ready, thread);
-}
-
-void scheduler_execute_thread(t_thread* thread)
-{
-	thread->state = EXEC;
-	thread_exec = thread;
-}
-
-void scheduler_block_thread(t_thread* thread)
-{
-	thread->state = BLOCKED;
-	list_add(queue_blocked, thread);
-}
-
-void scheduler_finish_thread(t_thread* thread)
-{
-	thread->state = EXIT;
-	t_program* program = _scheduler_find_program_by_id(thread->pid);
-	scheduler_finish_program(program);
-	scheduler_print_metrics();
 }
 
 void scheduler_execute_metrics()
