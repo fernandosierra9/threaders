@@ -1,6 +1,11 @@
 #ifndef hilolay_alumnos_h__
 	#define hilolay_alumnos_h__
 
+
+	char *ip_suse = "127.0.0.1";
+	int puerto_suse = 5003;
+	int suse_fd;
+
 	/**
 	 * TODO: Interface for alumnos (what they should implement in orde to make this work)
 	 */
