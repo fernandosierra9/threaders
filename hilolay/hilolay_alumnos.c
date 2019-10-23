@@ -6,8 +6,6 @@
 /* Lib implementation: It'll only schedule the last thread that was created */
 int max_tid = 0;
 
-
-
 int suse_create(int tid){
 	if (tid > max_tid) max_tid = tid;
 
@@ -39,9 +37,6 @@ int suse_create(int tid){
 
 	return 0;
 
-
-
-	return 0;
 }
 
 int suse_schedule_next(void){
