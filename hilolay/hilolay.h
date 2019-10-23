@@ -12,6 +12,10 @@
 		int attrs;
 	} hilolay_attr_t;
 
+	typedef struct hilolay_sem_t {
+		char *name;
+	} hilolay_sem_t;
+
 	/**
 	 * Initializes the library. Implemented in the client interface.
 	 *
@@ -38,4 +42,33 @@
 	 * TODO
 	 */
 	int hilolay_get_tid(void);
+
+	/**
+	 * Initializes a named hilolay semaphore.
+	 */
+	hilolay_sem_t* hilolay_sem_open(char *name);
+
+	/**
+	 * Closes a named hilolay semaphore.
+	 */
+	int hilolay_sem_close(hilolay_sem_t*);
+
+	/**
+	 * Does a wait operation over a semaphore. It blocks the thread if no resources available.
+	 */
+	int hilolay_wait(hilolay_sem_t *sem);
+
+	/**
+	 * Does a signal operation over a semaphore.
+	 */
+	int hilolay_signal(hilolay_sem_t *sem);
+
+	/**
+	 * Returns and closes a thread
+	 * Note: Replaces a return statement on the original thread that called hilolay_init.
+	 */
+	int hilolay_return(int value);
 #endif // hilolay_h__
+
+#endif // hilolay_h__
+
