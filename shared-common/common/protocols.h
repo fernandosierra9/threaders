@@ -13,7 +13,7 @@ typedef struct
 
 typedef enum
 {
-	HANDSHAKE, MALLOC, FREE_MALLOC, COPY, GET
+	HANDSHAKE, MALLOC, FREE_MALLOC, COPY, GET, NEW_THREAD
 } t_protocol;
 
 typedef struct
@@ -27,6 +27,12 @@ typedef struct
 	uint32_t memoria;
 	int id_libmuse;
 } t_malloc;
+
+typedef struct
+{
+	uint32_t pid;
+	uint32_t tid;
+} t_newthread;
 
 typedef struct
 {

@@ -172,6 +172,15 @@ void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 			utils_package_destroy(package);
 			break;
 		}
+		case NEW_THREAD:
+		{
+			t_package* package = utils_package_create(package_type);
+			utils_package_add(package, &((t_newthread*) package_recv)->pid,sizeof(uint32_t));
+			utils_package_add(package, &((t_newthread*) package_recv)->tid,sizeof(uint32_t));
+			utils_package_send_to(package,socket);
+			utils_package_destroy(package);
+			break;
+		}
 	}
 }
 
@@ -225,6 +234,16 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 
 
 				}
+		case NEW_THREAD:
+		{
+	        t_newthread *newthread_request = malloc(sizeof(t_newthread));
+            t_list* list = utils_receive_package(socket);
+			utils_get_from_list_to(&newthread_request->pid,list,0);
+			utils_get_from_list_to(&newthread_request->tid,list,1);
+			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
+			return newthread_request;
+
+		}
 
 
 	}

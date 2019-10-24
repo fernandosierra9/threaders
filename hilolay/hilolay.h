@@ -70,5 +70,3 @@
 	int hilolay_return(int value);
 #endif // hilolay_h__
 
-#endif // hilolay_h__
-

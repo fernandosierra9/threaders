@@ -1,10 +1,14 @@
-#include <hilolay/alumnos.h>
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include "hilolay_alumnos.h"
 
 /* Lib implementation: It'll only schedule the last thread that was created */
 int max_tid = 0;
+
+char *ip_suse = "127.0.0.1";
+int puerto_suse = 5003;
+int suse_fd;
 
 int suse_create(int tid){
 	if (tid > max_tid) max_tid = tid;
@@ -19,13 +23,13 @@ int suse_create(int tid){
 	}
 	puts("Conexion con Suse establecida");
 
-	t_malloc *malloc_send = malloc(sizeof(t_malloc));
-	malloc_send->pid = 2000;
-	malloc_send->tid = tid;
-	t_protocol malloc_protocol = HANDSHAKE;
+	t_newthread *newthread_send = malloc(sizeof(t_newthread));
+	newthread_send->pid = 200;
+	newthread_send->tid = 123;
+	t_protocol newthread_protocol = NEW_THREAD;
 
-	utils_serialize_and_send(suse_fd, malloc_protocol, malloc_send);
-	utils_serialize_and_send(suse_fd, malloc_protocol, malloc_send);
+	utils_serialize_and_send(suse_fd, newthread_protocol, newthread_send);
+	utils_serialize_and_send(suse_fd, newthread_protocol, newthread_send);
 
 	return 0;
 

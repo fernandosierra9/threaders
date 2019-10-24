@@ -2,10 +2,9 @@
 	#define hilolay_alumnos_h__
 	#include "../shared-common/common/sockets.h"
 	#include "../shared-common/common/utils.h"
+	#include "../shared-common/common/protocols.h"
 
-	char *ip_suse = "127.0.0.1";
-	int puerto_suse = 5003;
-	int suse_fd;
+
 
 	/**
 	 * TODO: Interface for alumnos (what they should implement in orde to make this work)

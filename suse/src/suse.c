@@ -60,6 +60,7 @@ void suse_exit_gracefully()
 
 void suse_server_init()
 {
+	int suse_socket;
 	suse_socket = socket_create_listener("127.0.0.1", suse_get_listen_port());
 	if (suse_socket < 0)
 	{
@@ -98,6 +99,20 @@ void suse_server_init()
 				suse_logger_info("Recibi malloc de hilolay");
 				break;
 			}
+
+			case NEW_THREAD:
+			{
+				suse_logger_info("Recibi NEW_THREAD de hilolay");
+				t_newthread *newthread_recive =  utils_receive_and_deserialize(hilolay_fd,protocol);
+				muse_logger_info("Program ID: %d", newthread_recive->pid);
+				muse_logger_info("Thread ID: %d", newthread_recive->tid);
+
+				t_program* program_id = program_create(newthread_recive->pid);
+				scheduler_add_new_program(program_id);
+
+				break;
+			}
+
 
 		}
 
