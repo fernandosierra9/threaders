@@ -74,12 +74,12 @@ void suse_server_init()
 
 	if (hilolay_fd == -1)
 	{
-		suse_logger_error("Error al establecer conexion con el libmuse");
+		suse_logger_error("Error al establecer conexion con hilolay");
 		return;
 	}
 
 
-	suse_logger_info("Conexion establecida con libmuse");
+	suse_logger_info("Conexion establecida con hilolay");
 	int received_bytes;
 	int protocol;
 	while (1)
@@ -104,8 +104,8 @@ void suse_server_init()
 			{
 				suse_logger_info("Recibi NEW_THREAD de hilolay");
 				t_newthread *newthread_recive =  utils_receive_and_deserialize(hilolay_fd,protocol);
-				muse_logger_info("Program ID: %d", newthread_recive->pid);
-				muse_logger_info("Thread ID: %d", newthread_recive->tid);
+				suse_logger_info("Program ID: %d", newthread_recive->pid);
+				suse_logger_info("Thread ID: %d", newthread_recive->tid);
 
 				t_program* program_id = program_create(newthread_recive->pid);
 				scheduler_add_new_program(program_id);
