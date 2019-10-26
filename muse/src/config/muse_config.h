@@ -23,5 +23,8 @@ t_muse_config* muse_config;
 int muse_config_load();
 void muse_config_free();
 int muse_get_listen_port();
+int muse_page_size();
+int muse_swap_size();
+int muse_memory_size();
 
 #endif /* CONFIG_MUSE_CONFIG_H_ */
