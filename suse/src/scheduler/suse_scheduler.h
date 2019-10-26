@@ -18,4 +18,6 @@ void scheduler_add_new_program(t_program* program);
 void scheduler_execute_metrics();
 void scheduler_destroy();
 
+pthread_mutex_t scheduler_mutex;
+
 #endif /* SCHEDULER_SUSE_SCHEDULER_H_ */

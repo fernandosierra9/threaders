@@ -1,5 +1,7 @@
 #include "suse.h"
 
+void suse_server_init();
+
 int main(void)
 {
 	int response = suse_logger_create();
@@ -22,22 +24,10 @@ int main(void)
 	return EXIT_SUCCESS;
 }
 
-void suse_accept_incoming_program()
-{
-	int pid = scheduler_get_next_pid();
-	t_program* program = program_create(pid);
-	scheduler_add_new_program(program);
-}
-
-void suse_handle_command()
-{
-
-}
-
 void suse_init()
 {
 	//socket_start_listening_select(SUSE_IP, suse_get_listen_port());
-	suse_server_init(SUSE_IP, suse_get_listen_port());
+	suse_server_init();
 	pthread_exit(0);
 }
 
@@ -78,7 +68,6 @@ void suse_server_init()
 		return;
 	}
 
-
 	suse_logger_info("Conexion establecida con hilolay");
 	int received_bytes;
 	int protocol;
@@ -112,7 +101,6 @@ void suse_server_init()
 
 				break;
 			}
-
 
 		}
 
