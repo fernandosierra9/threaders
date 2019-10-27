@@ -49,7 +49,8 @@ static struct fuse_opt fuse_options[] = {
 // ./sac_cli.exe -d -o direct_io --Disc-Path=/media/sf_tp-2019-2c-threaders/sac_server/disc.bin ./fuse_test
 // Dentro de los argumentos que recibe nuestro programa obligatoriamente
 // debe estar el path al directorio donde vamos a montar nuestro FS
-int main(int argc, char *argv[]) {
+int sac_cli_init(int argc, char *argv[]) {
+	
 	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
 
 	// Limpio la estructura que va a contener los parametros
@@ -68,7 +69,7 @@ int main(int argc, char *argv[]) {
 	} else {
 		printf("Mountpoint not specified: Unloading modules.");
 		exit(0);
-	}
+	
 
 	sac_cli_fd = socket_connect_to_server(ip_sac_server, puerto_sac);
 
@@ -79,8 +80,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	printf("Conexion con SAC_SERVER establecida");
-	
-	// Esta es la funcion principal de FUSE
+
 	return fuse_main(args.argc, args.argv, &sac_operations, NULL);
 }
 
@@ -97,10 +97,10 @@ int sac_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offse
 	return 0;
 };
 
-int sac_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
+int sac_read(char *path) {
 	t_read *read_send = malloc(sizeof(t_read));
 	read_send->id_sac_cli = 456;
-	read_send->pathname = "/";
+	read_send->pathname = "/niconico";
 	t_protocol read_protocol = READ;
 	utils_serialize_and_send(sac_cli_fd, read_protocol, read_send);
 	return 0;

@@ -170,15 +170,16 @@ void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 		case READ_DIR: {
 			t_package* package = utils_package_create(package_type);
 			utils_package_add(package, &((t_read_dir*) package_recv)->id_sac_cli,sizeof(uint32_t));
-			utils_package_add(package, &((t_read_dir*) package_recv)->pathname,sizeof(char));
+			utils_package_add(package, &((t_read_dir*) package_recv)->pathname, strlen(((t_read_dir*) package_recv)->pathname));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
 		}
 		case READ: {
 			t_package* package = utils_package_create(package_type);
+			printf("PATHNAME: %s", ((t_read*) package_recv)->pathname);
 			utils_package_add(package, &((t_read*) package_recv)->id_sac_cli,sizeof(uint32_t));
-			utils_package_add(package, &((t_read*) package_recv)->pathname,sizeof(char));
+			utils_package_add(package, &((t_read*) package_recv)->pathname, strlen(((t_read*) package_recv)->pathname));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
@@ -186,7 +187,7 @@ void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 		case OPEN: {
 			t_package* package = utils_package_create(package_type);
 			utils_package_add(package, &((t_open*) package_recv)->id_sac_cli,sizeof(uint32_t));
-			utils_package_add(package, &((t_open*) package_recv)->pathname,sizeof(char));
+			utils_package_add(package, &((t_open*) package_recv)->pathname, strlen(((t_open*) package_recv)->pathname));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
@@ -194,7 +195,7 @@ void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 		case GET_ATTR: {
 			t_package* package = utils_package_create(package_type);
 			utils_package_add(package, &((t_get_attr*) package_recv)->id_sac_cli,sizeof(uint32_t));
-			utils_package_add(package, &((t_get_attr*) package_recv)->pathname,sizeof(char));
+			utils_package_add(package, &((t_get_attr*) package_recv)->pathname, strlen(((t_get_attr*) package_recv)->pathname));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
@@ -202,7 +203,7 @@ void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 		case CREATE_DIR: {
 			t_package* package = utils_package_create(package_type);
 			utils_package_add(package, &((t_create_directory*) package_recv)->id_sac_cli,sizeof(uint32_t));
-			utils_package_add(package, &((t_create_directory*) package_recv)->pathname,sizeof(char));
+			utils_package_add(package, &((t_create_directory*) package_recv)->pathname, strlen(((t_create_directory*) package_recv)->pathname));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
@@ -210,7 +211,7 @@ void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 		case WRITE: {
 			t_package* package = utils_package_create(package_type);
 			utils_package_add(package, &((t_write*) package_recv)->id_sac_cli,sizeof(uint32_t));
-			utils_package_add(package, &((t_write*) package_recv)->pathname,sizeof(char));
+			utils_package_add(package, &((t_write*) package_recv)->pathname, strlen(((t_write*) package_recv)->pathname));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
@@ -218,7 +219,7 @@ void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 		case RM_DIR: {
 			t_package* package = utils_package_create(package_type);
 			utils_package_add(package, &((t_rm_directory*) package_recv)->id_sac_cli,sizeof(uint32_t));
-			utils_package_add(package, &((t_rm_directory*) package_recv)->pathname,sizeof(char));
+			utils_package_add(package, &((t_rm_directory*) package_recv)->pathname, strlen(((t_rm_directory*) package_recv)->pathname));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
@@ -226,7 +227,7 @@ void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 		case MK_DIR: {
 			t_package* package = utils_package_create(package_type);
 			utils_package_add(package, &((t_mk_directory*) package_recv)->id_sac_cli,sizeof(uint32_t));
-			utils_package_add(package, &((t_mk_directory*) package_recv)->pathname,sizeof(char));
+			utils_package_add(package, &((t_mk_directory*) package_recv)->pathname, strlen(((t_mk_directory*) package_recv)->pathname));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
@@ -277,7 +278,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 			t_get_attr *get_request = malloc(sizeof(t_get_attr));
 			t_list* list = utils_receive_package(socket);
 			utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-			utils_get_from_list_to(&get_request->pathname,list,0);
+			utils_get_from_list_to(&get_request->pathname, list, 1);
 			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 			return get_request;
 		}
@@ -285,7 +286,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 			t_read_dir *get_request = malloc(sizeof(t_read_dir));
 			t_list* list = utils_receive_package(socket);
 			utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-			utils_get_from_list_to(&get_request->pathname,list,0);
+			utils_get_from_list_to(&get_request->pathname, list, 1);
 			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 			return get_request;
 		}
@@ -293,7 +294,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 			t_read *get_request = malloc(sizeof(t_read));
 			t_list* list = utils_receive_package(socket);
 			utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-			utils_get_from_list_to(&get_request->pathname,list,0);
+			utils_get_from_list_to(&get_request->pathname, list, 1);
 			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 			return get_request;
 		}
@@ -301,7 +302,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 			t_open *get_request = malloc(sizeof(t_open));
 			t_list* list = utils_receive_package(socket);
 			utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-			utils_get_from_list_to(&get_request->pathname,list,0);
+			utils_get_from_list_to(&get_request->pathname, list, 1);
 			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 			return get_request;
 		}
@@ -309,7 +310,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 			t_mk_directory *get_request = malloc(sizeof(t_mk_directory));
 			t_list* list = utils_receive_package(socket);
 			utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-			utils_get_from_list_to(&get_request->pathname,list,0);
+			utils_get_from_list_to(&get_request->pathname, list, 1);
 			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 			return get_request;
 		}
@@ -317,7 +318,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 			t_create_directory *get_request = malloc(sizeof(t_create_directory));
 			t_list* list = utils_receive_package(socket);
 			utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-			utils_get_from_list_to(&get_request->pathname,list,0);
+			utils_get_from_list_to(&get_request->pathname, list, 1);
 			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 			return get_request;
 		}
@@ -325,7 +326,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 			t_write *get_request = malloc(sizeof(t_write));
 			t_list* list = utils_receive_package(socket);
 			utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-			utils_get_from_list_to(&get_request->pathname,list,0);
+			utils_get_from_list_to(&get_request->pathname, list, 1);
 			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 			return get_request;
 		}
@@ -333,7 +334,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 			t_rm_directory *get_request = malloc(sizeof(t_rm_directory));
 			t_list* list = utils_receive_package(socket);
 			utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-			utils_get_from_list_to(&get_request->pathname,list,0);
+			utils_get_from_list_to(&get_request->pathname, list, 1);
 			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 			return get_request;
 		}
@@ -348,8 +349,10 @@ static void utils_destroy_list(t_buffer *self) {
 }
 
 void utils_get_from_list_to(void *parameter,t_list *list,int index) {
-	t_buffer *buffer; buffer=list_get(list,index);
+	t_buffer *buffer; 
+	buffer=list_get(list,index);
 	memcpy(parameter,buffer->stream,buffer->size);
+	printf("BUFFER SIZEEEEEEEE INDEX %d %d", buffer->size, index);
 }
 
 void* utils_receive_buffer(int* size, int socket_cliente) {

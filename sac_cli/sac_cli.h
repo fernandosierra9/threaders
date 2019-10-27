@@ -45,10 +45,11 @@ char fuse_disc_path[1000];
 #define CUSTOM_FUSE_OPT_KEY(t, p, v) { t, offsetof(struct t_runtime_options, p), v }
 
 
-void sac_cli_init();
+int sac_cli_init(int argc, char *argv[]);
 int sac_create_directory(const char *path, mode_t mode);
 int sac_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi);
-int sac_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
+int sac_read(char *path);
+// int sac_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
 int sac_open(const char *path, struct fuse_file_info *fi);
 int sac_getattr(const char *path, struct stat *stbuf);
 int sac_write (const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
