@@ -54,7 +54,10 @@ int main(void)
     printf("\n ptr nuevo: %d \n" , ptr);
     ptr = muse_alloc(200);
     printf("\n ptr nuevo: %d \n" , ptr);
-
+    ptr = muse_alloc(100);
+    printf("\n ptr nuevo: %d \n" , ptr);
+    ptr = muse_alloc(50);
+    printf("\n ptr nuevo: %d \n" , ptr);
     int dst;
     muse_get(&dst, ptr, 4);
     int src;

@@ -140,13 +140,19 @@ void muse_init() {
 	int cantidad_paginas_virtuales = muse_swap_size() / muse_page_size();
 	cantidad_paginas_totales = cantidad_paginas_reales
 			+ cantidad_paginas_virtuales;
-
+   /*
 	t_vector_paginas creacionVectorPaginas[cantidad_paginas_totales];
 
 	for (int i = 0; i < cantidad_paginas_totales; i++) {
 		creacionVectorPaginas[i].libre = true;
 	}
 	vectorPaginas = creacionVectorPaginas;
+	*/
+	vectorPaginas = (t_vector_paginas*)calloc(cantidad_paginas_totales, sizeof(vectorPaginas));
+	for (int i = 0; i < cantidad_paginas_totales; i++) {
+		vectorPaginas[i].libre = true;
+	}
+
 	lista_procesos = list_create();
 	puts("algo");
 	printf("cantidad de bytes de la estructura: %d", sizeof(t_heapMetadata));
@@ -253,9 +259,8 @@ bool existe_memoria_parar_paginas(int cantidad_paginas_necesarias) {
 	int i = 0;
 	int contador =0;
 	while (i < cantidad_paginas_totales) {
-		t_vector_paginas pagina2 = *(vectorPaginas + i);
 
-		if (pagina2.libre) {
+		if (vectorPaginas[i].libre) {
 			contador++;
 		}
 		if (contador == cantidad_paginas_necesarias) {
@@ -270,8 +275,7 @@ bool existe_memoria_parar_paginas(int cantidad_paginas_necesarias) {
 }
 
 void cambiar_estado_pagina(int pagina, bool estado) {
-	t_vector_paginas pagina2 = *(vectorPaginas + pagina);
-	pagina2.libre = estado;
+	vectorPaginas[pagina].libre = estado;
 }
 /*
  t_nodo_segmento* nuevo_segmento(uint32_t cantidad_memoria){
