@@ -58,10 +58,23 @@ int main(void)
     printf("\n ptr nuevo: %d \n" , ptr);
     ptr = muse_alloc(50);
     printf("\n ptr nuevo: %d \n" , ptr);
+
+    //ejemplo 1
+    int src =4;
+    muse_cpy(ptr, &src, 12);
     int dst;
     muse_get(&dst, ptr, 4);
-    int src;
-    muse_cpy(ptr, &src, 12);
+    printf("get %d ",dst);
+
+    //ejemplo 2
+    char *string =malloc(strlen("fernando")+1);
+    memcpy(string,"fernando",strlen("fernando"));
+    string[strlen("fernando")] = '\0';
+    char *dstchar;
+    muse_cpy(ptr, &string, 12);
+    muse_get(&dstchar, ptr, 4);
+    printf("obtuve %s",dstchar);
+
     muse_free(ptr);
     muse_close();
 	//th_return(0);
