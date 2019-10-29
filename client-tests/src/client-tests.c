@@ -51,6 +51,10 @@ int main(void)
     muse_init((int)getpid(),
     		"127.0.0.1", 5003);
     uint32_t ptr = muse_alloc(200);
+    printf("\n ptr nuevo: %d \n" , ptr);
+    ptr = muse_alloc(200);
+    printf("\n ptr nuevo: %d \n" , ptr);
+
     int dst;
     muse_get(&dst, ptr, 4);
     int src;
