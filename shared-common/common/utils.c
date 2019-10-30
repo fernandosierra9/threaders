@@ -364,9 +364,20 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		utils_get_from_list_to(get_request->pathname, list, 0);
 		int cant=strlen(get_request->pathname);
 		//memcpy(get_request->pathname,test,strlen(get_request->pathname)+1);
-		get_request->pathname[cant] = '\0';
-		printf("%s string",get_request->pathname);
-		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
+		//get_request->pathname[cant] = '\0';
+		char *test = malloc(cant);
+		test= strdup(get_request->pathname);
+		printf("path %s \n",test);
+		printf(" path %c \n",get_request->pathname[0]);
+		printf(" path %c \n",get_request->pathname[1]);
+		printf(" path %c \n",get_request->pathname[2]);
+		printf(" path %c \n",get_request->pathname[3]);
+		printf(" path %c \n",get_request->pathname[4]);
+		printf(" path %c \n",get_request->pathname[5]);
+		printf(" path %c \n",get_request->pathname[6]);
+		printf(" path %c \n",get_request->pathname[7]);
+
+		//list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}
 	case OPEN: {
