@@ -16,6 +16,17 @@ int muse_init(int id, char* ip, int puerto) {
 	}
 	puts("Conexion con Muse establecida");
 
+	char *send_algo ;
+	send_algo  = malloc(strlen("fernando"));
+	send_algo  =strdup("fernando");
+	t_read* read_send  = malloc(sizeof(t_read));
+	read_send->pathname = malloc(strlen("fernando")+1);
+	memcpy(read_send->pathname,"fernando",strlen("fernando"));
+	read_send->pathname[strlen("fernando")] = '\0';
+	//memcpy(read_send->pathname,"fernando",strlen("fernando"));
+	t_protocol protocol_send = READ;
+	utils_serialize_and_send(muse_fd, protocol_send, read_send);
+
 	return 0;
 }
 

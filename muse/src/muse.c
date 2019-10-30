@@ -130,6 +130,16 @@ void muse_server_init() {
 		case UNMAP: {
 			// TODO: Implementation
 		}
+		case READ: {
+			muse_logger_info("***READ RECIBIDO***");
+			t_read* read_recv = utils_receive_and_deserialize(libmuse_fd, protocol);
+			//char * test;
+			//test = malloc(strlen("fernando")+1);
+			//memcpy(test,read_recv->pathname,strlen("fernando")+1);
+			//muse_logger_info("****Process with pid %d*****", read_recv->id_sac_cli);
+			muse_logger_info("****Process with pid %s*****",read_recv->pathname);
+
+		}
 		}
 	}
 

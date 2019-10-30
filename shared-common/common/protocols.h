@@ -112,7 +112,7 @@ typedef struct {
 
 typedef struct {
 	char* pathname;
-	int id_sac_cli;
+	//int id_sac_cli;
 } t_read;
 
 typedef struct {
