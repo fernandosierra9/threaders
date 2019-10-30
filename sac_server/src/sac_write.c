@@ -9,7 +9,7 @@
  * 	@ RET
  * 		0 si termino correctamente, negativo si hay error.
  */
-int sac_create_directory (const char *path, mode_t mode){
+int sac_server_create_directory (const char *path, mode_t mode){
     sac_server_logger_info("Making directory, Path: %s", path);
 	int father_node, i, res = 0;
 	struct sac_file_t* node;

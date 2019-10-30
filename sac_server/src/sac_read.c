@@ -14,7 +14,7 @@
  * 	@RETURN
  * 		O archivo/directorio fue encontrado. -ENOENT archivo/directorio no encontrado
  */
-int sac_getattr(const char *path, struct stat *stbuf) {
+int sac_server_getattr(const char *path, struct stat *stbuf) {
 	int res = 0;
 
 	memset(stbuf, 0, sizeof(struct stat));
@@ -47,7 +47,7 @@ int sac_getattr(const char *path, struct stat *stbuf) {
  * 	@RETURN
  * 		O archivo fue encontrado. -EACCES archivo no es accesible
  */
-int sac_open(const char *path, struct fuse_file_info *fi) {
+int sac_server_open(const char *path, struct fuse_file_info *fi) {
 	if (strcmp(path, DEFAULT_FILE_PATH) != 0)
 		return -ENOENT;
 
@@ -74,7 +74,7 @@ int sac_open(const char *path, struct fuse_file_info *fi) {
  * 		O directorio fue encontrado. -ENOENT directorio no encontrado
  */
 
-int sac_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
+int sac_server_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
 	(void) offset;
 	(void) fi;
 
@@ -108,7 +108,7 @@ int sac_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offse
  * 		la cantidad de bytes leidos o -ENOENT si ocurrio un error. ( Este comportamiento es igual
  * 		para la funcion write )
  */
-int sac_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
+int sac_server_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	size_t len;
 	(void) fi;
 	if (strcmp(path, DEFAULT_FILE_PATH) != 0)

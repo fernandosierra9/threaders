@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lshared-common -lfuse
+LIBS := -lfuse -lshared-common
 

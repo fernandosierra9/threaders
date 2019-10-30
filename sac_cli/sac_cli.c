@@ -16,13 +16,13 @@ struct t_runtime_options {
  */
 
 static struct fuse_operations sac_operations = {
-		.getattr = sac_getattr,
-		.readdir = sac_readdir,
-		.open = sac_open,
-		.read = sac_read,
-		.mkdir = sac_create_directory,
-		.write = sac_write,
-		.rmdir = sac_rm_directory,
+		.getattr = sac_cli_getattr,
+		.readdir = sac_cli_readdir,
+		.open = sac_cli_open,
+		.read = sac_cli_read,
+		.mkdir = sac_cli_create_directory,
+		.write = sac_cli_write,
+		.rmdir = sac_cli_rm_directory,
 };
 
 /** keys for FUSE_OPT_ options */
@@ -69,7 +69,7 @@ int sac_cli_init(int argc, char *argv[]) {
 	} else {
 		printf("Mountpoint not specified: Unloading modules.");
 		exit(0);
-	
+	}
 
 	sac_cli_fd = socket_connect_to_server(ip_sac_server, puerto_sac);
 
@@ -84,11 +84,11 @@ int sac_cli_init(int argc, char *argv[]) {
 	return fuse_main(args.argc, args.argv, &sac_operations, NULL);
 }
 
-int sac_create_directory(const char *path, mode_t mode) {
+int sac_cli_create_directory(const char *path, mode_t mode) {
     return 0;
 };
 
-int sac_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
+int sac_cli_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
 	t_read_dir *read_dir_send = malloc(sizeof(t_read_dir));
 	read_dir_send->id_sac_cli = 123;
 	read_dir_send->pathname = "/";
@@ -97,7 +97,7 @@ int sac_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offse
 	return 0;
 };
 
-int sac_read(char *path) {
+int sac_cli_read(char *path) {
 	t_read *read_send = malloc(sizeof(t_read));
 	read_send->id_sac_cli = 456;
 	read_send->pathname = "/niconico";
@@ -106,7 +106,7 @@ int sac_read(char *path) {
 	return 0;
 };
 
-int sac_open(const char *path, struct fuse_file_info *fi) { 
+int sac_cli_open(const char *path, struct fuse_file_info *fi) { 
 	t_open *open_send = malloc(sizeof(t_open));
 	open_send->id_sac_cli = 789;
 	open_send->pathname = "/";
@@ -115,7 +115,7 @@ int sac_open(const char *path, struct fuse_file_info *fi) {
 	return 0;
 };
 
-int sac_getattr(const char *path, struct stat *stbuf) { 
+int sac_cli_getattr(const char *path, struct stat *stbuf) { 
 	t_get_attr *get_attr_send = malloc(sizeof(t_get_attr));
 	get_attr_send->id_sac_cli = 1011;
 	get_attr_send->pathname = "/";
@@ -124,7 +124,7 @@ int sac_getattr(const char *path, struct stat *stbuf) {
 	return 0;
 };
 
-int sac_write (const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
+int sac_cli_write (const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	t_write *write_send = malloc(sizeof(t_write));
 	write_send->id_sac_cli = 1112;
 	write_send->pathname = "/";
@@ -133,7 +133,7 @@ int sac_write (const char *path, const char *buf, size_t size, off_t offset, str
 	return 0;
 };
 
-int sac_rm_directory (const char* path) {
+int sac_cli_rm_directory (const char* path) {
 	t_rm_directory *rm_directory_send = malloc(sizeof(t_rm_directory));
 	rm_directory_send->id_sac_cli = 1314;
 	rm_directory_send->pathname = "/";
