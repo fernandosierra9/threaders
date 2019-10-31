@@ -230,7 +230,7 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 				list_add(nodoSegmento->list_paginas, nodo_pagina);
 			}
 			nodoSegmento->base    = primera_pagina * muse_page_size();
-			nodoSegmento->tamanio = cantidad_paginas_necesarias * muse_page_size();
+			nodoSegmento->tamanio = cantidad_paginas_necesarias * muse_page_size() -1;
 			t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
 			heap->libre = false;
 			heap->size = memoria_reservar;
@@ -276,6 +276,10 @@ int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,uint32_t memori
 			break;
 		}
 		offset = heap->size;
+		//sobran menos de 5 bytes
+		if(ultima_pagina*muse_page_size()-1 -offset  <= 4 ){
+			break;
+		}
 	}while (offset <= ultima_pagina*muse_page_size()-1);
 
 	printf("valor respuesta: %d",respuesta);
