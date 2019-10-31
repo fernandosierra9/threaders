@@ -212,10 +212,11 @@ t_nodo_segmento* crear_nodo_segmento() {
 
 int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 		uint32_t memoria_reservar) {
-	memoria_reservar  = memoria_reservar +5;
+	int memoria_reservar2  = memoria_reservar +2;
+
 	int pagina = -1;
 	if (list_size(nodoSegmento->list_paginas) == 0) {
-		int cantidad_paginas_necesarias = (memoria_reservar / muse_page_size())
+		int cantidad_paginas_necesarias = (memoria_reservar2 / muse_page_size())
 				+ 1;
 		int primera_pagina;
 		if (existe_memoria_parar_paginas(cantidad_paginas_necesarias)) {
@@ -237,11 +238,11 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 			memcpy(memoria +primera_pagina * muse_page_size(), heap,
 					sizeof(t_heapMetadata));
 			heap->libre = true;
-			heap->size  = cantidad_paginas_necesarias * muse_page_size() - memoria_reservar -5;
+			heap->size  = cantidad_paginas_necesarias * muse_page_size() - memoria_reservar -5 -5 -1;
 			memcpy(memoria +5+primera_pagina* muse_page_size() + memoria_reservar,
 					heap, sizeof(t_heapMetadata));
 			pagina = primera_pagina;
-			memoria_reservar = 10;
+			memoria_reservar = 5;
 			recorer_segmento_espacio_libre(nodoSegmento,memoria_reservar);
 
 		} else {
@@ -267,22 +268,35 @@ int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,uint32_t memori
 	int offset = primera_pagina*muse_page_size();
 	int respuesta = -1;
 	t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
-
+	printf("\n base segmento %d \n",nodoSegmento->base);
+	printf("limite segmento %d \n",ultima_pagina*muse_page_size()-1);
 	do{
 		memcpy(heap,memoria+offset,sizeof(t_heapMetadata));
 		offset =offset + 5;
-		if(heap->libre == true && heap->size  <= memoria_reservar){
+		printf(" \n offset despues de leer estructura %d \n",offset);
+		if(heap->libre && memoria_reservar < heap->size){
+			printf("\ **** esta libre a partir de este lugar %d ***** \n",offset);
+			respuesta = offset;
+			break;
+
+		}
+
+		if(heap->libre && heap->size  <= memoria_reservar){
 			respuesta = offset;
 			break;
 		}
-		offset = heap->size;
+		printf(" \n memoria reservar %d \n",memoria_reservar);
+		printf(" \n heap size de la estructura %d \n",heap->size);
+
+		offset = offset + heap->size;
+		printf("offset despues de leer el size de  la estructura %d \n",offset);
 		//sobran menos de 5 bytes
 		if(ultima_pagina*muse_page_size()-1 -offset  <= 4 ){
 			break;
 		}
 	}while (offset <= ultima_pagina*muse_page_size()-1);
 
-	printf("valor respuesta: %d",respuesta);
+	printf("valor respuesta: %d \n",respuesta);
 	return respuesta;
 }
 
