@@ -198,7 +198,7 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 	case READ: {
 		t_package* package = utils_package_create(protocol);
 		utils_package_add(package, &((t_read*) package_send)->id_sac_cli,sizeof(uint32_t));
-		utils_package_add(package, &((t_read*) package_send)->pathname, strlen(((t_read*) package_send)->pathname));
+		utils_package_add(package, ((t_read*) package_send)->pathname, strlen(((t_read*) package_send)->pathname)+1);
 		utils_package_send_to(package,socket);
 		utils_package_destroy(package);
 		break;
@@ -343,7 +343,12 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		t_read *get_request = malloc(sizeof(t_read));
 		t_list* list = utils_receive_package(socket);
 		utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-		utils_get_from_list_to(&get_request->pathname, list, 1);
+		utils_get_from_list_to(get_request->pathname, list, 1);
+		char *test ;
+		test = malloc(strlen(get_request->pathname)+1);
+		test = strdup(get_request->pathname);
+		printf("test de path: %s \n",get_request->pathname);
+		get_request->pathname = test;
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}
