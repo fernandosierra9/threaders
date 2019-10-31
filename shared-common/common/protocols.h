@@ -55,6 +55,7 @@ typedef struct {
 
 typedef struct {
 	uint32_t dst;
+	void* content;
 	int self_id;
 	int size;
 } t_copy;

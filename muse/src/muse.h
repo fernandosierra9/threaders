@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 #include <pthread.h>
 #include <assert.h>
 #include <commons/config.h>
@@ -50,6 +51,7 @@ t_vector_paginas;
 int cantidad_paginas_totales;
 t_vector_paginas *vectorPaginas;
 bool existe_memoria_parar_paginas(int cantidad_paginas_necesarias);
+bool estaOcupada(int pag);
 
 void cambiar_estado_pagina(int pagina,bool estado);
 int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,uint32_t recervar);

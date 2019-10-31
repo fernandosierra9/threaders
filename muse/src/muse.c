@@ -75,10 +75,22 @@ void muse_server_init() {
 			muse_logger_info("Free received\n");
 			t_free *free_receive = utils_receive_and_deserialize(libmuse_fd,
 					protocol);
-			muse_logger_info("Direction %d will be freed", free_receive->dir);
-			muse_logger_info("id proceso %d", free_receive->self_id);
 
 			t_nodo_proceso* nodoProceso = procesar_id(free_receive->self_id);
+			int paginaBuscada = free_receive->dir / muse_page_size();
+
+			int dir = free_receive->dir;
+			if (estaOcupada(dir/muse_page_size() +1))
+			{
+				cambiar_estado_pagina(paginaBuscada, false);
+
+			}
+
+			// Devolver error
+			else return;
+
+			muse_logger_info("Direction %d will be freed", free_receive->dir);
+			muse_logger_info("id proceso %d", free_receive->self_id);
 
 			//t_nodo_segmento* nodoSegmento=procesar_segmentacion(nodoProceso->list_segmento);
 
@@ -88,6 +100,7 @@ void muse_server_init() {
 			utils_serialize_and_send(libmuse_fd, free_protocol, free_res);
 			break;
 		}
+
 		case GET: {
 			muse_logger_info("Get received");
 			t_get *get_receive = utils_receive_and_deserialize(libmuse_fd,
@@ -98,14 +111,23 @@ void muse_server_init() {
 			muse_logger_info("id proceso %d", get_receive->id_libmuse);
 			t_nodo_proceso* nodo = procesar_id(get_receive->id_libmuse);
 
-			// Response logic
-			t_get_ok* response = malloc(sizeof(t_get_ok));
-			response->res = 8;
-			response->tamres = get_receive->size;
-			t_protocol get_protocol = GET_OK;
-			utils_serialize_and_send(libmuse_fd, get_protocol, response);
+			// VErifico que haya contenido en la posicion
+			char* content;
+			memcpy(&content, memoria + get_receive->src, get_receive->size);
+
+			if (strlen(content) != 0)
+			{
+				// Response logic
+				t_get_ok* response = malloc(sizeof(t_get_ok));
+				response->res = content;
+				response->tamres = strlen(content)* sizeof(char);
+				t_protocol get_protocol = GET_OK;
+				utils_serialize_and_send(libmuse_fd, get_protocol, response);
+			}
+			// Else
 			break;
 		}
+
 		case COPY: {
 			muse_logger_info("Copy received");
 			t_copy* cpy = utils_receive_and_deserialize(libmuse_fd, protocol);
@@ -114,6 +136,22 @@ void muse_server_init() {
 					cpy->self_id, cpy->size, cpy->dst);
 			muse_logger_info("id proceso %d", cpy->self_id);
 			t_nodo_proceso* nodo = procesar_id(cpy->self_id);
+
+			// Verifico si puedo copiar algo a la posicion solicitada
+
+			t_heapMetadata *heap = malloc(sizeof(t_heapMetadata))
+			memcpy(heap, memoria + cpy->dst -5, sizeof(t_heapMetadata));
+
+			if (heap->libre)
+			{
+				int pagina = cpy->dst / muse_page_size() +1;
+				heap->libre = false;
+				heap->size = cpy->size;
+				memcpy (cpy->dst-5, &heap, sizeof(t_heapMetadata));
+				memcpy (cpy->dst, &cpy->content, cpy->size);
+
+			}
+
 			// Response logic
 			t_copy_response* copy_res = malloc(sizeof(t_copy_response));
 			copy_res->res = 1;
@@ -234,7 +272,7 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 			t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
 			heap->libre = false;
 			heap->size = memoria_reservar;
-			memcpy(memoria +5+primera_pagina * muse_page_size(), heap,
+			memcpy(memoria +primera_pagina * muse_page_size(), heap,
 					sizeof(t_heapMetadata));
 			//falta preguntar si alcanza con una sola pagina o necesita mas paginas
 			heap->libre = true;
@@ -277,6 +315,12 @@ bool existe_memoria_parar_paginas(int cantidad_paginas_necesarias) {
 void cambiar_estado_pagina(int pagina, bool estado) {
 	vectorPaginas[pagina].libre = estado;
 }
+
+bool estaOcupada(int pagina)
+{
+	return vectorPaginas[pagina].libre;
+}
+
 /*
  t_nodo_segmento* nuevo_segmento(uint32_t cantidad_memoria){
  int cantidad_paginas_necesarias= cantidad_memoria /muse_page_size();

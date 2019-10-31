@@ -95,10 +95,13 @@ int muse_get(void* dst, uint32_t src, size_t n) {
 
 int muse_cpy(uint32_t dst, void* src, int n) {
 
+	void* dataToCopy;
+	memcpy(dataToCopy, &src, sizeof(dataToCopy));
 	t_copy* copy_send = malloc(sizeof(t_copy));
 	copy_send->self_id = getpid();
 	copy_send->size = n;
 	copy_send->dst = dst;
+	copy_send->content = dataToCopy;
 	t_protocol copy_protocol = COPY;
 	utils_serialize_and_send(muse_fd, copy_protocol, copy_send);
 
@@ -108,7 +111,6 @@ int muse_cpy(uint32_t dst, void* src, int n) {
 			copy_protocol);
 
 	if (deserialized_res->res == 1) {
-		// COPY TO MUSE
 		puts("Operation has been successful");
 		return 0;
 	}
