@@ -61,4 +61,6 @@ t_nodo_proceso* existe_proceso_en_lista(int id);
 t_nodo_segmento* procesar_segmentacion(t_list* listaSegmento);
 t_nodo_segmento* crear_nodo_segmento();
 
+int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,uint32_t memoria_reservar);
+
 #endif /* MUSE_H_ */

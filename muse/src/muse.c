@@ -234,14 +234,15 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 			t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
 			heap->libre = false;
 			heap->size = memoria_reservar;
-			memcpy(memoria +5+primera_pagina * muse_page_size(), heap,
+			memcpy(memoria +primera_pagina * muse_page_size(), heap,
 					sizeof(t_heapMetadata));
-			//falta preguntar si alcanza con una sola pagina o necesita mas paginas
 			heap->libre = true;
-			heap->size  = cantidad_paginas_necesarias * muse_page_size() - memoria_reservar;
+			heap->size  = cantidad_paginas_necesarias * muse_page_size() - memoria_reservar -5;
 			memcpy(memoria +5+primera_pagina* muse_page_size() + memoria_reservar,
 					heap, sizeof(t_heapMetadata));
 			pagina = primera_pagina;
+			memoria_reservar = 10;
+			recorer_segmento_espacio_libre(nodoSegmento,memoria_reservar);
 
 		} else {
 			return -1;
@@ -253,6 +254,30 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 //buscar si segmento se puede agrandar
 //crear nuevo segmento
 	return pagina * muse_page_size()+5;
+}
+
+int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,uint32_t memoria_reservar){
+	int desde = nodoSegmento->base;
+	int hasta= nodoSegmento->base + nodoSegmento->tamanio;
+
+	int primera_pagina = (desde / muse_page_size())
+						+ 1;
+
+	int ultima_pagina = (hasta/ muse_page_size())+1;
+
+	int offset = primera_pagina*muse_page_size();
+	int respuesta = -1;
+	t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
+	while ((offset - primera_pagina*muse_page_size() )<= memoria_reservar){
+		memcpy(heap,memoria+offset,sizeof(t_heapMetadata));
+		offset =offset + 5;
+		if(heap->libre == true && heap->size  <= memoria_reservar){
+			respuesta = offset;
+			break;
+		}
+		offset = heap->size;
+	}
+	return respuesta;
 }
 
 bool existe_memoria_parar_paginas(int cantidad_paginas_necesarias) {
