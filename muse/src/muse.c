@@ -260,15 +260,15 @@ int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,uint32_t memori
 	int desde = nodoSegmento->base;
 	int hasta= nodoSegmento->base + nodoSegmento->tamanio;
 
-	int primera_pagina = (desde / muse_page_size())
-						+ 1;
+	int primera_pagina = (desde / muse_page_size());
 
 	int ultima_pagina = (hasta/ muse_page_size())+1;
 
 	int offset = primera_pagina*muse_page_size();
 	int respuesta = -1;
 	t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
-	while ((offset - primera_pagina*muse_page_size() )<= memoria_reservar){
+
+	do{
 		memcpy(heap,memoria+offset,sizeof(t_heapMetadata));
 		offset =offset + 5;
 		if(heap->libre == true && heap->size  <= memoria_reservar){
@@ -276,7 +276,9 @@ int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,uint32_t memori
 			break;
 		}
 		offset = heap->size;
-	}
+	}while (offset <= ultima_pagina*muse_page_size()-1);
+
+	printf("valor respuesta: %d",respuesta);
 	return respuesta;
 }
 
