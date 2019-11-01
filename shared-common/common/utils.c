@@ -164,7 +164,7 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 		//utils_package_add(package, &((t_copy*) package_send)->self_id,
 				//sizeof(int));
 		//printf("\n********size a enviar %d***********",package->buffer->size);
-		//utils_package_add(package, &((t_copy*) package_send)->size, sizeof(int));
+		utils_package_add(package, &((t_copy*) package_send)->size, sizeof(int));
 		//printf("\n********size a enviar %d***********",package->buffer->size);
 		utils_package_add(package, ((t_copy*) package_send)->content,4);
 		printf("\n********size a enviar %d***********",package->buffer->size);
@@ -310,10 +310,11 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		t_list* list = utils_receive_package(socket);
 		//utils_get_from_list_to(&copy_req->dst, list, 0);
 		//utils_get_from_list_to(&copy_req->self_id, list, 1);
-		//utils_get_from_list_to(&copy_req->size, list, 2);
+		utils_get_from_list_to(&copy_req->size, list, 0);
 
 		//falta recervar memoria parar content
-		utils_get_from_list_to(copy_req->content, list, 0);
+		copy_req->content = malloc(copy_req->size);
+		utils_get_from_list_to(copy_req->content, list, 1);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		printf("****termino el copy****");
 		return copy_req;
