@@ -139,7 +139,7 @@ void muse_server_init() {
 
 			// Verifico si puedo copiar algo a la posicion solicitada
 
-			t_heapMetadata *heap = malloc(sizeof(t_heapMetadata))
+			t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
 			memcpy(heap, memoria + cpy->dst -5, sizeof(t_heapMetadata));
 
 			if (heap->libre)

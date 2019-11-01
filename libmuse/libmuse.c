@@ -83,7 +83,7 @@ int muse_get(void* dst, uint32_t src, size_t n) {
 	switch (get_protocol) {
 	case GET_OK: {
 		t_get_ok* get = utils_receive_and_deserialize(muse_fd, get_protocol);
-		memcpy(dst, &get->res, get->tamres);
+		memcpy(dst, get->res, get->tamres);
 		return 0;
 	}
 
@@ -95,13 +95,11 @@ int muse_get(void* dst, uint32_t src, size_t n) {
 
 int muse_cpy(uint32_t dst, void* src, int n) {
 
-	void* dataToCopy;
-	memcpy(dataToCopy, &src, sizeof(dataToCopy));
 	t_copy* copy_send = malloc(sizeof(t_copy));
 	copy_send->self_id = getpid();
 	copy_send->size = n;
 	copy_send->dst = dst;
-	copy_send->content = dataToCopy;
+	copy_send->content = src;
 	t_protocol copy_protocol = COPY;
 	utils_serialize_and_send(muse_fd, copy_protocol, copy_send);
 

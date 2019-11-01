@@ -299,6 +299,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		utils_get_from_list_to(&copy_req->dst, list, 0);
 		utils_get_from_list_to(&copy_req->self_id, list, 1);
 		utils_get_from_list_to(&copy_req->size, list, 2);
+		utils_get_from_list_to(copy_req->content, list, 3);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return copy_req;
 	}
