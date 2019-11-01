@@ -131,14 +131,16 @@ void muse_server_init() {
 		case COPY: {
 			muse_logger_info("Copy received");
 			t_copy* cpy = utils_receive_and_deserialize(libmuse_fd, protocol);
-			muse_logger_info(
-					"Process with pid; %d is trying to copy %d bytes to direction: %d",
-					cpy->self_id, cpy->size, cpy->dst);
-			muse_logger_info("id proceso %d", cpy->self_id);
+			muse_logger_info("ver cpy bien ");
+			//muse_logger_info(
+			//		"Process with pid; %d is trying to copy %d bytes to direction: %d",
+			//		cpy->self_id, cpy->size, cpy->dst);
+			muse_logger_info("recibio bien ");
+			//muse_logger_info("id proceso %d", cpy->self_id);
 			t_nodo_proceso* nodo = procesar_id(cpy->self_id);
 
 			// Verifico si puedo copiar algo a la posicion solicitada
-
+			/*
 			t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
 			memcpy(heap, memoria + cpy->dst -5, sizeof(t_heapMetadata));
 
@@ -147,11 +149,11 @@ void muse_server_init() {
 				int pagina = cpy->dst / muse_page_size() +1;
 				heap->libre = false;
 				heap->size = cpy->size;
-				memcpy (cpy->dst-5, heap, sizeof(t_heapMetadata));
-				memcpy (cpy->dst, cpy->content, cpy->size);
+				memcpy (memoria + cpy->dst-5, heap, sizeof(t_heapMetadata));
+				memcpy (memoria + cpy->dst, cpy->content, cpy->size);
 
 			}
-
+			 */
 			// Response logic
 			t_copy_response* copy_res = malloc(sizeof(t_copy_response));
 			copy_res->res = 1;

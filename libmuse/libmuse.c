@@ -101,14 +101,19 @@ int muse_cpy(uint32_t dst, void* src, int n) {
 	copy_send->dst = dst;
 	copy_send->content = src;
 	t_protocol copy_protocol = COPY;
-	utils_serialize_and_send(muse_fd, copy_protocol, copy_send);
+	int test;
+	memcpy(&test,copy_send->content,4);
+	printf("\n numero %d",test);
 
+	utils_serialize_and_send(muse_fd, copy_protocol, copy_send);
+/*
 	int response = recv(muse_fd, &copy_protocol, sizeof(t_protocol), 0);
 
 	t_copy_response* deserialized_res = utils_receive_and_deserialize(muse_fd,
 			copy_protocol);
-
-	if (deserialized_res->res == 1) {
+*/
+	int res =1;
+	if (res == 1) {
 		puts("Operation has been successful");
 		return 0;
 	}

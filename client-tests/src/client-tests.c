@@ -60,12 +60,14 @@ int main(void)
     printf("\n ptr nuevo: %d \n" , ptr);
 
     int num = 4;
-    muse_cpy(ptr, &num, 12);
+    muse_cpy(ptr, &num, sizeof(num));
     int des;
+   /*
     muse_get(&des, ptr, 4);
     printf("Read: %d", des);
 
     muse_free(ptr);
+ */
     muse_close();
 	//th_return(0);
 	return 0;
