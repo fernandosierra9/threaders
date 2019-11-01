@@ -80,7 +80,7 @@ void muse_server_init() {
 			int paginaBuscada = free_receive->dir / muse_page_size();
 
 			int dir = free_receive->dir;
-			if (estaOcupada(dir/muse_page_size() +1))
+			if (estaOcupada(paginaBuscada))
 			{
 				cambiar_estado_pagina(paginaBuscada, false);
 
@@ -112,8 +112,8 @@ void muse_server_init() {
 			t_nodo_proceso* nodo = procesar_id(get_receive->id_libmuse);
 
 			// VErifico que haya contenido en la posicion
-			char* content;
-			memcpy(&content, memoria + get_receive->src, get_receive->size);
+			char* content = malloc(sizeof(get_receive->size));
+			memcpy(content, memoria + get_receive->src, sizeof(content));
 
 			if (strlen(content) != 0)
 			{
@@ -147,8 +147,8 @@ void muse_server_init() {
 				int pagina = cpy->dst / muse_page_size() +1;
 				heap->libre = false;
 				heap->size = cpy->size;
-				memcpy (cpy->dst-5, &heap, sizeof(t_heapMetadata));
-				memcpy (cpy->dst, &cpy->content, cpy->size);
+				memcpy (cpy->dst-5, heap, sizeof(t_heapMetadata));
+				memcpy (cpy->dst, cpy->content, cpy->size);
 
 			}
 

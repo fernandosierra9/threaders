@@ -157,6 +157,7 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 		utils_package_add(package, &((t_copy*) package_send)->self_id,
 				sizeof(int));
 		utils_package_add(package, &((t_copy*) package_send)->size, sizeof(int));
+		utils_package_add(package, ((t_copy*) package_send)->content, ((t_copy*) package_send)->size);
 		utils_package_send_to(package, socket);
 		utils_package_destroy(package);
 		break;
