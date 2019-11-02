@@ -59,10 +59,10 @@ int main(void)
     ptr = muse_alloc(50);
     printf("\n ptr nuevo: %d \n" , ptr);
 
-    int num = 4;
+    int num = 9;
     muse_cpy(ptr, &num, sizeof(num));
-    int des;
 
+    int des;
     muse_get(&des, ptr, 4);
     printf("Read: %d", des);
 

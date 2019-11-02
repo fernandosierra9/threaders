@@ -151,12 +151,6 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 		break;
 	}
 	case COPY: {
-		printf("\n ****empieza test****");
-		int algo;
-		printf("\n ****empieza memcpy****");
-		memcpy(&algo,((t_copy*) package_send)->content,4);
-		printf("\n numero %d",algo);
-		printf("\n ****termina memcpy****");
 		t_package* package = utils_package_create(protocol);
 		utils_package_add(package, &((t_copy*) package_send)->dst,
 				sizeof(uint32_t));
@@ -165,7 +159,7 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 				sizeof(int));
 		utils_package_add(package, &((t_copy*) package_send)->size, sizeof(int));
 
-		utils_package_add(package, ((t_copy*) package_send)->content,4);
+		utils_package_add(package, ((t_copy*) package_send)->content, ((t_copy*) package_send)->size);
 
 		utils_package_send_to(package, socket);
 
@@ -310,7 +304,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		utils_get_from_list_to(&copy_req->dst, list, 0);
 		utils_get_from_list_to(&copy_req->self_id, list, 1);
 		utils_get_from_list_to(&copy_req->size, list, 2);
-		//falta recervar memoria parar content
+		//falta reservar memoria parar content
 
 		copy_req->content = malloc(copy_req->size);
 		utils_get_from_list_to(copy_req->content, list, 3);

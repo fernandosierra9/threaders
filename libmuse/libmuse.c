@@ -82,7 +82,7 @@ int muse_get(void* dst, uint32_t src, size_t n) {
 	switch (get_protocol) {
 	case GET_OK: {
 		t_get_ok* get = utils_receive_and_deserialize(muse_fd, get_protocol);
-		memcpy(dst, get->res, get->tamres);
+		memcpy(dst, &get->res, get->tamres);
 		return 0;
 	}
 
@@ -108,7 +108,7 @@ int muse_cpy(uint32_t dst, void* src, int n) {
 	t_copy_response* deserialized_res = utils_receive_and_deserialize(muse_fd,
 			copy_protocol);
 
-	if (deserialized_res == 1) {
+	if (deserialized_res->res == 1) {
 		puts("Operation has been successful");
 		return 0;
 	}

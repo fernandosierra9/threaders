@@ -75,11 +75,12 @@ void muse_server_init() {
 			muse_logger_info("Free received\n");
 			t_free *free_receive = utils_receive_and_deserialize(libmuse_fd,
 					protocol);
-			muse_logger_info("Direction %d will be freed \n", free_receive->dir);
+			muse_logger_info("Direction %d will be freed \n",
+					free_receive->dir);
 
 			if (!existe_proceso_en_lista(free_receive->self_id)) {
 				t_protocol free_failed = SEG_FAULT;
-				send(libmuse_fd, &free_failed, sizeof(t_protocol),0);
+				send(libmuse_fd, &free_failed, sizeof(t_protocol), 0);
 				break;
 			}
 
@@ -94,39 +95,38 @@ void muse_server_init() {
 				break;
 			}
 
-			else
-			{
+			else {
 				header->libre = true;
-				memset(memoria+dir+5, '\0', header->size);
+				memset(memoria + dir + 5, '\0', header->size);
 				t_heapMetadata* closestHeader = malloc(sizeof(t_heapMetadata));
-				memcpy(closestHeader, memoria + dir + header->size, sizeof(closestHeader));
+				memcpy(closestHeader, memoria + dir + header->size,
+						sizeof(closestHeader));
 				int oldsize = header->size;
 
-				if (closestHeader->libre)
-				{
+				if (closestHeader->libre) {
 					header->size += closestHeader->size;
 					memset(memoria + dir + header->size, '\0', header->size);
 				}
 
-				t_heapMetadata* previousHeaderDir = malloc(sizeof(previousHeaderDir));
+				t_heapMetadata* previousHeaderDir = malloc(
+						sizeof(previousHeaderDir));
 				int desp = 0;
 
-				do
-				{
-					memcpy(previousHeaderDir, memoria+desp, sizeof(previousHeaderDir));
-					if (memoria + desp + previousHeaderDir->size == dir-6)
-					{
-						if(previousHeaderDir->libre)
-						{
+				do {
+					memcpy(previousHeaderDir, memoria + desp,
+							sizeof(previousHeaderDir));
+					if (memoria + desp + previousHeaderDir->size == dir - 6) {
+						if (previousHeaderDir->libre) {
 							previousHeaderDir->size += header->size;
-							memset(memoria+ desp +5, '\0', previousHeaderDir->size);
+							memset(memoria + desp + 5, '\0',
+									previousHeaderDir->size);
 							break;
 						}
-					}
-					else desp = desp + previousHeaderDir->size +1;
+					} else
+						desp = desp + previousHeaderDir->size + 1;
 				}
 
-				while(desp < dir-5);
+				while (desp < dir - 5);
 			}
 
 			muse_logger_info("Direction %d will be freed", free_receive->dir);
@@ -153,12 +153,13 @@ void muse_server_init() {
 			}
 
 			else {
-				char* content = malloc(sizeof(get_receive->size));
-				memcpy(content, memoria + get_receive->src, sizeof(content));
+
+				char* content = malloc(get_receive->size);
+				memcpy(&content, memoria + get_receive->src, sizeof(content));
 
 				t_get_ok* response = malloc(sizeof(t_get_ok));
 				response->res = content;
-				response->tamres = strlen(content) * sizeof(char);
+				response->tamres = sizeof(get_receive->size);
 				t_protocol get_protocol = GET_OK;
 				utils_serialize_and_send(libmuse_fd, get_protocol, response);
 				break;
@@ -192,7 +193,19 @@ void muse_server_init() {
 					memcpy(memoria + cpy->dst, cpy->content, cpy->size);
 				}
 
-				// Response logic
+				else
+				{
+					t_copy_response* copy_res = malloc(sizeof(t_copy_response));
+					copy_res->res = -1;
+					cpy_protocol = SEG_FAULT;
+					utils_serialize_and_send(libmuse_fd, cpy_protocol, copy_res);
+					break;
+				}
+
+//				int val;
+//				memcpy(&val, cpy->content, sizeof(int));
+//				printf("Received %d", val);
+
 				t_copy_response* copy_res = malloc(sizeof(t_copy_response));
 				copy_res->res = 1;
 				t_protocol cpy_protocol = GET_OK;
