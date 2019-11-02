@@ -50,17 +50,30 @@ int main(void)
 	/* MUSE CLIENTS */
     muse_init((int)getpid(),
     		"127.0.0.1", 5003);
+
     uint32_t ptr = muse_alloc(200);
     printf("\n ptr nuevo: %d \n" , ptr);
-    ptr = muse_alloc(200);
-    printf("\n ptr nuevo: %d \n" , ptr);
-    ptr = muse_alloc(100);
-    printf("\n ptr nuevo: %d \n" , ptr);
-    ptr = muse_alloc(50);
+
+    //ptr = muse_alloc(200);
+
+
+    ptr = muse_alloc(2);
     printf("\n ptr nuevo: %d \n" , ptr);
 
-    int num = 4;
-    muse_cpy(ptr, &num, sizeof(num));
+
+
+//    ptr = muse_alloc(50);
+//    printf("\n ptr nuevo: %d \n" , ptr);
+
+    int num = 10;
+
+    char *  algo = malloc(strlen("fernando")+1);
+    memcpy(algo,"fernando",strlen("fernando"));
+    algo[strlen("fernando")] = '\0';
+
+    muse_cpy(ptr, algo,strlen("fernando")+1);
+
+    //muse_cpy(ptr, &num,sizeof(int));
     int des;
    /*
     muse_get(&des, ptr, 4);

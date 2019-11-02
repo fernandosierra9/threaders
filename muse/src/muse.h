@@ -31,7 +31,7 @@ typedef struct {
 } t_nodo_segmento;
 
 typedef struct {
-	int nro;
+	int indiceVector;
 } t_nodo_pagina;
 
 t_list *lista_procesos;
@@ -46,20 +46,44 @@ t_heapMetadata;
 typedef struct {
    bool libre;
 }__attribute__((packed))
-t_vector_paginas;
+t_vector_frames;
+
+typedef struct {
+   int nroFrame ;
+}__attribute__((packed))
+t_frames;
+
+typedef struct {
+   bool libre;
+   int frame;
+   bool presencia;
+   int uso;
+   int modificado;
+}__attribute__((packed))
+t_vector_atributo_paginas;
 
 int cantidad_paginas_totales;
-t_vector_paginas *vectorPaginas;
+
+
+t_vector_frames *vectorFrames;
+t_vector_atributo_paginas  *vectorAtributoPaginas;
+void estadoFrames();
+
+
 bool existe_memoria_parar_paginas(int cantidad_paginas_necesarias);
 bool estaOcupada(int pag);
 
 void cambiar_estado_pagina(int pagina,bool estado);
+
 int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,uint32_t recervar);
+int asignarIndiceVectorLibre();
+
 t_nodo_proceso *crear_nodo(int id);
 t_nodo_proceso* existe_proceso_en_lista(int id);
 t_nodo_proceso* procesar_id(int id);
 t_nodo_proceso* existe_proceso_en_lista(int id);
 
+int asignarFrameLibre();
 t_nodo_segmento* procesar_segmentacion(t_list* listaSegmento);
 t_nodo_segmento* crear_nodo_segmento();
 

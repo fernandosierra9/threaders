@@ -151,12 +151,6 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 		break;
 	}
 	case COPY: {
-		printf("\n ****empieza test****");
-		int algo;
-		printf("\n ****empieza memcpy****");
-		memcpy(&algo,((t_copy*) package_send)->content,4);
-		printf("\n numero %d",algo);
-		printf("\n ****termina memcpy****");
 		t_package* package = utils_package_create(protocol);
 		utils_package_add(package, &((t_copy*) package_send)->dst,
 				sizeof(uint32_t));
@@ -165,7 +159,12 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 				sizeof(int));
 		utils_package_add(package, &((t_copy*) package_send)->size, sizeof(int));
 
-		utils_package_add(package, ((t_copy*) package_send)->content,4);
+		//int valor = *(int *) ((t_copy*) package_send)->content;
+
+		//printf("\n id recibi %d", valor);
+
+
+		utils_package_add(package, ((t_copy*) package_send)->content,((t_copy*) package_send)->size);
 
 		utils_package_send_to(package, socket);
 
@@ -311,7 +310,6 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		utils_get_from_list_to(&copy_req->self_id, list, 1);
 		utils_get_from_list_to(&copy_req->size, list, 2);
 		//falta recervar memoria parar content
-
 		copy_req->content = malloc(copy_req->size);
 		utils_get_from_list_to(copy_req->content, list, 3);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
@@ -344,7 +342,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		t_get_attr *get_request = malloc(sizeof(t_get_attr));
 		t_list* list = utils_receive_package(socket);
 		utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-		utils_get_from_list_to(&get_request->pathname, list, 1);
+		utils_get_from_list_to(get_request->pathname, list, 1);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}
@@ -352,7 +350,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		t_read_dir *get_request = malloc(sizeof(t_read_dir));
 		t_list* list = utils_receive_package(socket);
 		utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-		utils_get_from_list_to(&get_request->pathname, list, 1);
+		utils_get_from_list_to(get_request->pathname, list, 1);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}
@@ -360,7 +358,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		t_read *get_request = malloc(sizeof(t_read));
 		t_list* list = utils_receive_package(socket);
 		utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-		utils_get_from_list_to(&get_request->pathname, list, 1);
+		utils_get_from_list_to(get_request->pathname, list, 1);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}
@@ -368,7 +366,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		t_open *get_request = malloc(sizeof(t_open));
 		t_list* list = utils_receive_package(socket);
 		utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-		utils_get_from_list_to(&get_request->pathname, list, 1);
+		utils_get_from_list_to(get_request->pathname, list, 1);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}
@@ -376,7 +374,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		t_mk_directory *get_request = malloc(sizeof(t_mk_directory));
 		t_list* list = utils_receive_package(socket);
 		utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-		utils_get_from_list_to(&get_request->pathname, list, 1);
+		utils_get_from_list_to(get_request->pathname, list, 1);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}
@@ -384,7 +382,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		t_create_directory *get_request = malloc(sizeof(t_create_directory));
 		t_list* list = utils_receive_package(socket);
 		utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-		utils_get_from_list_to(&get_request->pathname, list, 1);
+		utils_get_from_list_to(get_request->pathname, list, 1);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}
@@ -392,7 +390,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		t_write *get_request = malloc(sizeof(t_write));
 		t_list* list = utils_receive_package(socket);
 		utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-		utils_get_from_list_to(&get_request->pathname, list, 1);
+		utils_get_from_list_to(get_request->pathname, list, 1);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}
@@ -400,7 +398,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		t_rm_directory *get_request = malloc(sizeof(t_rm_directory));
 		t_list* list = utils_receive_package(socket);
 		utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-		utils_get_from_list_to(&get_request->pathname, list, 1);
+		utils_get_from_list_to(get_request->pathname, list, 1);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}
@@ -412,6 +410,15 @@ static void utils_destroy_list(t_buffer *self) {
 	free(self->stream);
 	free(self);
 }
+
+void utils_get_from_list_to_malloc(void *parameter, t_list *list, int index) {
+	t_buffer *buffer;
+	buffer = list_get(list, index);
+	void *pointer = malloc(buffer->size);
+	memcpy(pointer, buffer->stream, buffer->size);
+	parameter =  pointer;
+}
+
 
 void utils_get_from_list_to(void *parameter, t_list *list, int index) {
 	t_buffer *buffer;
