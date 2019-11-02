@@ -10,8 +10,8 @@
 
 `Name: "LD_LIBRARY_PATH"`
 
-`Value:
-${PATH_PROYECTO}/hilolay/Debug:${PATH_PROYECTO}/libmuse/Debug:${PATH_PROYECTO}/sac_cli/Debug:${PATH_PROYECTO}/shared_common/Debug`
+`Value:`
+`${PATH_PROYECTO}/hilolay/Debug:${PATH_PROYECTO}/libmuse/Debug:${PATH_PROYECTO}/sac_cli/Debug:${PATH_PROYECTO}/shared_common/Debug`
 
 2) Desde terminal:
 
@@ -59,6 +59,6 @@ _Desmontando el Disco_
 Para desmontar el disco se utiliza el comando: 'fusermount' con el parametro -u, indicando la ruta de montaje del FileSystem
 
 Por ejemplo: 
-    fusermount -u /tmp/fusea
+    fusermount -u /tmp/fuse_test
 
 (siendo /tmp/fuse_test/ la ruta en donde se monto FUSE).
