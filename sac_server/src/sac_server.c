@@ -110,56 +110,56 @@ static void *handle_connection(void *arg) {
 			case READ_DIR: {
 				sac_server_logger_info("Recibi READ_DIR de SAC_CLI");
 				t_read_dir *read_dir = utils_receive_and_deserialize(fd, protocol);
-				sac_server_logger_info("PATHNAME: %s", read_dir->pathname);
+				//sac_server_logger_info("PATHNAME: %s", read_dir->pathname);
 				sac_server_logger_info("ID_SAC_CLI: %d", read_dir->id_sac_cli);
 				break;
 			}
 			case GET_ATTR: {
 				sac_server_logger_info("Recibi GET_ATTR de SAC_CLI");
 				t_get_attr *get_attr_dir = utils_receive_and_deserialize(fd, protocol);
-				sac_server_logger_info("PATHNAME: %s", get_attr_dir->pathname);
+				//sac_server_logger_info("PATHNAME: %s", get_attr_dir->pathname);
 				sac_server_logger_info("ID_SAC_CLI: %d", get_attr_dir->id_sac_cli);
 				break;
 			}
 			case READ: {
 				sac_server_logger_info("Recibi READ de SAC_CLI");
 				t_read *read_dir = utils_receive_and_deserialize(fd, protocol);
-				sac_server_logger_info("PATHNAME: %d", strlen(read_dir->pathname));
+				//sac_server_logger_info("PATHNAME: %s", read_dir->pathname);
 				sac_server_logger_info("ID_SAC_CLI: %d", read_dir->id_sac_cli);
 				break;
 			}
 			case OPEN: {
 				sac_server_logger_info("Recibi OPEN_DIR de SAC_CLI");
 				t_open *open_dir = utils_receive_and_deserialize(fd, protocol);
-				sac_server_logger_info("PATHNAME: %s", open_dir->pathname);
+				//sac_server_logger_info("PATHNAME: %s", open_dir->pathname);
 				sac_server_logger_info("ID_SAC_CLI: %d", open_dir->id_sac_cli);
 				break;
 			}
 			case MK_DIR: {
 				sac_server_logger_info("Recibi MK_DIR de SAC_CLI");
 				t_mk_directory *mk_dir = utils_receive_and_deserialize(fd, protocol);
-				sac_server_logger_info("PATHNAME: %s", mk_dir->pathname);
+				//sac_server_logger_info("PATHNAME: %s", mk_dir->pathname);
 				sac_server_logger_info("ID_SAC_CLI: %d", mk_dir->id_sac_cli);
 				break;
 			}
 			case CREATE_DIR: {
 				sac_server_logger_info("Recibi CREATE_DIR de SAC_CLI");
 				t_read_dir *create_dir = utils_receive_and_deserialize(fd, protocol);
-				sac_server_logger_info("PATHNAME: %s", create_dir->pathname);
+				//sac_server_logger_info("PATHNAME: %s", create_dir->pathname);
 				sac_server_logger_info("ID_SAC_CLI: %d", create_dir->id_sac_cli);
 				break;
 			}
 			case WRITE: {
 				sac_server_logger_info("Recibi WRITE_DIR de SAC_CLI");
 				t_write *write_dir = utils_receive_and_deserialize(fd, protocol);
-				sac_server_logger_info("PATHNAME: %s", write_dir->pathname);
+				//sac_server_logger_info("PATHNAME: %s", write_dir->pathname);
 				sac_server_logger_info("ID_SAC_CLI: %d", write_dir->id_sac_cli);
 				break;
 			}
 			case RM_DIR: {
 				sac_server_logger_info("Recibi RM_DIR de SAC_CLI");
 				t_read_dir *rm_dir = utils_receive_and_deserialize(fd, protocol);
-				sac_server_logger_info("PATHNAME: %s", rm_dir->pathname);
+				//sac_server_logger_info("PATHNAME: %s", rm_dir->pathname);
 				sac_server_logger_info("ID_SAC_CLI: %d", rm_dir->id_sac_cli);
 				break;
 			}

@@ -8,6 +8,7 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include bin/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -24,8 +25,11 @@ endif
 # All Target
 all: libsac_cli.so
 
+dependents:
+	-cd /media/sf_tp-2019-2c-threaders/shared-common/Debug && $(MAKE) clean all
+
 # Tool invocations
-libsac_cli.so: $(OBJS) $(USER_OBJS)
+libsac_cli.so: $(OBJS) $(USER_OBJS) /media/sf_tp-2019-2c-threaders/shared-common/Debug/libshared-common.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
 	gcc -L"/media/sf_tp-2019-2c-threaders/shared-common/Debug" -shared -o "libsac_cli.so" $(OBJS) $(USER_OBJS) $(LIBS)
@@ -38,5 +42,6 @@ clean:
 	-@echo ' '
 
 .PHONY: all clean dependents
+/media/sf_tp-2019-2c-threaders/shared-common/Debug/libshared-common.so:
 
 -include ../makefile.targets

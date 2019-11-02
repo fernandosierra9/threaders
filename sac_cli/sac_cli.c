@@ -118,7 +118,7 @@ int sac_cli_open(const char *path, struct fuse_file_info *fi) {
 int sac_cli_getattr(const char *path, struct stat *stbuf) { 
 	t_get_attr *get_attr_send = malloc(sizeof(t_get_attr));
 	get_attr_send->id_sac_cli = 1011;
-	get_attr_send->pathname = "/";
+	get_attr_send->pathname = "/niconico";
 	t_protocol get_attr_protocol = GET_ATTR;
 	utils_serialize_and_send(sac_cli_fd, get_attr_protocol, get_attr_send);
 	return 0;

@@ -3,6 +3,7 @@
 	<name>sac_cli</name>
 	<comment></comment>
 	<projects>
+		<project>shared-common</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
