@@ -103,13 +103,40 @@ void suse_server_init()
 			case NEW_THREAD:
 			{
 				suse_logger_info("Recibi NEW_THREAD de hilolay");
-				t_newthread *newthread_recive =  utils_receive_and_deserialize(hilolay_fd,protocol);
+				t_new_thread *newthread_recive =  utils_receive_and_deserialize(hilolay_fd,protocol);
 				suse_logger_info("Program ID: %d", newthread_recive->pid);
 				suse_logger_info("Thread ID: %d", newthread_recive->tid);
 
 				t_program* program_id = program_create(newthread_recive->pid);
 				scheduler_add_new_program(program_id);
-
+				break;
+			}
+			case THREAD_JOIN:
+			{
+				suse_logger_info("Recibi THREAD_JOIN de hilolay");
+				t_thread_join *thread_join_recive =  utils_receive_and_deserialize(hilolay_fd,protocol);
+				suse_logger_info("Thread ID: %d", thread_join_recive->tid);
+				break;
+			}
+			case THREAD_CLOSE:
+			{
+				suse_logger_info("Recibi THREAD_CLOSE de hilolay");
+				t_thread_close *thread_close_recive =  utils_receive_and_deserialize(hilolay_fd,protocol);
+				suse_logger_info("Thread ID: %d", thread_close_recive->tid);
+				break;
+			}
+			case SEM_WAIT:
+			{
+				suse_logger_info("Recibi SEM_WAIT de hilolay");
+				t_sem_wait *sem_wait_name = utils_receive_and_deserialize(hilolay_fd, protocol);
+				sac_server_logger_info("Semaforo: %s", sem_wait_name->semaphore);
+				break;
+			}
+			case SEM_SIGNAL:
+			{
+				suse_logger_info("Recibi SEM_WAIT de hilolay");
+				t_sem_signal *sem_signal_name = utils_receive_and_deserialize(hilolay_fd, protocol);
+				sac_server_logger_info("Semaforo: %s", sem_signal_name->semaphore);
 				break;
 			}
 

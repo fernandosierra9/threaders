@@ -25,7 +25,7 @@ int suse_create(int tid){
 
 	t_newthread *newthread_send = malloc(sizeof(t_newthread));
 	newthread_send->pid = 200;
-	newthread_send->tid = 123;
+	newthread_send->tid = tid;
 	t_protocol newthread_protocol = NEW_THREAD;
 
 	utils_serialize_and_send(suse_fd, newthread_protocol, newthread_send);
@@ -53,8 +53,25 @@ int suse_close(int tid){
 }
 
 int suse_wait(int tid, char *sem_name){
-	// Not supported
-	return 0;
+
+	/*suse_fd = socket_connect_to_server(ip_suse, puerto_suse);
+
+	if (suse_fd < 0)
+	{
+		socket_close_conection(suse_fd);
+		return -1;
+	}
+	puts("Conexion con Suse establecida");
+
+	t_semwait *semwait_send = malloc(sizeof(t_semwait));
+	semwait_send->pid = 200;
+	semwait_send->sem = tid;
+	t_protocol newthread_protocol = SEM_WAIT;
+
+	utils_serialize_and_send(suse_fd, newthread_protocol, newthread_send);
+	utils_serialize_and_send(suse_fd, newthread_protocol, newthread_send);
+
+	return 0;*/
 }
 
 int suse_signal(int tid, char *sem_name){

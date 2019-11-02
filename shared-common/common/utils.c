@@ -175,12 +175,45 @@ void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 		case NEW_THREAD:
 		{
 			t_package* package = utils_package_create(package_type);
-			utils_package_add(package, &((t_newthread*) package_recv)->pid,sizeof(uint32_t));
-			utils_package_add(package, &((t_newthread*) package_recv)->tid,sizeof(uint32_t));
+			utils_package_add(package, &((t_new_thread*) package_recv)->pid,sizeof(uint32_t));
+			utils_package_add(package, &((t_new_thread*) package_recv)->tid,sizeof(uint32_t));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
 		}
+		case THREAD_JOIN:
+		{
+			t_package* package = utils_package_create(package_type);
+			utils_package_add(package, &((t_thread_join*) package_recv)->tid,sizeof(int));
+			utils_package_send_to(package,socket);
+			utils_package_destroy(package);
+			break;
+		}
+		case THREAD_CLOSE:
+		{
+			t_package* package = utils_package_create(package_type);
+			utils_package_add(package, &((t_thread_close*) package_recv)->tid,sizeof(int));
+			utils_package_send_to(package,socket);
+			utils_package_destroy(package);
+			break;
+		}
+		case SEM_WAIT:
+		{
+			t_package* package = utils_package_create(package_type);
+			utils_package_add(package, &((t_sem_wait*) package_send)->semaphore, strlen(((t_sem_wait*) package_send)->semaphore));
+			utils_package_send_to(package,socket);
+			utils_package_destroy(package);
+			break;
+		}
+		case SEM_SIGNAL:
+		{
+			t_package* package = utils_package_create(package_type);
+			utils_package_add(package, &((t_sem_signal*) package_send)->semaphore, strlen(((t_sem_signal*) package_send)->semaphore));
+			utils_package_send_to(package,socket);
+			utils_package_destroy(package);
+			break;
+		}
+
 	}
 }
 
@@ -236,7 +269,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 				}
 		case NEW_THREAD:
 		{
-	        t_newthread *newthread_request = malloc(sizeof(t_newthread));
+	        t_new_thread *newthread_request = malloc(sizeof(t_new_thread));
             t_list* list = utils_receive_package(socket);
 			utils_get_from_list_to(&newthread_request->pid,list,0);
 			utils_get_from_list_to(&newthread_request->tid,list,1);
@@ -244,7 +277,38 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 			return newthread_request;
 
 		}
-
+		case THREAD_JOIN:
+		{
+	        t_thread_join *thread_join_request = malloc(sizeof(t_thread_join));
+            t_list* list = utils_receive_package(socket);
+			utils_get_from_list_to(&thread_join_request->tid,list,0);
+			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
+			return thread_join_request;
+		}
+		case THREAD_CLOSE:
+		{
+	        t_thread_close *thread_close_request = malloc(sizeof(t_thread_close));
+            t_list* list = utils_receive_package(socket);
+			utils_get_from_list_to(&thread_close_request->tid,list,0);
+			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
+			return thread_close_request;
+		}
+		case SEM_WAIT:
+		{
+			t_sem_wait *sem_wait_request = malloc(sizeof(t_sem_wait));
+			t_list* list = utils_receive_package(socket);
+			utils_get_from_list_to(&sem_wait_request->semaphore, list, 0);
+			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
+			return sem_wait_request;
+		}
+		case SEM_SIGNAL:
+		{
+			t_sem_signal *sem_signal_request = malloc(sizeof(t_sem_signal));
+			t_list* list = utils_receive_package(socket);
+			utils_get_from_list_to(&sem_signal_request->semaphore, list, 0);
+			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
+			return sem_signal_request;
+		}
 
 	}
 	return NULL;

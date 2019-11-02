@@ -13,7 +13,7 @@ typedef struct
 
 typedef enum
 {
-	HANDSHAKE, MALLOC, FREE_MALLOC, COPY, GET, NEW_THREAD
+	HANDSHAKE, MALLOC, FREE_MALLOC, COPY, GET, NEW_THREAD, THREAD_JOIN, THREAD_CLOSE, SEM_WAIT, SEM_SIGNAL
 } t_protocol;
 
 typedef struct
@@ -30,9 +30,25 @@ typedef struct
 
 typedef struct
 {
-	uint32_t pid;
-	uint32_t tid;
-} t_newthread;
+	int pid;
+	int tid;
+} t_new_thread;
+
+typedef struct {
+	int tid;
+} t_thread_join;
+
+typedef struct {
+	int tid;
+} t_thread_close;
+
+typedef struct {
+	char* semaphore;
+} t_sem_wait;
+
+typedef struct {
+	char* semaphore;
+} t_sem_signal;
 
 typedef struct
 {
