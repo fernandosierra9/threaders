@@ -35,7 +35,7 @@ typedef enum {
 	CREATE_DIR,
 	WRITE,
 	RM_DIR,
-	GET_ATTR_OK
+	GET_ATTR_OK,
 } t_protocol;
 
 typedef struct {
@@ -58,6 +58,7 @@ typedef struct {
 	uint32_t dst;
 	int self_id;
 	int size;
+	void* content;
 } t_copy;
 
 typedef struct {
