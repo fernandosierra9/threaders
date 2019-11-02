@@ -58,7 +58,6 @@ void muse_free(uint32_t dir) {
 		t_free_response* deserialized_response = utils_receive_and_deserialize(
 				muse_fd, free_protocol);
 		if (deserialized_response->res == 1) {
-			// FREE FROM MUSE
 			puts("Operation has been successful");
 			return;
 		}
@@ -99,16 +98,18 @@ int muse_cpy(uint32_t dst, void* src, int n) {
 	copy_send->self_id = getpid();
 	copy_send->size = n;
 	copy_send->dst = dst;
+	copy_send->content = src;
+
+
 	t_protocol copy_protocol = COPY;
+
 	utils_serialize_and_send(muse_fd, copy_protocol, copy_send);
 
 	int response = recv(muse_fd, &copy_protocol, sizeof(t_protocol), 0);
-
 	t_copy_response* deserialized_res = utils_receive_and_deserialize(muse_fd,
 			copy_protocol);
 
 	if (deserialized_res->res == 1) {
-		// COPY TO MUSE
 		puts("Operation has been successful");
 		return 0;
 	}
