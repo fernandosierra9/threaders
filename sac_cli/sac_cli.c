@@ -81,7 +81,8 @@ int sac_cli_init(int argc, char *argv[]) {
 
 	printf("Conexion con SAC_SERVER establecida");
 
-	return fuse_main(args.argc, args.argv, &sac_operations, NULL);
+	return 0;
+	//return fuse_main(args.argc, args.argv, &sac_operations, NULL);
 }
 
 int sac_cli_create_directory(const char *path, mode_t mode) {

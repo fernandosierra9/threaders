@@ -1,5 +1,6 @@
 #include "../../hilolay/hilolay.h"
 #include "../../libmuse/libmuse.h"
+#include "../../sac_cli/sac_cli.h"
 
 void recursiva(int cant)
 {
@@ -40,23 +41,31 @@ void test2()
 	}
 }
 
-int main(void)
-{
+// PARA LEVANTAR FUSE:
+// ./sac_cli.exe -d -o direct_io --Disc-Path=/media/sf_tp-2019-2c-threaders/sac_server/disc.bin ./fuse_test
+
+// PARA LEVANTAR POR :
+//  -o direct_io --Disc-Path=/media/sf_tp-2019-2c-threaders/sac_server/disc.bin ./fuse_test
+
+int main(int argc, char *argv[]) {
 	/* HILOLAY CLIENTS */
 	//lib_init();
 	//th_create(test1);
 	//th_create(test2);
+	//th_return(0);
 
 	/* MUSE CLIENTS */
-    muse_init((int)getpid(),
-    		"127.0.0.1", 5003);
-    uint32_t ptr = muse_alloc(200);
-    int dst;
-    muse_get(&dst, ptr, 4);
-    int src;
-    muse_cpy(ptr, &src, 12);
-    muse_free(ptr);
-    muse_close();
-	//th_return(0);
+	//muse_init((int)getpid(), "127.0.0.1", 5003);
+    //uint32_t ptr = muse_alloc(200);
+    //int dst;
+    //muse_get(&dst, ptr, 4);
+    //int src;
+    //muse_cpy(ptr, &src, 12);
+    //muse_free(ptr);
+    //muse_close(); 
+
+	/* SAC_CLI */
+	sac_cli_init(argc, argv);
+	//sac_cli_read("test");
 	return 0;
 }
