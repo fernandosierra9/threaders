@@ -16,6 +16,7 @@ int pid, tid = 0;
 
 void scheduler_init()
 {
+	pthread_mutex_init(&scheduler_mutex, NULL);
 	programs = list_create();
 	threads = list_create();
 	queue_new = list_create();
@@ -49,6 +50,7 @@ void scheduler_destroy()
 	list_destroy_and_destroy_elements(semphores, (void*)semaphore_destroy);
 	list_destroy_and_destroy_elements(programs, (void*)program_destroy);
 	list_destroy_and_destroy_elements(threads, (void*)program_destroy_thread);
+	pthread_mutex_destroy(&scheduler_mutex);
 	suse_logger_info("Todas las estructuras de planificacion fueron destruidas!");
 }
 
@@ -66,11 +68,13 @@ void _scheduler_list_threads(t_thread *t)
 
 void _scheduler_list_programs(t_program *p)
 {
+	pthread_mutex_lock(&scheduler_mutex);
 	suse_logger_info("Grado actual de multiprogramación: %d", suse_get_max_multiprog());
 	int new_size = list_size(queue_new);
 	int ready_size = list_size(queue_ready);
-	int run_size = list_size(queue_ready);
+	int run_size = thread_exec != NULL? 1: 0;
 	int blocked_size = list_size(queue_blocked);
+	pthread_mutex_unlock(&scheduler_mutex);
 	suse_logger_info("Cantidad de hilos en NEW: %d, READY: %d, RUN: %d, BLOCKED: %d", new_size, ready_size, run_size, blocked_size);
 }
 

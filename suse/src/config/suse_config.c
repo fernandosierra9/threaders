@@ -6,6 +6,10 @@ void print_config();
 
 t_suse_config* suse_config;
 
+char** sem_ids;
+char** sem_init;
+char** sem_max;
+
 int suse_config_load()
 {
 	suse_logger_info("Se establecerá la configuración");
@@ -14,9 +18,9 @@ int suse_config_load()
 
 void suse_config_free()
 {
-//	utils_free_array(suse_config->sem_ids);
-//	utils_free_array(suse_config->sem_init);
-//	utils_free_array(suse_config->sem_max);
+	utils_free_array(sem_ids);
+	utils_free_array(sem_init);
+	utils_free_array(sem_max);
 	free(suse_config);
 }
 
@@ -37,17 +41,17 @@ int suse_get_max_multiprog()
 
 char** suse_get_sem_ids()
 {
-	return suse_config->sem_ids;
+	return sem_ids;
 }
 
 char** suse_get_sem_init()
 {
-	return suse_config->sem_init;
+	return sem_init;
 }
 
 char** suse_get_sem_max()
 {
-	return suse_config->sem_max;
+	return sem_max;
 }
 
 double suse_get_alpha_sjf()
@@ -79,8 +83,11 @@ void read_config(t_config* config_file)
 	suse_config->metrics_timer = config_get_int_value(config_file, "METRICS_TIMER");
 	suse_config->max_multiprog = config_get_int_value(config_file, "MAX_MULTIPROG");
 	suse_config->sem_ids = config_get_array_value(config_file, "SEM_IDS");
+	sem_ids = config_get_array_value(config_file, "SEM_IDS");
 	suse_config->sem_init = config_get_array_value(config_file, "SEM_INIT");
+	sem_init = config_get_array_value(config_file, "SEM_INIT");;
 	suse_config->sem_max = config_get_array_value(config_file, "SEM_MAX");
+	sem_max =  config_get_array_value(config_file, "SEM_MAX");
 	suse_config->alpha_sjf = config_get_double_value(config_file, "ALPHA_SJF");
 }
 
