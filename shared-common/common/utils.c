@@ -200,7 +200,7 @@ void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 		case SEM_WAIT:
 		{
 			t_package* package = utils_package_create(package_type);
-			utils_package_add(package, &((t_sem_wait*) package_send)->semaphore, strlen(((t_sem_wait*) package_send)->semaphore));
+			utils_package_add(package, &((t_sem_wait*) package_recv)->semaphore, strlen(((t_sem_wait*) package_recv)->semaphore));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;
@@ -208,7 +208,7 @@ void utils_serialize_and_send(int socket, int package_type, void* package_recv)
 		case SEM_SIGNAL:
 		{
 			t_package* package = utils_package_create(package_type);
-			utils_package_add(package, &((t_sem_signal*) package_send)->semaphore, strlen(((t_sem_signal*) package_send)->semaphore));
+			utils_package_add(package, &((t_sem_signal*) package_recv)->semaphore, strlen(((t_sem_signal*) package_recv)->semaphore));
 			utils_package_send_to(package,socket);
 			utils_package_destroy(package);
 			break;

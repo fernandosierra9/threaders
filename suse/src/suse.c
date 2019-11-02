@@ -118,14 +118,14 @@ void suse_server_init()
 			{
 				suse_logger_info("Recibi SEM_WAIT de hilolay");
 				t_sem_wait *sem_wait_name = utils_receive_and_deserialize(hilolay_fd, protocol);
-				sac_server_logger_info("Semaforo: %s", sem_wait_name->semaphore);
+				suse_logger_info("Semaforo: %s", sem_wait_name->semaphore);
 				break;
 			}
 			case SEM_SIGNAL:
 			{
 				suse_logger_info("Recibi SEM_WAIT de hilolay");
 				t_sem_signal *sem_signal_name = utils_receive_and_deserialize(hilolay_fd, protocol);
-				sac_server_logger_info("Semaforo: %s", sem_signal_name->semaphore);
+				suse_logger_info("Semaforo: %s", sem_signal_name->semaphore);
 				break;
 			}
 
