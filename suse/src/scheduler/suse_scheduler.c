@@ -58,22 +58,58 @@ void scheduler_destroy()
  * METRICS
  * */
 
+t_program* _scheduler_find_program_by_id(int id) {
+	int _is_the_program(t_program *p) {
+		return id == p->pid;
+	}
+
+	return list_find(programs, (void*) _is_the_program);
+}
+
+int thread_add_exec_time(int accum, t_thread* thread) {
+	return accum + thread->exec_time;
+}
+
 void _scheduler_list_threads(t_thread *t)
 {
+	clock_t time = clock();
+	t->exec_time += time;
+
+	t_program* p = _scheduler_find_program_by_id(t->tid);
+	int sum = (int) list_fold(p->threads, 0, (void*) thread_add_exec_time);
+	t->exec_time_percent = t->exec_time * 100 /sum;
+
 	suse_logger_info("Tiempo de ejecución: %d", t->exec_time);
 	suse_logger_info("Tiempo de espera: %d", t->wait_time);
 	suse_logger_info("Tiempo de uso de CPU: %d", t->cpu_time);
 	suse_logger_info("Porcentaje del tiempo de ejecución: %d", t->exec_time_percent);
 }
 
+bool _thread_is_new(t_thread* thread) {
+	return thread->state == NEW;
+}
+
+bool _thread_is_ready(t_thread* thread) {
+	return thread->state == READY;
+}
+
+bool _thread_is_blocked(t_thread* thread) {
+	return thread->state == BLOCKED;
+}
+
+bool _thread_is_the_running(t_thread* thread) {
+	return thread->state == EXEC && thread_exec != NULL && thread->tid == thread_exec->tid && thread->pid == thread_exec->pid;
+}
+
 void _scheduler_list_programs(t_program *p)
 {
 	pthread_mutex_lock(&scheduler_mutex);
 	suse_logger_info("Grado actual de multiprogramación: %d", suse_get_max_multiprog());
-	int new_size = list_size(queue_new);
-	int ready_size = list_size(queue_ready);
-	int run_size = thread_exec != NULL? 1: 0;
-	int blocked_size = list_size(queue_blocked);
+	t_list* threads = p->threads;
+	int new_size = list_size(list_filter(threads, (void*) _thread_is_new));
+	int ready_size = list_size(list_filter(threads, (void*) _thread_is_ready));
+	int run_size = list_any_satisfy(threads, (void*)_thread_is_the_running)? 1: 0;
+	int blocked_size = list_size(list_filter(threads, (void*) _thread_is_blocked));
 	pthread_mutex_unlock(&scheduler_mutex);
 	suse_logger_info("Cantidad de hilos en NEW: %d, READY: %d, RUN: %d, BLOCKED: %d", new_size, ready_size, run_size, blocked_size);
 }
@@ -99,17 +135,15 @@ void scheduler_print_metrics()
  * PROGRAMS
  * */
 
-t_program* _scheduler_find_program_by_id(int id) {
-	int _is_the_program(t_program *p) {
-		return id == p->pid;
-	}
-
-	return list_find(programs, (void*) _is_the_program);
-}
-
 void scheduler_add_new_program(t_program* program)
 {
-	list_add(queue_new, program);
+	pthread_mutex_lock(&scheduler_mutex);
+	for(int i = 0; i < list_size(program->threads); i++)
+	{
+		t_thread* thread = list_get(program->threads, i);
+		list_add(queue_new, thread);
+	}
+	pthread_mutex_unlock(&scheduler_mutex);
 }
 
 void scheduler_execute_program(t_program* program)
@@ -118,10 +152,9 @@ void scheduler_execute_program(t_program* program)
 	program_exec = program;
 }
 
-void scheduler_finish_program(t_program* program)
+void scheduler_ready_program(t_program* program)
 {
-	program->state = EXIT;
-	list_add(queue_exit, program);
+	program->state = READY;
 }
 
 /**
@@ -136,21 +169,32 @@ void scheduler_set_ready_thread(t_thread* thread)
 
 void scheduler_execute_thread(t_thread* thread)
 {
+	clock_t wait_time = clock();
+	thread->wait_time += wait_time;
 	thread->state = EXEC;
+	pthread_mutex_lock(&scheduler_mutex);
 	thread_exec = thread;
+	t_program* program = _scheduler_find_program_by_id(thread->pid);
+	program_exec = program;
+	pthread_mutex_unlock(&scheduler_mutex);
 }
 
 void scheduler_block_thread(t_thread* thread)
 {
+	clock_t cpu_time = clock();
+	thread->cpu_time += cpu_time;
 	thread->state = BLOCKED;
+	pthread_mutex_lock(&scheduler_mutex);
 	list_add(queue_blocked, thread);
+	pthread_mutex_unlock(&scheduler_mutex);
 }
 
 void scheduler_finish_thread(t_thread* thread)
 {
 	thread->state = EXIT;
-	t_program* program = _scheduler_find_program_by_id(thread->pid);
-	scheduler_finish_program(program);
+	pthread_mutex_lock(&scheduler_mutex);
+	list_add(queue_exit, thread);
+	pthread_mutex_unlock(&scheduler_mutex);
 	scheduler_print_metrics();
 }
 

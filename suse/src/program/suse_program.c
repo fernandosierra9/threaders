@@ -20,7 +20,11 @@ t_thread* program_create_thread(int pid, int tid)
 	t_thread* thread = malloc(sizeof(t_thread));
 	thread->pid = pid;
 	thread->tid = tid;
-	thread->state = READY;
+	thread->cpu_time = 0;
+	thread->exec_time = 0;
+	thread->exec_time_percent = 0;
+	thread->wait_time = 0;
+	thread->state = NEW;
 	return thread;
 }
 
