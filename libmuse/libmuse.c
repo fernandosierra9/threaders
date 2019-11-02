@@ -83,7 +83,7 @@ int muse_get(void* dst, uint32_t src, size_t n) {
 	switch (get_protocol) {
 	case GET_OK: {
 		t_get_ok* get = utils_receive_and_deserialize(muse_fd, get_protocol);
-		memcpy(dst, &get->res, get->tamres);
+		memcpy(dst, get->res, get->tamres);
 		return 0;
 	}
 
@@ -99,16 +99,21 @@ int muse_cpy(uint32_t dst, void* src, int n) {
 	copy_send->self_id = getpid();
 	copy_send->size = n;
 	copy_send->dst = dst;
+	copy_send->content = src;
 	t_protocol copy_protocol = COPY;
-	utils_serialize_and_send(muse_fd, copy_protocol, copy_send);
+	int test;
+	memcpy(&test,copy_send->content,4);
+	printf("\n numero %d",test);
 
+	utils_serialize_and_send(muse_fd, copy_protocol, copy_send);
+/*
 	int response = recv(muse_fd, &copy_protocol, sizeof(t_protocol), 0);
 
 	t_copy_response* deserialized_res = utils_receive_and_deserialize(muse_fd,
 			copy_protocol);
-
-	if (deserialized_res->res == 1) {
-		// COPY TO MUSE
+*/
+	int res =1;
+	if (res == 1) {
 		puts("Operation has been successful");
 		return 0;
 	}

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 #include <pthread.h>
 #include <assert.h>
 #include <commons/config.h>
@@ -31,23 +32,29 @@ typedef struct {
 
 typedef struct {
 	int nro;
-	uint32_t algo;
 } t_nodo_pagina;
 
 t_list *lista_procesos;
 
 typedef struct t_heapMetadata {
 	uint32_t size;
-	_Bool libre;
-}t_heapMetadata;
+	bool libre;
+}__attribute__((packed))
+t_heapMetadata;
+
 
 typedef struct {
    bool libre;
-}t_vector_paginas;
+}__attribute__((packed))
+t_vector_paginas;
 
 int cantidad_paginas_totales;
 t_vector_paginas *vectorPaginas;
+bool existe_memoria_parar_paginas(int cantidad_paginas_necesarias);
+bool estaOcupada(int pag);
 
+void cambiar_estado_pagina(int pagina,bool estado);
+int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,uint32_t recervar);
 t_nodo_proceso *crear_nodo(int id);
 t_nodo_proceso* existe_proceso_en_lista(int id);
 t_nodo_proceso* procesar_id(int id);
@@ -55,5 +62,7 @@ t_nodo_proceso* existe_proceso_en_lista(int id);
 
 t_nodo_segmento* procesar_segmentacion(t_list* listaSegmento);
 t_nodo_segmento* crear_nodo_segmento();
+
+int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,uint32_t memoria_reservar);
 
 #endif /* MUSE_H_ */

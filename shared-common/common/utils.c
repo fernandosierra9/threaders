@@ -151,13 +151,24 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 		break;
 	}
 	case COPY: {
+		printf("\n ****empieza test****");
+		int algo;
+		printf("\n ****empieza memcpy****");
+		memcpy(&algo,((t_copy*) package_send)->content,4);
+		printf("\n numero %d",algo);
+		printf("\n ****termina memcpy****");
 		t_package* package = utils_package_create(protocol);
 		utils_package_add(package, &((t_copy*) package_send)->dst,
 				sizeof(uint32_t));
+
 		utils_package_add(package, &((t_copy*) package_send)->self_id,
 				sizeof(int));
 		utils_package_add(package, &((t_copy*) package_send)->size, sizeof(int));
+
+		utils_package_add(package, ((t_copy*) package_send)->content,4);
+
 		utils_package_send_to(package, socket);
+
 		utils_package_destroy(package);
 		break;
 	}
@@ -293,12 +304,18 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		return get_request;
 	}
 	case COPY: {
+
 		t_copy *copy_req = malloc(sizeof(t_copy));
 		t_list* list = utils_receive_package(socket);
 		utils_get_from_list_to(&copy_req->dst, list, 0);
 		utils_get_from_list_to(&copy_req->self_id, list, 1);
 		utils_get_from_list_to(&copy_req->size, list, 2);
+		//falta recervar memoria parar content
+
+		copy_req->content = malloc(copy_req->size);
+		utils_get_from_list_to(copy_req->content, list, 3);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
+
 		return copy_req;
 	}
 	case MALLOC_OK: {
@@ -425,6 +442,7 @@ t_list* utils_receive_package(int socket_cliente) {
 	int tamanio;
 
 	buffer = utils_receive_buffer(&size, socket_cliente);
+
 	while (desplazamiento < size) {
 		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 		desplazamiento += sizeof(int);
