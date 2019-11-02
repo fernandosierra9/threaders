@@ -79,7 +79,7 @@ void muse_server_init() {
 
 			if (!existe_proceso_en_lista(free_receive->self_id)) {
 				t_protocol free_failed = SEG_FAULT;
-				send(libmuse_fd, free_failed, sizeof(t_protocol));
+				send(libmuse_fd, &free_failed, sizeof(t_protocol),0);
 				break;
 			}
 
@@ -90,7 +90,7 @@ void muse_server_init() {
 
 			if (header->libre) {
 				t_protocol free_failed = SEG_FAULT;
-				send(libmuse_fd, free_failed, sizeof(t_protocol));
+				send(libmuse_fd, &free_failed, sizeof(t_protocol), 0);
 				break;
 			}
 
@@ -148,7 +148,7 @@ void muse_server_init() {
 
 			if (!existe_proceso_en_lista(get_receive->id_libmuse)) {
 				t_protocol get_failed = SEG_FAULT;
-				send(libmuse_fd, get_failed, sizeof(t_protocol));
+				send(libmuse_fd, &get_failed, sizeof(t_protocol), 0);
 				break;
 			}
 
@@ -235,7 +235,6 @@ void muse_init() {
 	}
 
 	lista_procesos = list_create();
-	puts("algo");
 	printf("cantidad de bytes de la estructura: %d", sizeof(t_heapMetadata));
 	printf("\ncantidad de paginas reales: %d", cantidad_paginas_reales);
 	printf("\ncantidad de paginas virtuales: %d", cantidad_paginas_virtuales);

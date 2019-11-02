@@ -90,8 +90,6 @@ typedef struct {
 	int tamres;
 } t_get_ok;
 
-typde
-
 typedef struct {
 	int res;
 } t_copy_response;
