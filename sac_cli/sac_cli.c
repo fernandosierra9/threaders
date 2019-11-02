@@ -80,8 +80,7 @@ int sac_cli_init(int argc, char *argv[]) {
 
 	printf("Conexion con SAC_SERVER establecida");
 
-	return 0;
-	//return fuse_main(args.argc, args.argv, &sac_operations, NULL);
+	return fuse_main(args.argc, args.argv, &sac_operations, NULL);
 }
 
 int sac_cli_create_directory(const char *path, mode_t mode) {
@@ -121,6 +120,19 @@ int sac_cli_getattr(const char *path, struct stat *stbuf) {
 	get_attr_send->pathname = "/niconico";
 	t_protocol get_attr_protocol = GET_ATTR;
 	utils_serialize_and_send(sac_cli_fd, get_attr_protocol, get_attr_send);
+
+	int response = recv(sac_cli_fd, &get_attr_protocol, sizeof(t_protocol), 0);
+
+	switch (get_attr_protocol) {
+		case GET_ATTR_OK: {
+			printf("ANDA TODO GENIAL");
+			return 0;
+		}
+		case SEG_FAULT: {
+			printf("ROMPIO EL SERVER");
+			return -1;
+		}
+	}
 	return 0;
 };
 

@@ -119,6 +119,11 @@ static void *handle_connection(void *arg) {
 				t_get_attr *get_attr_dir = utils_receive_and_deserialize(fd, protocol);
 				//sac_server_logger_info("PATHNAME: %s", get_attr_dir->pathname);
 				sac_server_logger_info("ID_SAC_CLI: %d", get_attr_dir->id_sac_cli);
+				
+				t_get_attr_ok *get_attr_ok_send = malloc(sizeof(t_get_attr_ok));
+				get_attr_ok_send->id_sac_cli = get_attr_dir->id_sac_cli + 5;
+				t_protocol get_attr_protocol = GET_ATTR_OK;
+				utils_serialize_and_send(fd, get_attr_protocol, get_attr_ok_send);
 				break;
 			}
 			case READ: {

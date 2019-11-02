@@ -34,7 +34,8 @@ typedef enum {
 	MK_DIR,
 	CREATE_DIR,
 	WRITE,
-	RM_DIR
+	RM_DIR,
+	GET_ATTR_OK
 } t_protocol;
 
 typedef struct {
@@ -144,5 +145,9 @@ typedef struct {
 	char* pathname;
 	int id_sac_cli;
 } t_mk_directory;
+
+typedef struct {
+	int id_sac_cli;
+} t_get_attr_ok;
 
 #endif /* COMMON_PROTOCOLS_H_ */
