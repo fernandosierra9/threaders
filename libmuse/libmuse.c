@@ -58,7 +58,6 @@ void muse_free(uint32_t dir) {
 		t_free_response* deserialized_response = utils_receive_and_deserialize(
 				muse_fd, free_protocol);
 		if (deserialized_response->res == 1) {
-			// FREE FROM MUSE
 			puts("Operation has been successful");
 			return;
 		}
@@ -83,7 +82,7 @@ int muse_get(void* dst, uint32_t src, size_t n) {
 	switch (get_protocol) {
 	case GET_OK: {
 		t_get_ok* get = utils_receive_and_deserialize(muse_fd, get_protocol);
-		memcpy(dst, get->res, get->tamres);
+		memcpy(dst, &get->res, get->tamres);
 		return 0;
 	}
 

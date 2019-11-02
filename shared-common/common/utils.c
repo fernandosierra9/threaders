@@ -163,11 +163,9 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 
 		//printf("\n id recibi %d", valor);
 
-
-		utils_package_add(package, ((t_copy*) package_send)->content,((t_copy*) package_send)->size);
+		utils_package_add(package, ((t_copy*) package_send)->content, ((t_copy*) package_send)->size);
 
 		utils_package_send_to(package, socket);
-
 		utils_package_destroy(package);
 		break;
 	}
@@ -208,7 +206,7 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 	case READ: {
 		t_package* package = utils_package_create(protocol);
 		utils_package_add(package, &((t_read*) package_send)->id_sac_cli,sizeof(uint32_t));
-		utils_package_add(package, &((t_read*) package_send)->pathname, strlen(((t_read*) package_send)->pathname));
+		utils_package_add(package, ((t_read*) package_send)->pathname, strlen(((t_read*) package_send)->pathname)+1);
 		utils_package_send_to(package,socket);
 		utils_package_destroy(package);
 		break;
@@ -309,7 +307,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		utils_get_from_list_to(&copy_req->dst, list, 0);
 		utils_get_from_list_to(&copy_req->self_id, list, 1);
 		utils_get_from_list_to(&copy_req->size, list, 2);
-		//falta recervar memoria parar content
+
 		copy_req->content = malloc(copy_req->size);
 		utils_get_from_list_to(copy_req->content, list, 3);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);

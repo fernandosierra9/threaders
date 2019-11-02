@@ -84,24 +84,61 @@ void muse_server_init() {
 			muse_logger_info("Free received\n");
 			t_free *free_receive = utils_receive_and_deserialize(libmuse_fd,
 					protocol);
+			muse_logger_info("Direction %d will be freed \n",
+					free_receive->dir);
 
-			t_nodo_proceso* nodoProceso = procesar_id(free_receive->self_id);
-			int paginaBuscada = free_receive->dir / muse_page_size();
-
-			int dir = free_receive->dir;
-			if (estaOcupada(paginaBuscada))
-			{
-				cambiar_estado_pagina(paginaBuscada, false);
-
+			if (!existe_proceso_en_lista(free_receive->self_id)) {
+				t_protocol free_failed = SEG_FAULT;
+				send(libmuse_fd, &free_failed, sizeof(t_protocol), 0);
+				break;
 			}
 
-			// Devolver error
-			else return;
+			int dir = free_receive->dir;
+			t_heapMetadata* header = malloc(sizeof(t_heapMetadata));
+
+			memcpy(header, memoria + dir - 5, sizeof(header));
+
+			if (header->libre) {
+				t_protocol free_failed = SEG_FAULT;
+				send(libmuse_fd, &free_failed, sizeof(t_protocol), 0);
+				break;
+			}
+
+			else {
+				header->libre = true;
+				memset(memoria + dir + 5, '\0', header->size);
+				t_heapMetadata* closestHeader = malloc(sizeof(t_heapMetadata));
+				memcpy(closestHeader, memoria + dir + header->size,
+						sizeof(closestHeader));
+				int oldsize = header->size;
+
+				if (closestHeader->libre) {
+					header->size += closestHeader->size;
+					memset(memoria + dir + header->size, '\0', header->size);
+				}
+
+				t_heapMetadata* previousHeaderDir = malloc(
+						sizeof(previousHeaderDir));
+				int desp = 0;
+
+				do {
+					memcpy(previousHeaderDir, memoria + desp,
+							sizeof(previousHeaderDir));
+					if (memoria + desp + previousHeaderDir->size == dir - 6) {
+						if (previousHeaderDir->libre) {
+							previousHeaderDir->size += header->size;
+							memset(memoria + desp + 5, '\0',
+									previousHeaderDir->size);
+							break;
+						}
+					} else
+						desp = desp + previousHeaderDir->size + 1;
+				}
+
+				while (desp < dir - 5);
+			}
 
 			muse_logger_info("Direction %d will be freed", free_receive->dir);
-			muse_logger_info("id proceso %d", free_receive->self_id);
-
-			//t_nodo_segmento* nodoSegmento=procesar_segmentacion(nodoProceso->list_segmento);
 
 			t_free_response* free_res = malloc(sizeof(t_free_response));
 			free_res->res = 1;
@@ -121,40 +158,35 @@ void muse_server_init() {
 
 			t_nodo_proceso* nodo = procesar_id(get_receive->id_libmuse);
 
-			// VErifico que haya contenido en la posicion
-			char* content = malloc(sizeof(get_receive->size));
+//			char* content = malloc(sizeof(get_receive->size));
+//			memcpy(content, memoria + get_receive->src,get_receive->size );
 
-			memcpy(content, memoria + get_receive->src,get_receive->size );
+			if (!existe_proceso_en_lista(get_receive->id_libmuse)) {
+				t_protocol get_failed = SEG_FAULT;
+				send(libmuse_fd, &get_failed, sizeof(t_protocol), 0);
+				break;
+			}
 
+			else {
 
-			if (strlen(content) != 0)
-			{
-				// Response logic
+				char* content = malloc(get_receive->size);
+				memcpy(&content, memoria + get_receive->src, sizeof(content));
+
 				t_get_ok* response = malloc(sizeof(t_get_ok));
 				response->res = content;
-				response->tamres = strlen(content)* sizeof(char);
+				response->tamres = sizeof(get_receive->size);
 				t_protocol get_protocol = GET_OK;
 				utils_serialize_and_send(libmuse_fd, get_protocol, response);
+				break;
 			}
-			else {
-				 t_protocol fallo = SEG_FAULT;
-				 send(libmuse_fd, &fallo, sizeof(int), 0);
-				 //send(libmuse_fd,fallo,sizeof(int),0);
-			}
-			// Else
-			break;
 		}
 
 		case COPY: {
 			muse_logger_info("Copy received");
 			t_copy* cpy = utils_receive_and_deserialize(libmuse_fd, protocol);
-			muse_logger_info("ver cpy bien ");
 			muse_logger_info(
 					"Process with pid; %d is trying to copy %d bytes to direction: %d",
 					cpy->self_id, cpy->size, cpy->dst);
-			muse_logger_info("recibio bien ");
-
-
 
 			/*
 			int valor;
@@ -163,40 +195,49 @@ void muse_server_init() {
 			muse_logger_info("id recibi %d", valor);
 			*/
 
-			char *test = malloc(cpy->size);
-			memcpy(test,cpy->content,cpy->size);
-
-			printf("test %s",test);
-
-			muse_logger_info("test de char %s",test);
-
-
 			muse_logger_info("id proceso %d", cpy->self_id);
-
 			t_nodo_proceso* nodo = procesar_id(cpy->self_id);
+			t_protocol cpy_protocol;
 
-			// Verifico si puedo copiar algo a la posicion solicitada
-
-			t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
-			memcpy(heap, memoria + cpy->dst -5, sizeof(t_heapMetadata));
-
-			if (!heap->libre)
-			{
-				int pagina = cpy->dst / muse_page_size() +1;
-				heap->libre = false;
-				heap->size = cpy->size;
-				memcpy (memoria + cpy->dst-5, heap, sizeof(t_heapMetadata));
-				memcpy (memoria + cpy->dst, cpy->content, cpy->size);
-
-
+			if (!existe_proceso_en_lista(cpy->self_id)) {
+				t_copy_response* copy_res = malloc(sizeof(t_copy_response));
+				copy_res->res = -1;
+				cpy_protocol = SEG_FAULT;
+				utils_serialize_and_send(libmuse_fd, cpy_protocol, copy_res);
+				break;
 			}
 
-			// Response logic
-			t_copy_response* copy_res = malloc(sizeof(t_copy_response));
-			copy_res->res = 1;
-			t_protocol cpy_protocol = GET_OK;
-			utils_serialize_and_send(libmuse_fd, cpy_protocol, copy_res);
-			break;
+			else {
+				t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
+				memcpy(heap, memoria + cpy->dst - 5, sizeof(t_heapMetadata));
+
+				if (!heap->libre) {
+					heap->size = cpy->size;
+					memcpy(memoria + cpy->dst - 5, heap,
+							sizeof(t_heapMetadata));
+					memcpy(memoria + cpy->dst, cpy->content, cpy->size);
+				}
+
+				else
+				{
+					t_copy_response* copy_res = malloc(sizeof(t_copy_response));
+					copy_res->res = -1;
+					cpy_protocol = SEG_FAULT;
+					utils_serialize_and_send(libmuse_fd, cpy_protocol, copy_res);
+					break;
+				}
+
+//				int val;
+//				memcpy(&val, cpy->content, sizeof(int));
+//				printf("Received %d", val);
+
+				t_copy_response* copy_res = malloc(sizeof(t_copy_response));
+				copy_res->res = 1;
+				t_protocol cpy_protocol = GET_OK;
+				utils_serialize_and_send(libmuse_fd, cpy_protocol, copy_res);
+				break;
+			}
+
 		}
 		case SYNC: {
 			// TODO: Implementation
@@ -217,24 +258,13 @@ void muse_init() {
 	int cantidad_paginas_virtuales = muse_swap_size() / muse_page_size();
 	cantidad_paginas_totales = cantidad_paginas_reales
 			+ cantidad_paginas_virtuales;
-    /*
-	t_vector_paginas creacionVectorPaginas[cantidad_paginas_totales];
-
-	for (int i = 0; i < cantidad_paginas_totales; i++) {
-		creacionVectorPaginas[i].libre = true;
-	}
-	vectorPaginas = creacionVectorPaginas;
-	*/
 
 	vectorFrames = (t_vector_frames*)calloc(cantidad_paginas_totales, sizeof(t_vector_frames));
-
 	vectorAtributoPaginas = (t_vector_atributo_paginas*)calloc(cantidad_paginas_totales, sizeof(t_vector_atributo_paginas));
-
 
 	for (int i = 0; i < cantidad_paginas_totales; i++) {
 		vectorFrames[i].libre = true;
 	}
-
 
 	for (int i = 0; i < cantidad_paginas_totales; i++) {
 		vectorAtributoPaginas[i].libre = true;
@@ -244,9 +274,7 @@ void muse_init() {
 		vectorAtributoPaginas[i].uso = 0;
 	}
 
-
 	lista_procesos = list_create();
-	puts("algo");
 	printf("cantidad de bytes de la estructura: %d", sizeof(t_heapMetadata));
 	printf("\ncantidad de paginas reales: %d", cantidad_paginas_reales);
 	printf("\ncantidad de paginas virtuales: %d", cantidad_paginas_virtuales);
@@ -364,43 +392,27 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 			t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
 			heap->libre = false;
 			heap->size = memoria_reservar;
-			memcpy(memoria +primerFrameLibre * muse_page_size(), heap,
+			memcpy(memoria + primerFrameLibre * muse_page_size(), heap,
 					sizeof(t_heapMetadata));
-
-
 
 			int bytes_sobran = cantidad_paginas_necesarias * muse_page_size() - memoria_reservar -5;
 			int dir_proxima_estructura  = frameLibre * muse_page_size() + (muse_page_size() - bytes_sobran) ;
 
-
-
 			heap->libre = true;
 			heap->size  = bytes_sobran -5 -1;
-
 
 			memcpy(memoria + dir_proxima_estructura,
 					heap, sizeof(t_heapMetadata));
 
 			printf("cantidad de paginas %d \n",cantidad_paginas_necesarias);
-
 			printf("tamanio de cantidad de paginas %d \n",cantidad_paginas_necesarias*muse_page_size());
-
-
 			printf("contenido de base segmento %d \n",nodoSegmento->base);
-
 			printf("bytes sobran sin la estructura %d \n", bytes_sobran );
-
 			printf("bytes sobran con la estructura %d \n", bytes_sobran -5);
-
 			printf("memoria a reservar %d \n",memoria_reservar);
-
 			printf("ultimo frame %d \n",frameLibre);
-
 			printf("ubicacion logica siguiente estructura %d \n" ,nodoSegmento->base + memoria_reservar +5);
-
 			printf("ubicacion fisica siguiente estructura %d \n" ,dir_proxima_estructura);
-
-
 			printf("desplazamiento dentro del frame %d \n" ,bytes_sobran);
 
 			//test de recorrido de segmento
@@ -408,6 +420,15 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 			memoria_reservar = 5;
 			recorer_segmento_espacio_libre(nodoSegmento,memoria_reservar);
 			//pagina = nodoSegmento->base+5;
+
+			heap->size = cantidad_paginas_necesarias * muse_page_size()
+					- memoria_reservar - 5 - 5 - 1;
+			memcpy(
+					memoria + 5 + primerFrameLibre * muse_page_size()
+							+ memoria_reservar, heap, sizeof(t_heapMetadata));
+			pagina = primerFrameLibre;
+//			memoria_reservar = 5;
+//			recorer_segmento_espacio_libre(nodoSegmento, memoria_reservar);
 
 		} else {
 			return -1;
@@ -418,16 +439,17 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 //buscar en segmento espacio libre
 //buscar si segmento se puede agrandar
 //crear nuevo segmento
-	return nodoSegmento->base +5;
+	return pagina * muse_page_size() + 5;
 }
 
-int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,uint32_t memoria_reservar){
+int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,
+		uint32_t memoria_reservar) {
 	int desde = nodoSegmento->base;
-	int hasta= nodoSegmento->base + nodoSegmento->tamanio;
+	int hasta = nodoSegmento->base + nodoSegmento->tamanio;
 
 	int primera_pagina = (desde / muse_page_size());
 
-	int ultima_pagina = (hasta/ muse_page_size())+1;
+	int ultima_pagina = (hasta / muse_page_size()) + 1;
 
 	//int offset = primera_pagina*muse_page_size();
 	int respuesta = -1;
@@ -477,10 +499,20 @@ int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,uint32_t memori
 			memcpy(memoria + frame->nroFrame*muse_page_size()+offset_frame+5+memoria_reservar,
 								heap, sizeof(t_heapMetadata));
 
-
-
+	int offset = primera_pagina * muse_page_size();
+	int respuesta = -1;
+	t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
+	printf("\n base segmento %d \n", nodoSegmento->base);
+	printf("limite segmento %d \n", ultima_pagina * muse_page_size() - 1);
+	do {
+		memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
+		offset = offset + 5;
+		printf(" \n offset despues de leer estructura %d \n", offset);
+		if (heap->libre && memoria_reservar < heap->size) {
+			printf("\ **** esta libre a partir de este lugar %d ***** \n",
+					offset);
 			respuesta = offset;
-			return offset ;
+			break;
 		}
 		offset = offset + heap->size;
 		pagina = (offset - nodoSegmento->base) / muse_page_size() ;
@@ -493,15 +525,13 @@ int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,uint32_t memori
 
 	}while (offset <= ultima_pagina*muse_page_size()-1);
 
-	printf("valor respuesta: %d \n",respuesta);
-
-
+	printf("valor respuesta: %d \n", respuesta);
 	return respuesta;
 }
 
 bool existe_memoria_parar_paginas(int cantidad_paginas_necesarias) {
 	int i = 0;
-	int contador =0;
+	int contador = 0;
 	while (i < cantidad_paginas_totales) {
 
 		if (vectorFrames[i].libre) {
@@ -512,7 +542,7 @@ bool existe_memoria_parar_paginas(int cantidad_paginas_necesarias) {
 		}
 		i++;
 	}
-	if(contador == cantidad_paginas_necesarias){
+	if (contador == cantidad_paginas_necesarias) {
 		return true;
 	}
 	return false;
@@ -539,8 +569,6 @@ void estadoFrames(){
 				printf("\n cambiado estado %d libre",i);
 		}
 	}
-
-}
 
 /*
  t_nodo_segmento* nuevo_segmento(uint32_t cantidad_memoria){
