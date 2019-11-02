@@ -76,18 +76,57 @@ void muse_server_init() {
 			t_free *free_receive = utils_receive_and_deserialize(libmuse_fd,
 					protocol);
 
-			t_nodo_proceso* nodoProceso = procesar_id(free_receive->self_id);
-			int paginaBuscada = free_receive->dir / muse_page_size();
-
-			int dir = free_receive->dir;
-			if (estaOcupada(paginaBuscada)) {
-				cambiar_estado_pagina(paginaBuscada, false);
-
+			if (!existe_proceso_en_lista(free_receive->self_id)) {
+				t_protocol free_failed = SEG_FAULT;
+				send(libmuse_fd, free_failed, sizeof(t_protocol));
+				break;
 			}
 
-			// Devolver error
+			int dir = free_receive->dir;
+			t_heapMetadata* header = malloc(sizeof(t_heapMetadata));
+
+			memcpy(header, memoria + dir - 5, sizeof(header));
+
+			if (header->libre) {
+				t_protocol free_failed = SEG_FAULT;
+				send(libmuse_fd, free_failed, sizeof(t_protocol));
+				break;
+			}
+
 			else
-				return;
+			{
+				header->libre = true;
+				memset(memoria+dir, '\0', header->size);
+				t_heapMetadata* closestHeader = malloc(sizeof(t_heapMetadata));
+				memcpy(closestHeader, memoria + dir + header->size, sizeof(closestHeader));
+				int oldsize = header->size;
+
+				if (closestHeader->libre)
+				{
+					header->size += closestHeader->size;
+					memset(memoria + dir + header->size, '\0', header->size);
+				}
+
+				t_heapMetadata* previousHeaderDir = malloc(sizeof(previousHeaderDir));
+				int desp = 0;
+
+				do
+				{
+					memcpy(previousHeaderDir, memoria+desp, sizeof(previousHeaderDir));
+					if (memoria + desp + previousHeaderDir->size == dir-6)
+					{
+						if(previousHeaderDir->libre)
+						{
+							previousHeaderDir->size += header->size;
+							memset(memoria+ desp +5, '\0', previousHeaderDir->size);
+							break;
+						}
+					}
+					else desp = desp + previousHeaderDir->size +1;
+				}
+
+				while(desp < dir-5);
+			}
 
 			muse_logger_info("Direction %d will be freed", free_receive->dir);
 
@@ -112,8 +151,7 @@ void muse_server_init() {
 				break;
 			}
 
-			else
-			{
+			else {
 				char* content = malloc(sizeof(get_receive->size));
 				memcpy(content, memoria + get_receive->src, sizeof(content));
 
