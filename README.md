@@ -10,12 +10,12 @@
 
 `Name: "LD_LIBRARY_PATH"`
 
-`Value: "${PATH_PROYECTO}/hilolay/Debug:${PATH_PROYECTO}/libmuse/Debug:${PATH_PROYECTO}/sac_cli/Debug:${PATH_PROYECTO}/shared_common/Debug"`
+`Value:`
+`${PATH_PROYECTO}/hilolay/Debug:${PATH_PROYECTO}/libmuse/Debug:${PATH_PROYECTO}/sac_cli/Debug:${PATH_PROYECTO}/shared_common/Debug`
 
 2) Desde terminal:
 
-`export LD_LIBRARY_PATH=${PATH_PROYECTO}/hilolay/Debug:${PATH_PROYECTO}/libmuse/Debug:${PATH_PROYECTO}/sac_cli/Debug:${PATH_PROYECTO}/shared_common/Debug`
-
+`export LD_LIBRARY_PATH= ${PATH_PROYECTO}/hilolay/Debug:${PATH_PROYECTO}/libmuse/Debug:${PATH_PROYECTO}/sac_cli/Debug:${PATH_PROYECTO}/shared_common/Debug`
 
 #### Para levantar FUSE dentro del *SAC_CLI*
 
@@ -50,7 +50,7 @@ La sentencia:
 
     ./sac_cli.exe -d -o direct_io --Disc-Path=/home/utnso/disc.bin /tmp/fuse_test/
     
-Monta el FileSystem, en modo DEBUG en la carpeta, con la cache DESHABILITADA en el punto de montaje /tmp/fuse_test/, con los parámetros indicados.
+Monta el FileSystem en modo DEBUG, con la cache DESHABILITADA, en el punto de montaje "/tmp/fuse_test/", con los parámetros indicados.
 
 
 _Desmontando el Disco_
@@ -59,6 +59,6 @@ _Desmontando el Disco_
 Para desmontar el disco se utiliza el comando: 'fusermount' con el parametro -u, indicando la ruta de montaje del FileSystem
 
 Por ejemplo: 
-    fusermount -u /tmp/fusea
+    fusermount -u /tmp/fuse_test
 
-(siendo /tmp/fuse_test la ruta en donde se monto FUSE).
+(siendo /tmp/fuse_test/ la ruta en donde se monto FUSE).
