@@ -46,7 +46,6 @@ static struct fuse_opt fuse_options[] = {
 		FUSE_OPT_END,
 };
 
-// ./sac_cli.exe -d -o direct_io --Disc-Path=/media/sf_tp-2019-2c-threaders/sac_server/disc.bin ./fuse_test
 // Dentro de los argumentos que recibe nuestro programa obligatoriamente
 // debe estar el path al directorio donde vamos a montar nuestro FS
 int sac_cli_init(int argc, char *argv[]) {

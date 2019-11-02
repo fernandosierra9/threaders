@@ -41,12 +41,6 @@ void test2()
 	}
 }
 
-// PARA LEVANTAR FUSE:
-// ./sac_cli.exe -d -o direct_io --Disc-Path=/media/sf_tp-2019-2c-threaders/sac_server/disc.bin ./fuse_test
-
-// PARA LEVANTAR POR :
-//  -o direct_io --Disc-Path=/media/sf_tp-2019-2c-threaders/sac_server/disc.bin ./fuse_test
-
 int main(int argc, char *argv[]) {
 	/* HILOLAY CLIENTS */
 	//lib_init();
