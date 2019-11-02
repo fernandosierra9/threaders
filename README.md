@@ -15,7 +15,7 @@
 
 2) Desde terminal:
 
-`export LD_LIBRARY_PATH=${PATH_PROYECTO}/hilolay/Debug:${PATH_PROYECTO}/libmuse/Debug:${PATH_PROYECTO}/sac_cli/Debug:${PATH_PROYECTO}/shared_common/Debug`
+`export LD_LIBRARY_PATH= ${PATH_PROYECTO}/hilolay/Debug:${PATH_PROYECTO}/libmuse/Debug:${PATH_PROYECTO}/sac_cli/Debug:${PATH_PROYECTO}/shared_common/Debug`
 
 #### Para levantar FUSE dentro del *SAC_CLI*
 
