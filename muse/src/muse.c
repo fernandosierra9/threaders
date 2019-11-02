@@ -75,6 +75,7 @@ void muse_server_init() {
 			muse_logger_info("Free received\n");
 			t_free *free_receive = utils_receive_and_deserialize(libmuse_fd,
 					protocol);
+			muse_logger_info("Direction %d will be freed \n", free_receive->dir);
 
 			if (!existe_proceso_en_lista(free_receive->self_id)) {
 				t_protocol free_failed = SEG_FAULT;
@@ -96,7 +97,7 @@ void muse_server_init() {
 			else
 			{
 				header->libre = true;
-				memset(memoria+dir, '\0', header->size);
+				memset(memoria+dir+5, '\0', header->size);
 				t_heapMetadata* closestHeader = malloc(sizeof(t_heapMetadata));
 				memcpy(closestHeader, memoria + dir + header->size, sizeof(closestHeader));
 				int oldsize = header->size;
