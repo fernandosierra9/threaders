@@ -50,7 +50,7 @@ La sentencia:
 
     ./sac_cli.exe -d -o direct_io --Disc-Path=/home/utnso/disc.bin /tmp/fuse_test/
     
-Monta el FileSystem en modo DEBUG, con la cache DESHABILITADA, en el punto de montaje "/tmp/fuse_test/", con los parámetros indicados.
+Monta el FileSystem en modo DEBUG, con la cache DESHABILITADA, en el punto de montaje /tmp/fuse_test/, con los parámetros indicados.
 
 
 _Desmontando el Disco_
