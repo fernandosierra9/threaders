@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <commons/string.h>
-#include "common/config.h"
+#include "../../../shared-common/common/config.h"
 #include "../logger/sac_server_logger.h"
 
 #define CONFIG_FILE_PATH "sac_server.config"

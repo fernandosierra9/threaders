@@ -21,6 +21,10 @@
 
 #define BACKLOG 10
 
+#define NO_FD_ERROR		-1
+#define BIND_ERROR		-2
+#define LISTEN_ERROR	-3
+
 /**
  * @NAME: socket_create_listener
  * @DESC: Creo un socket de escucha y lo devuelvo, o -1 se hubo error. Me pongo a escuchar.

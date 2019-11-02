@@ -20,6 +20,22 @@ int muse_get_listen_port()
 	return muse_config->listen_port;
 }
 
+int muse_memory_size()
+{
+	return muse_config->memory_size;
+}
+
+int muse_page_size()
+{
+	return muse_config->page_size;
+}
+
+int muse_swap_size()
+{
+	return muse_config->swap_size;
+}
+
+
 t_muse_config* muse_config_reload()
 {
 	muse_config_free();
