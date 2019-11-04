@@ -115,9 +115,11 @@ int sac_cli_open(const char *path, struct fuse_file_info *fi) {
 };
 
 int sac_cli_getattr(const char *path, struct stat *stbuf) { 
+	printf("\nPATH: %s\n", path);
 	t_get_attr *get_attr_send = malloc(sizeof(t_get_attr));
 	get_attr_send->id_sac_cli = 1011;
-	get_attr_send->pathname = "/niconicotest";
+	strcpy(get_attr_send->pathname, path);
+	//memcpy(get_attr_send->stbuf, stbuf, sizeof(stbuf));
 	t_protocol get_attr_protocol = GET_ATTR;
 	utils_serialize_and_send(sac_cli_fd, get_attr_protocol, get_attr_send);
 	int response = recv(sac_cli_fd, &get_attr_protocol, sizeof(t_protocol), 0);
@@ -133,6 +135,7 @@ int sac_cli_getattr(const char *path, struct stat *stbuf) {
 			return -1;
 		}
 	}
+
 	return 0;
 };
 

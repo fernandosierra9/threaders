@@ -53,6 +53,12 @@ typedef uint32_t pointerSACBlock;
 
 typedef pointerSACBlock pointer_data_block [PTR_BLOCK_SIZE];
 
+// Se guarda el tamaño del bitarray para la implementacion de 64 bits.
+#define ARRAY64SIZE _bitarray_64
+size_t _bitarray_64;
+#define ARRAY64LEAK _bitarray_64_leak
+size_t _bitarray_64_leak;
+
 // Ruta del disco.
 char fuse_disc_path[1000];
 // Tamaño del disco.
@@ -90,6 +96,8 @@ int discDescriptor;
 int path_size(const char* path);
 pointerSACBlock determinar_nodo(const char* path);
 int split_path(const char* path, char** super_path, char** name);
+int get_size(void);
+
 
 // Funciones de escritura
 int sac_server_create_directory(const char *path, mode_t mode);

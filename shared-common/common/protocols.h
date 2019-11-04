@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <sys/mman.h>
+
 
 typedef struct {
 	int size;
@@ -125,6 +127,7 @@ typedef struct {
 typedef struct {
 	char* pathname;
 	int id_sac_cli;
+	struct stat *stbuf;
 } t_get_attr;
 
 typedef struct {

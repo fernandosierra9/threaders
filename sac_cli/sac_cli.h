@@ -18,7 +18,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <stddef.h>
 #include "../shared-common/common/sockets.h"
 #include "../shared-common/common/utils.h"
 

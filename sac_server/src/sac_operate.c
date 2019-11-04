@@ -115,3 +115,7 @@ int split_path(const char* path, char** super_path, char** name){
 
 	return 0;
 }
+
+int get_size(void){
+	return ((int) (ACTUAL_DISC_SIZE_B / BLOCK_SIZE));
+}

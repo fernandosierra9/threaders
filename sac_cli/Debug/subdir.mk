@@ -6,6 +6,9 @@
 C_SRCS += \
 ../sac_cli.c 
 
+O_SRCS += \
+../sac_cli.o 
+
 OBJS += \
 ./sac_cli.o 
 

@@ -5,6 +5,7 @@
 static void init_server(int port);
 static void *handle_connection(void *arg);
 static void exit_gracefully(int status);
+static void init_administrative_structures();
 
 int main(int argc, char *argv[]) {
 
@@ -15,47 +16,19 @@ int main(int argc, char *argv[]) {
 
 	sac_server_logger_destroy();
 	exit_gracefully(EXIT_FAILURE);
-	
-	//int fd;
-	// Obiene el tamanio del disco
-	//fuse_disc_size = path_size(DISC_PATH);
-
-	/*
-	BitArray
-	*/
-
-/* 	if ((discDescriptor = fd = open(DISC_PATH, O_RDWR, 0)) == -1) {
-		sac_server_logger_error("Error");
-	}
-	
-	header_start = (struct sac_header_t*) mmap(NULL, ACTUAL_DISC_SIZE_B , PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, fd, 0);
-	header_data = *header_start;
-	bitmap_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS];
-	node_table_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS + BITMAP_BLOCK_SIZE];
-	data_block_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS + BITMAP_BLOCK_SIZE + NODE_TABLE_SIZE];
-	
-	mlock(bitmap_start, BITMAP_BLOCK_SIZE * BLOCK_SIZE);
-	mlock(node_table_start, NODE_TABLE_SIZE * BLOCK_SIZE);
-	madvise(header_start, ACTUAL_DISC_SIZE_B , MADV_RANDOM); */
-
-	//fdatasync(discDescriptor);
-	
-	//munlockall(); /* Desbloquea todas las paginas que tenia bloqueadas */
-
-	//if (munmap(header_start, ACTUAL_DISC_SIZE_B ) == -1) printf("ERROR");
-
-	//close(fd);
 }
 
 static void init_server(int port) {
 	
+	//init_administrative_structures();
+
 	int sac_server_socket = socket_create_listener("127.0.0.1", port);
 
 	sac_server_logger_info("Esperando conexion de SAC_CLI: %d", sac_server_socket);
 
 	if (sac_server_socket < 0) {
 		switch (sac_server_socket) {
-		case NO_FD_ERROR:
+			case NO_FD_ERROR:
 			sac_server_logger_error("No hay file descriptor disponible para el listener.");
 			break;
 		case BIND_ERROR:
@@ -74,7 +47,7 @@ static void init_server(int port) {
 
 		pthread_attr_t attrs;
 		pthread_attr_init(&attrs);
-		pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED);
+		pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_JOINABLE);
 
 		for (;;) {
 			int *accepted_fd = malloc(sizeof(int));
@@ -87,6 +60,7 @@ static void init_server(int port) {
 		}
 
 		pthread_attr_destroy(&attrs);
+		close(sac_server_socket);
 	}
 }
 
@@ -117,12 +91,11 @@ static void *handle_connection(void *arg) {
 			case GET_ATTR: {
 				sac_server_logger_info("Recibi GET_ATTR de SAC_CLI");
 				t_get_attr *get_attr_dir = utils_receive_and_deserialize(fd, protocol);
-				sac_server_logger_info("PATHNAME: %s", get_attr_dir->pathname);
 				sac_server_logger_info("ID_SAC_CLI: %d", get_attr_dir->id_sac_cli);
-				
+			    sac_server_logger_info("PATHNAME: %s", get_attr_dir->pathname);
 				t_get_attr_ok *get_attr_ok_send = malloc(sizeof(t_get_attr_ok));
 				get_attr_ok_send->id_sac_cli = (get_attr_dir->id_sac_cli) + 5;
-				t_protocol get_attr_protocol = GET_ATTR_OK;
+				t_protocol get_attr_protocol = GET_ATTR_OK; 
 				utils_serialize_and_send(fd, get_attr_protocol, get_attr_ok_send);
 				break;
 			}
@@ -170,6 +143,36 @@ static void *handle_connection(void *arg) {
 			}
 		}
 	}
+}
+
+static void init_administrative_structures() {
+	int fd;
+	// Obiene el tamanio del disco
+	fuse_disc_size = path_size(DISC_PATH);
+
+	_bitarray_64 = get_size() / 64;
+	_bitarray_64_leak = get_size() - (_bitarray_64 * 64);
+
+	if ((discDescriptor = fd = open(DISC_PATH, O_RDWR, 0)) == -1) {
+		sac_server_logger_error("Error");
+	}
+	
+	header_start = (struct sac_header_t*) mmap(NULL, ACTUAL_DISC_SIZE_B , PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, fd, 0);
+	header_data = *header_start;
+	bitmap_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS];
+	node_table_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS + BITMAP_BLOCK_SIZE];
+	data_block_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS + BITMAP_BLOCK_SIZE + NODE_TABLE_SIZE];
+	
+	/*
+	mlock(bitmap_start, BITMAP_BLOCK_SIZE * BLOCK_SIZE);
+	mlock(node_table_start, NODE_TABLE_SIZE * BLOCK_SIZE);
+	madvise(header_start, ACTUAL_DISC_SIZE_B , MADV_RANDOM); */
+
+	fdatasync(discDescriptor);
+	
+	//munlockall(); /* Desbloquea todas las paginas que tenia bloqueadas */
+
+	if (munmap(header_start, ACTUAL_DISC_SIZE_B ) == -1) printf("ERROR");
 }
 
 static void exit_gracefully(int status) {
