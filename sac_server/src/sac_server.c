@@ -125,7 +125,10 @@ static void *handle_connection(void *arg) {
 				sac_server_logger_info("Recibi READ de SAC_CLI");
 				t_read *read_dir = utils_receive_and_deserialize(fd, protocol);
 				sac_server_logger_info("PATHNAME: %d", strlen(read_dir->pathname));
+				sac_server_logger_info("PATHNAME: %s", read_dir->pathname);
 				sac_server_logger_info("ID_SAC_CLI: %d", read_dir->id_sac_cli);
+				protocol =GET_ATTR_OK;
+				send(fd, &protocol, sizeof(t_protocol), 0);
 				break;
 			}
 			case OPEN: {

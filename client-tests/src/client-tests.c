@@ -1,5 +1,6 @@
 #include "../../hilolay/hilolay.h"
 #include "../../libmuse/libmuse.h"
+#include "../../sac_cli/sac_cli.h"
 
 void recursiva(int cant)
 {
@@ -40,14 +41,20 @@ void test2()
 	}
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
+
+
+	sac_cli_init(argc, argv);
+	sac_read("hi");
 	/* HILOLAY CLIENTS */
 	//lib_init();
 	//th_create(test1);
 	//th_create(test2);
 
 	/* MUSE CLIENTS */
+
+	/*
     muse_init((int)getpid(),
     		"127.0.0.1", 5003);
 
@@ -77,4 +84,5 @@ int main(void)
     muse_close();
 	//th_return(0);
 	return 0;
+	*/
 }

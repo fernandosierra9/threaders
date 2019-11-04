@@ -34,7 +34,8 @@ typedef enum {
 	MK_DIR,
 	CREATE_DIR,
 	WRITE,
-	RM_DIR
+	RM_DIR,
+	GET_ATTR_OK
 } t_protocol;
 
 typedef struct {

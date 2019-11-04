@@ -5,6 +5,7 @@
 	<projects>
 		<project>libmuse</project>
 		<project>hilolay</project>
+		<project>sac_cli</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

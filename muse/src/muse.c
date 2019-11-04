@@ -457,53 +457,9 @@ int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,
 	printf("\n base segmento %d \n",nodoSegmento->base);
 	printf("limite segmento %d \n",ultima_pagina*muse_page_size()-1);
 
-	/*
-	t_list *lista_frames_proceso = list_create();
-	for(int i=0;i<list_size(nodoSegmento->list_paginas);i++){
-		t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,i);
-		t_frames* frame = malloc(sizeof(t_frames));
-		printf("\n indice vector %d :",nodoPagina->indiceVector);
-		frame->nroFrame = vectorAtributoPaginas[nodoPagina->indiceVector].frame;
-		list_add(lista_frames_proceso,frame);
-	}
-
-	for(int i=0;i<list_size(lista_frames_proceso);i++){
-		t_frames* frame =list_get(lista_frames_proceso,i);
-		printf("\n nro frama del proceso %d :",frame->nroFrame);
-	}
-  */
-
 	int offset = 0;
 	int pagina = 0;
 	int offset_frame =0;
-	do{
-
-		t_frames *frame = list_get(nodoSegmento->list_paginas,pagina);
-		memcpy(heap,memoria+frame->nroFrame*muse_page_size()+offset_frame,sizeof(t_heapMetadata));
-		offset =offset + 5;
-		printf(" \n offset despues de leer estructura %d \n",offset);
-		printf(" \n %d \n",offset);
-		if(heap->libre && memoria_reservar < heap->size){
-			printf("\n **** esta libre a partir de este lugar %d ***** \n",offset);
-			int tamanio = heap->size;
-			heap->libre = false;
-			heap->size = memoria_reservar;
-
-			heap->libre = false;
-			heap->size = memoria_reservar;
-			memcpy(memoria+frame->nroFrame*muse_page_size()+offset_frame, heap,
-					sizeof(t_heapMetadata));
-
-			heap->libre = true;
-			heap->size = tamanio - memoria_reservar -5;
-			memcpy(memoria + frame->nroFrame*muse_page_size()+offset_frame+5+memoria_reservar,
-								heap, sizeof(t_heapMetadata));
-
-	int offset = primera_pagina * muse_page_size();
-	int respuesta = -1;
-	t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
-	printf("\n base segmento %d \n", nodoSegmento->base);
-	printf("limite segmento %d \n", ultima_pagina * muse_page_size() - 1);
 	do {
 		memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
 		offset = offset + 5;
@@ -569,7 +525,7 @@ void estadoFrames(){
 				printf("\n cambiado estado %d libre",i);
 		}
 	}
-
+}
 /*
  t_nodo_segmento* nuevo_segmento(uint32_t cantidad_memoria){
  int cantidad_paginas_necesarias= cantidad_memoria /muse_page_size();

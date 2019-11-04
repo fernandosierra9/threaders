@@ -70,7 +70,7 @@ int sac_cli_init(int argc, char *argv[]) {
 		printf("Mountpoint not specified: Unloading modules.");
 		exit(0);
 	
-
+	}
 	sac_cli_fd = socket_connect_to_server(ip_sac_server, puerto_sac);
 
 	if (sac_cli_fd < 0) {
@@ -85,7 +85,9 @@ int sac_cli_init(int argc, char *argv[]) {
 }
 
 int sac_create_directory(const char *path, mode_t mode) {
-    return 0;
+
+
+	return 0;
 };
 
 int sac_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
@@ -103,6 +105,18 @@ int sac_read(char *path) {
 	read_send->pathname = "/niconico";
 	t_protocol read_protocol = READ;
 	utils_serialize_and_send(sac_cli_fd, read_protocol, read_send);
+	int response = recv(sac_cli_fd, &read_protocol, sizeof(t_protocol), 0);
+
+		switch (read_protocol) {
+			case GET_ATTR_OK: {
+				printf("ANDA TODO GENIAL");
+				return 0;
+			}
+			case SEG_FAULT: {
+				printf("ROMPIO EL SERVER");
+				return -1;
+			}
+	}
 	return 0;
 };
 
@@ -121,6 +135,19 @@ int sac_getattr(const char *path, struct stat *stbuf) {
 	get_attr_send->pathname = "/";
 	t_protocol get_attr_protocol = GET_ATTR;
 	utils_serialize_and_send(sac_cli_fd, get_attr_protocol, get_attr_send);
+	int response = recv(sac_cli_fd, &get_attr_protocol, sizeof(t_protocol), 0);
+
+	switch (get_attr_protocol) {
+		case GET_ATTR_OK: {
+			printf("ANDA TODO GENIAL");
+			return 0;
+		}
+		case SEG_FAULT: {
+			printf("ROMPIO EL SERVER");
+			return -1;
+		}
+	}
+
 	return 0;
 };
 

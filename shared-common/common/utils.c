@@ -424,6 +424,7 @@ void utils_get_from_list_to(void *parameter, t_list *list, int index) {
 	memcpy(parameter, buffer->stream, buffer->size);
 }
 
+
 void* utils_receive_buffer(int* size, int socket_cliente) {
 	void * buffer;
 
