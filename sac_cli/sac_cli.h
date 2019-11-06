@@ -26,9 +26,6 @@ char *ip_sac_server = "127.0.0.1";
 int puerto_sac = 8003;
 int sac_cli_fd;
 
-// Ruta del disco.
-char fuse_disc_path[1000];
-
 #define DEFAULT_FILE_CONTENT "Hello World!\n"
 #define DEFAULT_FILE_NAME "hello"
 #define DEFAULT_FILE_PATH "/" DEFAULT_FILE_NAME

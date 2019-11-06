@@ -60,7 +60,7 @@ size_t _bitarray_64;
 size_t _bitarray_64_leak;
 
 // Ruta del disco.
-char fuse_disc_path[1000];
+char *fuse_disc_path;
 // Tamaño del disco.
 int fuse_disc_size;
 

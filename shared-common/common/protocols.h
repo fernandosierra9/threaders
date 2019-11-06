@@ -29,6 +29,7 @@ typedef enum {
 	UNMAP_OK,
 	SYNC_OK,
 	SEG_FAULT,
+	// SAC_CLI/SAC_SERVER PROTOCOLS
 	GET_ATTR,
 	READ_DIR,
 	READ,
@@ -38,6 +39,7 @@ typedef enum {
 	WRITE,
 	RM_DIR,
 	GET_ATTR_OK,
+	FUSE_INIT,
 } t_protocol;
 
 typedef struct {
@@ -150,8 +152,5 @@ typedef struct {
 	int id_sac_cli;
 } t_mk_directory;
 
-typedef struct {
-	int id_sac_cli;
-} t_get_attr_ok;
 
 #endif /* COMMON_PROTOCOLS_H_ */

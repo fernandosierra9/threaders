@@ -15,6 +15,50 @@
  * 		O archivo/directorio fue encontrado. -ENOENT archivo/directorio no encontrado
  */
 int sac_server_getattr(const char *path, struct stat *stbuf) {
+
+/* 	sac_server_logger_info("Getattr: Path: %s", path);
+	int nodo = determinar_nodo(path), res;
+	if (nodo < 0) return -ENOENT;
+	struct sac_file_t *node;
+	memset(stbuf, 0, sizeof(struct stat));
+
+	if (nodo == -1) return -ENOENT;
+
+	if (strcmp(path, "/") == 0){
+		stbuf->st_mode = S_IFDIR | 0777;
+		stbuf->st_nlink = 2;
+		return 0;
+	}
+
+	node = node_table_start;
+
+	node = &(node[nodo-1]);
+
+	if (node->state == 2){
+		stbuf->st_mode = S_IFDIR | 0777;
+		stbuf->st_nlink = 2;
+		stbuf->st_size = 4096; // Default para los directorios, es una "convencion".
+		stbuf->st_mtime = node->modified_date;
+		stbuf->st_ctime = node->creation_date;
+		stbuf->st_atime = time(NULL);
+		res = 0;
+		goto finalizar;
+	} else if(node->state == 1){
+		stbuf->st_mode = S_IFREG | 0777;
+		stbuf->st_nlink = 1;
+		stbuf->st_size = node->file_size;
+		stbuf->st_mtime = node->modified_date;
+		stbuf->st_ctime = node->creation_date;
+		stbuf->st_atime = time(NULL); 
+		res = 0;
+		goto finalizar;
+	}
+
+	res = -ENOENT;
+	// Cierra conexiones y libera memoria.
+	finalizar:
+	return res; */
+
 	int res = 0;
 
 	memset(stbuf, 0, sizeof(struct stat));

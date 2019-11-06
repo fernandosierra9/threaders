@@ -45,6 +45,7 @@ t_list* utils_receive_package(int socket_cliente);
 void* utils_receive_buffer(int* size, int socket_cliente);
 void utils_get_from_list_to(void *parameter,t_list *list,int index);
 void utils_get_from_list_to_malloc(void *parameter,t_list *list,int index);
+int utils_get_buffer_size(t_list *list, int index);
 static void utils_destroy_list(t_buffer *self);
 
 #endif /* CUSTOM_UTILITARIA_H_ */

@@ -6,7 +6,7 @@
  * de FUSE
  */
 struct t_runtime_options {
-	char* disc_path;
+	//char* disc_path;
 } runtime_options;
 
 /*
@@ -36,8 +36,6 @@ enum {
  * parametro puede recibir y donde tiene que guardar el valor de estos
  */
 static struct fuse_opt fuse_options[] = {
-		// Si se le manda el parametro "--Disc-Path", lo utiliza:
-		CUSTOM_FUSE_OPT_KEY("--Disc-Path=%s", disc_path, 0),
 		// Estos son parametros por defecto que ya tiene FUSE
 		FUSE_OPT_KEY("-V", KEY_VERSION),
 		FUSE_OPT_KEY("--version", KEY_VERSION),
@@ -49,25 +47,14 @@ static struct fuse_opt fuse_options[] = {
 // Dentro de los argumentos que recibe nuestro programa obligatoriamente
 // debe estar el path al directorio donde vamos a montar nuestro FS
 int sac_cli_init(int argc, char *argv[]) {
-	
 	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
 
-	// Limpio la estructura que va a contener los parametros
 	memset(&runtime_options, 0, sizeof(struct t_runtime_options));
 
 	// Esta funcion de FUSE lee los parametros recibidos y los intepreta
 	if (fuse_opt_parse(&args, &runtime_options, fuse_options, NULL) == -1){
-		
 		perror("Invalid arguments!");
 		return EXIT_FAILURE;
-	}
-
-	// Setea el path del disco
-	if (runtime_options.disc_path != NULL){
-		strcpy(fuse_disc_path, runtime_options.disc_path);
-	} else {
-		printf("Mountpoint not specified: Unloading modules.");
-		exit(0);
 	}
 
 	sac_cli_fd = socket_connect_to_server(ip_sac_server, puerto_sac);
@@ -78,8 +65,7 @@ int sac_cli_init(int argc, char *argv[]) {
 		return -1;
 	}
 
-	printf("Conexion con SAC_SERVER establecida");
-
+	printf("\n Conexion con SAC_SERVER establecida \n");
 	return fuse_main(args.argc, args.argv, &sac_operations, NULL);
 }
 
@@ -115,23 +101,25 @@ int sac_cli_open(const char *path, struct fuse_file_info *fi) {
 };
 
 int sac_cli_getattr(const char *path, struct stat *stbuf) { 
-	printf("\nPATH: %s\n", path);
+	printf("\n SAC CLI: GET ATTR\n");
 	t_get_attr *get_attr_send = malloc(sizeof(t_get_attr));
 	get_attr_send->id_sac_cli = 1011;
-	strcpy(get_attr_send->pathname, path);
+	get_attr_send->pathname = strdup(path);
 	//memcpy(get_attr_send->stbuf, stbuf, sizeof(stbuf));
 	t_protocol get_attr_protocol = GET_ATTR;
 	utils_serialize_and_send(sac_cli_fd, get_attr_protocol, get_attr_send);
 	int response = recv(sac_cli_fd, &get_attr_protocol, sizeof(t_protocol), 0);
-	printf("\nRESPONSE: %d\n", response);
 
 	switch (get_attr_protocol) {
 		case GET_ATTR_OK: {
-			printf("ANDA TODO GENIAL");
+			printf("GET ATTRIBUTE OK");
 			return 0;
 		}
 		case SEG_FAULT: {
-			printf("ROMPIO EL SERVER");
+			printf("SEGMENTATION FAULT");
+			return -1;
+		}
+		default: { 
 			return -1;
 		}
 	}

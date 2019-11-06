@@ -1,8 +1,10 @@
 #include "../../sac_cli/sac_cli.h"
 
 
-// export LD_LIBRARY_PATH=/media/sf_tp-2019-2c-threaders/hilolay/Debug:/media/sf_tp-2019-2c-threaders/libmuse/Debug:/media/sf_tp-2019-2c-threaders/sac_cli/Debug:/media/sf_tp-2019-2c-threaders/shared_common/Debug
-// ./client-tests -d -o direct_io --Disc-Path=/media/sf_tp-2019-2c-threaders/sac_server/disc.bin /media/sf_tp-2019-2c-threaders/client-tests/fuse_test
+// export LD_LIBRARY_PATH=/media/sf_tp-2019-2c-threaders/hilolay/Debug:/media/sf_tp-2019-2c-threaders/libmuse/Debug:/media/sf_tp-2019-2c-threaders/sac_cli/Debug:/media/sf_tp-2019-2c-threaders/shared-common/Debug
+// ./client-tests -d -o direct_io /media/sf_tp-2019-2c-threaders/client-tests/fuse_test
+// ./sac_server /media/sf_tp-2019-2c-threaders/sac_server/disc.bin
+//fusermount -u /media/sf_tp-2019-2c-threaders/client-tests/fuse_test
 int main(int argc, char *argv[]) {
 	/* HILOLAY CLIENTS */
 	//lib_init();
