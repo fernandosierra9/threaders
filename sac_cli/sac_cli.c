@@ -70,15 +70,61 @@ int sac_cli_init(int argc, char *argv[]) {
 }
 
 int sac_cli_create_directory(const char *path, mode_t mode) {
-    return 0;
+	printf("\n SAC CLI: MAKE DIRECTORY\n");
+	t_mk_directory* mk_directory_send = malloc(sizeof(t_mk_directory));
+	mk_directory_send->pathname = strdup(path);
+	mk_directory_send->id_sac_cli = 345;
+	//mk_directory_send->mode = mode;
+	t_protocol mk_directory_protocol = MK_DIR;
+	utils_serialize_and_send(sac_cli_fd, mk_directory_protocol, mk_directory_send);
+
+	int response = recv(sac_cli_fd, &mk_directory_protocol, sizeof(t_protocol), 0);
+
+	switch (mk_directory_protocol) {
+		case MK_DIR_OK: {
+			printf("MK DIRECTORY OK");
+			return 0;
+		}
+		case SEG_FAULT: {
+			printf("SEGMENTATION FAULT");
+			return -1;
+		}
+		default: { 
+			return -1;
+		}
+	}
+	return 0;
 };
 
 int sac_cli_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
+	printf("\n SAC CLI: READ DIRECTORY\n");
 	t_read_dir *read_dir_send = malloc(sizeof(t_read_dir));
 	read_dir_send->id_sac_cli = 123;
-	read_dir_send->pathname = "/";
+	read_dir_send->pathname = strdup(path);
+
+	
+/* 	read_dir_send->filler = filler;
+	read_dir_send->offset = offset;
+	read_dir_send->buf = buf; */
 	t_protocol read_dir_protocol = READ_DIR;
 	utils_serialize_and_send(sac_cli_fd, read_dir_protocol, read_dir_send);
+
+	int response = recv(sac_cli_fd, &read_dir_protocol, sizeof(t_protocol), 0);
+
+	switch (read_dir_protocol) {
+		case GET_ATTR_OK: {
+			printf("READ DIRECTORY ATTRIBUTE OK");
+			return 0;
+		}
+		case SEG_FAULT: {
+			printf("SEGMENTATION FAULT");
+			return -1;
+		}
+		default: { 
+			return -1;
+		}
+	}
+
 	return 0;
 };
 
@@ -105,7 +151,7 @@ int sac_cli_getattr(const char *path, struct stat *stbuf) {
 	t_get_attr *get_attr_send = malloc(sizeof(t_get_attr));
 	get_attr_send->id_sac_cli = 1011;
 	get_attr_send->pathname = strdup(path);
-	//memcpy(get_attr_send->stbuf, stbuf, sizeof(stbuf));
+	memset(stbuf, 0, sizeof(struct stat));
 	t_protocol get_attr_protocol = GET_ATTR;
 	utils_serialize_and_send(sac_cli_fd, get_attr_protocol, get_attr_send);
 	int response = recv(sac_cli_fd, &get_attr_protocol, sizeof(t_protocol), 0);

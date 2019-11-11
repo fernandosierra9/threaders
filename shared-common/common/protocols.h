@@ -5,7 +5,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <sys/mman.h>
-
+#include <sys/types.h>
+#include <sys/stat.h>
 
 typedef struct {
 	int size;
@@ -35,11 +36,10 @@ typedef enum {
 	READ,
 	OPEN,
 	MK_DIR,
-	CREATE_DIR,
 	WRITE,
 	RM_DIR,
 	GET_ATTR_OK,
-	FUSE_INIT,
+	MK_DIR_OK
 } t_protocol;
 
 typedef struct {
@@ -131,11 +131,6 @@ typedef struct {
 	int id_sac_cli;
 	struct stat *stbuf;
 } t_get_attr;
-
-typedef struct {
-	char* pathname;
-	int id_sac_cli;
-} t_create_directory;
 
 typedef struct {
 	char* pathname;

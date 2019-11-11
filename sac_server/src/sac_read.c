@@ -15,12 +15,10 @@
  * 		O archivo/directorio fue encontrado. -ENOENT archivo/directorio no encontrado
  */
 int sac_server_getattr(const char *path, struct stat *stbuf) {
-
-/* 	sac_server_logger_info("Getattr: Path: %s", path);
+	sac_server_logger_info("Getattr: Path: %s", path);
 	int nodo = determinar_nodo(path), res;
 	if (nodo < 0) return -ENOENT;
 	struct sac_file_t *node;
-	memset(stbuf, 0, sizeof(struct stat));
 
 	if (nodo == -1) return -ENOENT;
 
@@ -57,25 +55,7 @@ int sac_server_getattr(const char *path, struct stat *stbuf) {
 	res = -ENOENT;
 	// Cierra conexiones y libera memoria.
 	finalizar:
-	return res; */
-
-	int res = 0;
-
-	memset(stbuf, 0, sizeof(struct stat));
-
-	//Si path es igual a "/" nos estan pidiendo los atributos del punto de montaje
-
-	if (strcmp(path, "/") == 0) {
-		stbuf->st_mode = S_IFDIR | 0755;
-		stbuf->st_nlink = 2;
-	} else if (strcmp(path, DEFAULT_FILE_PATH) == 0) {
-		stbuf->st_mode = S_IFREG | 0444;
-		stbuf->st_nlink = 1;
-		stbuf->st_size = strlen(DEFAULT_FILE_CONTENT);
-	} else {
-		res = -ENOENT;
-	}
-	return res;
+	return res; 
 }
 
 /*
@@ -118,20 +98,34 @@ int sac_server_open(const char *path, struct fuse_file_info *fi) {
  * 		O directorio fue encontrado. -ENOENT directorio no encontrado
  */
 
-int sac_server_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
-	(void) offset;
-	(void) fi;
+int sac_server_readdir(const char *path) {
+	sac_server_logger_info("Readdir: Path: %s - Offset %d", path, offset);
+	int i;
+	int res = 0;
+	int nodo = determinar_nodo(path);
+	struct sac_file_t *node;
 
-	if (strcmp(path, "/") != 0)
-		return -ENOENT;
+	if (nodo == -1) return  -ENOENT;
 
-	// "." y ".." son entradas validas, la primera es una referencia al directorio donde estamos parados
-	// y la segunda indica el directorio padre
+	node = node_table_start;
+
+	// "." y ".." obligatorios.
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
-	filler(buf, "hello", NULL, 0);
 
-	return 0;
+	//pthread_rwlock_rdlock(&rwlock); //Toma un lock de lectura.
+	//log_lock_trace(logger, "Readdir: Toma lock lectura. Cantidad de lectores: %d", rwlock.__data.__nr_readers);
+
+	// Carga los nodos que cumple la condicion en el buffer.
+	for (i = 0; i < SAC_FILE_BY_TABLE;  (i++)){
+		if ((nodo==(node->parent_dir_block)) & (((node->state) == DIRECTORY_T) | ((node->state) == FILE_T))) 
+		filler(buf, (char*) &(node->file_name[0]), NULL, 0);
+		node = &node[1];
+	}
+
+	//pthread_rwlock_unlock(&rwlock); //Devuelve un lock de lectura.
+	//log_lock_trace(logger, "Readdir: Libera lock lectura. Cantidad de lectores: %d", rwlock.__data.__nr_readers);
+	return res;
 }
 
 /*

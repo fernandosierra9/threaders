@@ -2,32 +2,26 @@
 
 
 /* Local functions */
-static void init_server(char *argv[], int port);
+static void init_server(int port);
 static void *handle_connection(void *arg);
 static void exit_gracefully(int status);
-static void init_administrative_structures();
+static void init_administrative_structures(char *argv[]);
+static void close_administrative_structures();
 
 int main(int argc, char *argv[]) {
 
 	sac_server_logger_create();
 	sac_server_config_load();
 
-	init_server(argv, sac_server_get_listen_port());
+	init_administrative_structures(argv);
+	init_server(sac_server_get_listen_port());
+	close_administrative_structures();
 
 	sac_server_logger_destroy();
 	exit_gracefully(EXIT_FAILURE);
 }
 
-static void init_server(char *argv[], int port) {
-	// Setea el path del disco
-	if (argv[1] != NULL){
-		fuse_disc_path = malloc(strlen(argv[1]));
-		strcpy(fuse_disc_path, argv[1]);
-	} else {
-		printf("Disc not specified: Unloading modules.");
-		exit(0);
-	}
-	sac_server_logger_info("DISC PATH: %s", fuse_disc_path);
+static void init_server(int port) {
 	int sac_server_socket = socket_create_listener("127.0.0.1", port);
 
 	sac_server_logger_info("Esperando conexion de SAC_CLI: %d", sac_server_socket);
@@ -76,7 +70,6 @@ static void *handle_connection(void *arg) {
 
 	int fd = *((int *)arg);
 	free(arg);
-	//init_administrative_structures();
 
 	for (;;) {
 		received_bytes = recv(fd, &protocol, sizeof(int), 0);
@@ -98,9 +91,10 @@ static void *handle_connection(void *arg) {
 			case GET_ATTR: {
 				sac_server_logger_info("Recibi GET_ATTR de SAC_CLI");
 				t_get_attr *get_attr_dir = utils_receive_and_deserialize(fd, protocol);
-			    sac_server_logger_info("PATHNAME: %s", get_attr_dir->pathname);
 				t_protocol get_attr_protocol = GET_ATTR_OK;
-				send(fd, &get_attr_protocol, sizeof(get_attr_protocol), 0);
+				//int res = sac_server_getattr(get_attr_dir->pathname, get_attr_dir->stbuf);
+				int res = sac_server_getattr("/", get_attr_dir->stbuf);
+				send(fd, &res, sizeof(int), 0);
 				break;
 			}
 			case READ: {
@@ -120,15 +114,9 @@ static void *handle_connection(void *arg) {
 			case MK_DIR: {
 				sac_server_logger_info("Recibi MK_DIR de SAC_CLI");
 				t_mk_directory *mk_dir = utils_receive_and_deserialize(fd, protocol);
-				sac_server_logger_info("PATHNAME: %s", mk_dir->pathname);
-				sac_server_logger_info("ID_SAC_CLI: %d", mk_dir->id_sac_cli);
-				break;
-			}
-			case CREATE_DIR: {
-				sac_server_logger_info("Recibi CREATE_DIR de SAC_CLI");
-				t_read_dir *create_dir = utils_receive_and_deserialize(fd, protocol);
-				sac_server_logger_info("PATHNAME: %s", create_dir->pathname);
-				sac_server_logger_info("ID_SAC_CLI: %d", create_dir->id_sac_cli);
+				//int res = sac_server_create_directory(mk_dir->pathname, mk_dir->mode);
+				int res = sac_server_create_directory("/", mk_dir->mode);
+				send(fd, &res, sizeof(int), 0);
 				break;
 			}
 			case WRITE: {
@@ -149,10 +137,17 @@ static void *handle_connection(void *arg) {
 	}
 }
 
-static void init_administrative_structures() {
+static void init_administrative_structures(char *argv[]) {
 	int fd;
-
-	sac_server_logger_info("INIT ADMINISTRATIVE STRUCTURES");
+		// Setea el path del disco
+	if (argv[1] != NULL){
+		fuse_disc_path = malloc(strlen(argv[1]));
+		strcpy(fuse_disc_path, argv[1]);
+	} else {
+		printf("Disc not specified: Unloading modules.");
+		exit(0);
+	}
+	sac_server_logger_info("INITIALIZING ADMINISTRATIVE STRUCTURES");
 	sac_server_logger_info("DISC PATH: %s", fuse_disc_path);
 	// Obiene el tamanio del disco
 	fuse_disc_size = path_size(DISC_PATH);
@@ -171,17 +166,20 @@ static void init_administrative_structures() {
 	bitmap_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS];
 	node_table_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS + BITMAP_BLOCK_SIZE];
 	data_block_start = (struct sac_file_t*) &header_start[SAC_HEADER_BLOCKS + BITMAP_BLOCK_SIZE + NODE_TABLE_SIZE];
-	
-	/*
+}
+
+static void close_administrative_structures() {
+	sac_server_logger_info("CLOSING ADMINISTRATIVE STRUCTURES");
 	mlock(bitmap_start, BITMAP_BLOCK_SIZE * BLOCK_SIZE);
 	mlock(node_table_start, NODE_TABLE_SIZE * BLOCK_SIZE);
-	madvise(header_start, ACTUAL_DISC_SIZE_B , MADV_RANDOM); */
+	madvise(header_start, ACTUAL_DISC_SIZE_B , MADV_RANDOM);
 
 	fdatasync(discDescriptor);
 	
-	//munlockall(); /* Desbloquea todas las paginas que tenia bloqueadas */
+	munlockall(); /* Desbloquea todas las paginas que tenia bloqueadas */
 
 	if (munmap(header_start, ACTUAL_DISC_SIZE_B ) == -1) printf("ERROR");
+
 }
 
 static void exit_gracefully(int status) {
