@@ -1,5 +1,11 @@
 #include "sac_cli.h"
 
+
+/* Local functions */
+static int sac_cli_access(const char* path, int flags);
+static int sac_cli_chmod(const char *path, mode_t mode);
+static int sac_cli_chown(const char *path, uid_t user_data, gid_t group_data);
+
 /*
  * Esta es una estructura auxiliar utilizada para almacenar parametros
  * que nosotros le pasemos por linea de comando a la funcion principal
@@ -16,13 +22,17 @@ struct t_runtime_options {
  */
 
 static struct fuse_operations sac_operations = {
-		.getattr = sac_cli_getattr,
+		.getattr = sac_cli_getattr, // OK a medias
 		.readdir = sac_cli_readdir,
 		.open = sac_cli_open,
 		.read = sac_cli_read,
 		.mkdir = sac_cli_create_directory,
 		.write = sac_cli_write,
 		.rmdir = sac_cli_rm_directory,
+		.access = sac_cli_access,		// OK
+		.chmod = sac_cli_chmod,		// OK
+		.chown = sac_cli_chown,		// OK
+
 };
 
 /** keys for FUSE_OPT_ options */
@@ -43,6 +53,7 @@ static struct fuse_opt fuse_options[] = {
 		FUSE_OPT_KEY("--help", KEY_HELP),
 		FUSE_OPT_END,
 };
+
 
 // Dentro de los argumentos que recibe nuestro programa obligatoriamente
 // debe estar el path al directorio donde vamos a montar nuestro FS
@@ -102,10 +113,10 @@ int sac_cli_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t o
 	read_dir_send->id_sac_cli = 123;
 	read_dir_send->pathname = strdup(path);
 
-	
-/* 	read_dir_send->filler = filler;
-	read_dir_send->offset = offset;
-	read_dir_send->buf = buf; */
+/* 	// "." y ".." obligatorios.
+	filler(buf, ".", NULL, 0);
+	filler(buf, "..", NULL, 0); */
+
 	t_protocol read_dir_protocol = READ_DIR;
 	utils_serialize_and_send(sac_cli_fd, read_dir_protocol, read_dir_send);
 
@@ -190,3 +201,15 @@ int sac_cli_rm_directory (const char* path) {
 	utils_serialize_and_send(sac_cli_fd, rm_dir_protocol, rm_directory_send);
 	return 0;
 };
+
+static int sac_cli_access(const char* path, int flags){
+	return 0;
+}
+
+static int sac_cli_chmod(const char *path, mode_t mode){
+	return 0;
+}
+
+static int sac_cli_chown(const char *path, uid_t user_data, gid_t group_data){
+	return 0;
+}

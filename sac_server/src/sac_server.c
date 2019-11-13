@@ -86,6 +86,9 @@ static void *handle_connection(void *arg) {
 				t_read_dir *read_dir = utils_receive_and_deserialize(fd, protocol);
 				sac_server_logger_info("PATHNAME: %s", read_dir->pathname);
 				sac_server_logger_info("ID_SAC_CLI: %d", read_dir->id_sac_cli);
+
+				//sac_server_readdir(read_dir->pathname);
+				sac_server_readdir("/");
 				break;
 			}
 			case GET_ATTR: {
@@ -115,8 +118,8 @@ static void *handle_connection(void *arg) {
 				sac_server_logger_info("Recibi MK_DIR de SAC_CLI");
 				t_mk_directory *mk_dir = utils_receive_and_deserialize(fd, protocol);
 				//int res = sac_server_create_directory(mk_dir->pathname, mk_dir->mode);
-				int res = sac_server_create_directory("/", mk_dir->mode);
-				send(fd, &res, sizeof(int), 0);
+				//int res = sac_server_create_directory("/", mk_dir->mode);
+				//send(fd, &res, sizeof(int), 0);
 				break;
 			}
 			case WRITE: {

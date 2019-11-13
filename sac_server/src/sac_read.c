@@ -99,7 +99,7 @@ int sac_server_open(const char *path, struct fuse_file_info *fi) {
  */
 
 int sac_server_readdir(const char *path) {
-	sac_server_logger_info("Readdir: Path: %s - Offset %d", path, offset);
+	sac_server_logger_info("Readdir: Path: %s ", path);
 	int i;
 	int res = 0;
 	int nodo = determinar_nodo(path);
@@ -109,17 +109,14 @@ int sac_server_readdir(const char *path) {
 
 	node = node_table_start;
 
-	// "." y ".." obligatorios.
-	filler(buf, ".", NULL, 0);
-	filler(buf, "..", NULL, 0);
-
 	//pthread_rwlock_rdlock(&rwlock); //Toma un lock de lectura.
 	//log_lock_trace(logger, "Readdir: Toma lock lectura. Cantidad de lectores: %d", rwlock.__data.__nr_readers);
 
 	// Carga los nodos que cumple la condicion en el buffer.
 	for (i = 0; i < SAC_FILE_BY_TABLE;  (i++)){
 		if ((nodo==(node->parent_dir_block)) & (((node->state) == DIRECTORY_T) | ((node->state) == FILE_T))) 
-		filler(buf, (char*) &(node->file_name[0]), NULL, 0);
+		printf("NODO: %s", &(node->file_name[0]));
+		//filler(buf, (char*) &(node->file_name[0]), NULL, 0);
 		node = &node[1];
 	}
 
