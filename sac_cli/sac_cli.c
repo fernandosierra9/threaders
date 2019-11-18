@@ -80,32 +80,57 @@ int sac_cli_init(int argc, char *argv[]) {
 	return fuse_main(args.argc, args.argv, &sac_operations, NULL);
 }
 
+/*
+ *  @ DESC
+ * 		Funcion que crea directorios en el filesystem.
+ * 	@ PARAM
+ * 		-path: El path del directorio a crear
+ * 		-mode: Contiene los permisos que debe tener el directorio y otra metadata
+ * 	@ RET
+ * 		0 si termino correctamente, negativo si hay error.
+ */
+
 int sac_cli_create_directory(const char *path, mode_t mode) {
-	printf("\n SAC CLI: MAKE DIRECTORY\n");
+	printf("\n SAC CLI: MAKE DIRECTORY, PATH: %s \n", path);
+	int protocol;
+	int server_response;
+	int response;
+
 	t_mk_directory* mk_directory_send = malloc(sizeof(t_mk_directory));
 	mk_directory_send->pathname = strdup(path);
 	mk_directory_send->id_sac_cli = 345;
-	//mk_directory_send->mode = mode;
 	t_protocol mk_directory_protocol = MK_DIR;
 	utils_serialize_and_send(sac_cli_fd, mk_directory_protocol, mk_directory_send);
 
-	int response = recv(sac_cli_fd, &mk_directory_protocol, sizeof(t_protocol), 0);
-
-	switch (mk_directory_protocol) {
-		case MK_DIR_OK: {
-			printf("MK DIRECTORY OK");
-			return 0;
-		}
-		case SEG_FAULT: {
-			printf("SEGMENTATION FAULT");
-			return -1;
-		}
-		default: { 
-			return -1;
-		}
+	int received_bytes = recv(sac_cli_fd, &server_response, sizeof(int), 0);
+	if (received_bytes <= 0){
+		printf("Error al recibir la operacion del SAC_SERVER");
+		printf("FIN");
+		response = -ENOENT;
 	}
-	return 0;
+
+	printf("\n MAKE DIRECTORY RESPONSE : %d\n", server_response);
+	response = server_response;
+	return response;
 };
+
+
+/*
+ * @DESC
+ *  Esta función va a ser llamada cuando a la biblioteca de FUSE le llege un pedido
+ * para obtener la lista de archivos o directorios que se encuentra dentro de un directorio
+ *
+ * @PARAMETROS
+ * 		path - El path es relativo al punto de montaje y es la forma mediante la cual debemos
+ * 		       encontrar el archivo o directorio que nos solicitan
+ * 		buf - Este es un buffer donde se colocaran los nombres de los archivos y directorios
+ * 		      que esten dentro del directorio indicado por el path
+ * 		filler - Este es un puntero a una función, la cual sabe como guardar una cadena dentro
+ * 		         del campo buf
+ *
+ * 	@RETURN
+ * 		O directorio fue encontrado. -ENOENT directorio no encontrado
+ */
 
 int sac_cli_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
 	printf("\n SAC CLI: READ DIRECTORY\n");
@@ -113,33 +138,38 @@ int sac_cli_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t o
 	read_dir_send->id_sac_cli = 123;
 	read_dir_send->pathname = strdup(path);
 
-/* 	// "." y ".." obligatorios.
+	// "." y ".." obligatorios.
 	filler(buf, ".", NULL, 0);
-	filler(buf, "..", NULL, 0); */
+	filler(buf, "..", NULL, 0);
 
 	t_protocol read_dir_protocol = READ_DIR;
 	utils_serialize_and_send(sac_cli_fd, read_dir_protocol, read_dir_send);
 
 	int response = recv(sac_cli_fd, &read_dir_protocol, sizeof(t_protocol), 0);
-
-	switch (read_dir_protocol) {
-		case GET_ATTR_OK: {
-			printf("READ DIRECTORY ATTRIBUTE OK");
-			return 0;
-		}
-		case SEG_FAULT: {
-			printf("SEGMENTATION FAULT");
-			return -1;
-		}
-		default: { 
-			return -1;
-		}
-	}
-
 	return 0;
 };
 
+/*
+ * @DESC
+ *  Esta función va a ser llamada cuando a la biblioteca de FUSE le llege un pedido
+ * para obtener el contenido de un archivo
+ *
+ * @PARAMETROS
+ * 		path - El path es relativo al punto de montaje y es la forma mediante la cual debemos
+ * 		       encontrar el archivo o directorio que nos solicitan
+ * 		buf - Este es el buffer donde se va a guardar el contenido solicitado
+ * 		size - Nos indica cuanto tenemos que leer
+ * 		offset - A partir de que posicion del archivo tenemos que leer
+ *
+ * 	@RETURN
+ * 		Si se usa el parametro direct_io los valores de retorno son 0 si  elarchivo fue encontrado
+ * 		o -ENOENT si ocurrio un error. Si el parametro direct_io no esta presente se retorna
+ * 		la cantidad de bytes leidos o -ENOENT si ocurrio un error. ( Este comportamiento es igual
+ * 		para la funcion write )
+ */
+
 int sac_cli_read(char *path) {
+	printf("\n SAC CLI: READ\n");
 	t_read *read_send = malloc(sizeof(t_read));
 	read_send->id_sac_cli = 456;
 	read_send->pathname = "/niconico";
@@ -147,6 +177,20 @@ int sac_cli_read(char *path) {
 	utils_serialize_and_send(sac_cli_fd, read_protocol, read_send);
 	return 0;
 };
+
+/*
+ * @DESC
+ *  Esta función va a ser llamada cuando a la biblioteca de FUSE le llege un pedido
+ * para tratar de abrir un archivo
+ *
+ * @PARAMETROS
+ * 		path - El path es relativo al punto de montaje y es la forma mediante la cual debemos
+ * 		       encontrar el archivo o directorio que nos solicitan
+ * 		fi - es una estructura que contiene la metadata del archivo indicado en el path
+ *
+ * 	@RETURN
+ * 		O archivo fue encontrado. -EACCES archivo no es accesible
+ */
 
 int sac_cli_open(const char *path, struct fuse_file_info *fi) { 
 	t_open *open_send = malloc(sizeof(t_open));
@@ -157,31 +201,79 @@ int sac_cli_open(const char *path, struct fuse_file_info *fi) {
 	return 0;
 };
 
+/*
+ * @DESC
+ *  Esta función va a ser llamada cuando a la biblioteca de FUSE le llege un pedido
+ * para obtener la metadata de un archivo/directorio. Esto puede ser tamaño, tipo,
+ * permisos, dueño, etc ...
+ *
+ * @PARAMETROS
+ * 		path - El path es relativo al punto de montaje y es la forma mediante la cual debemos
+ * 		       encontrar el archivo o directorio que nos solicitan
+ * 		stbuf - Esta esta estructura es la que debemos completar
+ *
+ * 	@RETURN
+ * 		O archivo/directorio fue encontrado. -ENOENT archivo/directorio no encontrado
+ */
 int sac_cli_getattr(const char *path, struct stat *stbuf) { 
 	printf("\n SAC CLI: GET ATTR\n");
+
+	int protocol;
+	int res;
+	int received_bytes;
+	memset(stbuf, 0, sizeof(struct stat));
+
+	/* 	if (strcmp(path, "/") == 0){
+	  stbuf->st_mode = S_IFDIR | 0777;
+	  stbuf->st_nlink = 2;
+	  return 0;
+	} */
+
+	printf("\n UPDATED12 \n");
+	
 	t_get_attr *get_attr_send = malloc(sizeof(t_get_attr));
 	get_attr_send->id_sac_cli = 1011;
 	get_attr_send->pathname = strdup(path);
-	memset(stbuf, 0, sizeof(struct stat));
 	t_protocol get_attr_protocol = GET_ATTR;
 	utils_serialize_and_send(sac_cli_fd, get_attr_protocol, get_attr_send);
-	int response = recv(sac_cli_fd, &get_attr_protocol, sizeof(t_protocol), 0);
-
-	switch (get_attr_protocol) {
-		case GET_ATTR_OK: {
-			printf("GET ATTRIBUTE OK");
-			return 0;
-		}
-		case SEG_FAULT: {
-			printf("SEGMENTATION FAULT");
-			return -1;
-		}
-		default: { 
-			return -1;
-		}
+	received_bytes = recv(sac_cli_fd, &protocol, sizeof(int), 0);
+	
+	if (received_bytes <= 0){
+		printf("\n Error al recibir la operacion del SAC_SERVER \n");
+		printf("\n FIN \n");
+		res = -ENOENT;
 	}
 
-	return 0;
+	t_get_attr_server *get_attr_response = utils_receive_and_deserialize(sac_cli_fd, protocol);
+	switch (protocol) {
+		case GET_ATTR_RESPONSE: {
+			printf("\n GET ATTRIBUTE OK \n");
+			if (get_attr_response->state == 2){
+				stbuf->st_mode = S_IFDIR | 0777;
+				stbuf->st_nlink = 2;
+				stbuf->st_size = 4096; // Default para los directorios, es una "convencion".
+				stbuf->st_mtime = get_attr_response->modified_date;
+				stbuf->st_ctime = get_attr_response->creation_date;
+				stbuf->st_atime = time(NULL);
+				res = 0;
+			} else if (get_attr_response->state == 1){
+				stbuf->st_mode = S_IFREG | 0777;
+				stbuf->st_nlink = 1;
+				stbuf->st_size = get_attr_response->file_size;
+				stbuf->st_mtime = get_attr_response->modified_date;
+				stbuf->st_ctime = get_attr_response->creation_date;
+				stbuf->st_atime = time(NULL); 
+				res = 0;
+			}
+			break;
+		}
+		default: {
+			printf("\n DEFAULT \n");
+			break;
+		}
+	}
+	res = -ENOENT;
+	return res;
 };
 
 int sac_cli_write (const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {

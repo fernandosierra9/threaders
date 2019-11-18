@@ -1,6 +1,7 @@
 #ifndef COMMON_PROTOCOLS_H_
 #define COMMON_PROTOCOLS_H_
 
+#include <commons/collections/list.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -38,8 +39,9 @@ typedef enum {
 	MK_DIR,
 	WRITE,
 	RM_DIR,
-	GET_ATTR_OK,
-	MK_DIR_OK
+	GET_ATTR_RESPONSE,
+	MK_DIR_RESPONSE,
+	READ_DIR_RESPONSE
 } t_protocol;
 
 typedef struct {
@@ -129,8 +131,14 @@ typedef struct {
 typedef struct {
 	char* pathname;
 	int id_sac_cli;
-	struct stat *stbuf;
 } t_get_attr;
+
+typedef struct {
+	uint32_t file_size;
+	uint64_t creation_date;
+	uint64_t modified_date;
+	uint8_t state;
+} t_get_attr_server;
 
 typedef struct {
 	char* pathname;
@@ -146,6 +154,10 @@ typedef struct {
 	char* pathname;
 	int id_sac_cli;
 } t_mk_directory;
+
+typedef struct {
+	t_list* nodes;
+} t_read_dir_server;
 
 
 #endif /* COMMON_PROTOCOLS_H_ */

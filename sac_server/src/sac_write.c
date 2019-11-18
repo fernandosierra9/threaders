@@ -1,20 +1,13 @@
 #include "sac_server.h"
 
-/*
- *  @ DESC
- * 		Funcion que crea directorios en el filesystem.
- * 	@ PARAM
- * 		-path: El path del directorio a crear
- * 		-mode: Contiene los permisos que debe tener el directorio y otra metadata
- * 	@ RET
- * 		0 si termino correctamente, negativo si hay error.
- */
-int sac_server_create_directory (const char *path, mode_t mode){
+int sac_server_create_directory (const char *path){
     sac_server_logger_info("Making directory, Path: %s", path);
 	int father_node, i, res = 0;
 	struct sac_file_t* node;
-	char *nombre = malloc(strlen(path) + 1), *nom_to_free = nombre;
-	char *dir_padre = malloc(strlen(path) + 1), *dir_to_free = dir_padre;
+	char *nombre = malloc(strlen(path) + 1);
+	char *nom_to_free = nombre;
+	char *dir_padre = malloc(strlen(path) + 1);
+	char *dir_to_free = dir_padre;
 
 	if (determinar_nodo(path) != -1) return -EEXIST;
 
@@ -36,11 +29,13 @@ int sac_server_create_directory (const char *path, mode_t mode){
 	// Abrir conexion y traer directorios, guarda el bloque de inicio para luego liberar memoria
 
 	// Busca el primer nodo libre (state 0) y cuando lo encuentra, lo crea:
-	for (i = 0; (node->state != 0) & (i <= NODE_TABLE_SIZE); i++) node = &(node_table_start[i]);
+	for (i = 0; (node->state != 0) & (i <= NODE_TABLE_SIZE); i++) {
+		node = &(node_table_start[i]);
+	}
 	// Si no hay un nodo libre, devuelve un error.
 	if (i > NODE_TABLE_SIZE){
 		res = -EDQUOT;
-		goto finalizar;
+		//goto finalizar;
 	}
 	// Escribe datos del archivo
 	node->state = DIRECTORY_T;
@@ -49,7 +44,7 @@ int sac_server_create_directory (const char *path, mode_t mode){
 	node->parent_dir_block = father_node;
 	res = 0;
 
-	finalizar:
+	//finalizar:
 	free(nom_to_free);
 	free(dir_to_free);
 

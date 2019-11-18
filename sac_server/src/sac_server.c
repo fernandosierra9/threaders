@@ -41,6 +41,12 @@ static void init_server(int port) {
 		exit_gracefully(EXIT_FAILURE);
 	} else {
 		sac_server_logger_info("Escuchando en el socket %d", sac_server_socket);
+		t_list* nodes = list_create();
+		int res = sac_server_readdir("/", nodes);
+		for (int j=0; j<list_size(nodes); j++) {
+			printf("\n NODO: %s \n", (char*) list_get(nodes, j));
+		}
+	}
 
 		struct sockaddr_in client_info;
 		socklen_t addrlen = sizeof client_info;
@@ -60,8 +66,9 @@ static void init_server(int port) {
 		}
 
 		pthread_attr_destroy(&attrs);
-		close(sac_server_socket);
+		close(sac_server_socket); 
 	}
+	
 }
 
 static void *handle_connection(void *arg) {
@@ -84,20 +91,32 @@ static void *handle_connection(void *arg) {
 			case READ_DIR: {
 				sac_server_logger_info("Recibi READ_DIR de SAC_CLI");
 				t_read_dir *read_dir = utils_receive_and_deserialize(fd, protocol);
-				sac_server_logger_info("PATHNAME: %s", read_dir->pathname);
-				sac_server_logger_info("ID_SAC_CLI: %d", read_dir->id_sac_cli);
+				t_protocol read_dir_protocol_response = READ_DIR_RESPONSE;
+				t_list* nodes = list_create();
+				t_read_dir_server *read_dir_send_server = malloc(sizeof(t_read_dir_server));
 
-				//sac_server_readdir(read_dir->pathname);
-				sac_server_readdir("/");
+				//int res = sac_server_readdir(read_dir->pathname, &nodes);
+				int res = sac_server_readdir("/", nodes);
+				sac_server_readdir("/", nodes);
+				read_dir_send_server->nodes = nodes;
+				utils_serialize_and_send(fd, read_dir_protocol_response, read_dir_send_server);
+
 				break;
 			}
 			case GET_ATTR: {
 				sac_server_logger_info("Recibi GET_ATTR de SAC_CLI");
 				t_get_attr *get_attr_dir = utils_receive_and_deserialize(fd, protocol);
-				t_protocol get_attr_protocol = GET_ATTR_OK;
-				//int res = sac_server_getattr(get_attr_dir->pathname, get_attr_dir->stbuf);
-				int res = sac_server_getattr("/", get_attr_dir->stbuf);
-				send(fd, &res, sizeof(int), 0);
+				t_protocol get_attr_protocol_response = GET_ATTR_RESPONSE;
+				struct sac_file_t node;
+				t_get_attr_server *get_attr_send_server = malloc(sizeof(t_get_attr_server));
+
+				//int res = sac_server_getattr(get_attr_send_server->pathname, &node);
+				int res = sac_server_getattr("/", &node);
+				get_attr_send_server->state = node.state;
+				get_attr_send_server->file_size = node.file_size;
+				get_attr_send_server->creation_date = node.creation_date;
+				get_attr_send_server->modified_date = node.modified_date;
+				utils_serialize_and_send(fd, get_attr_protocol_response, get_attr_send_server);
 				break;
 			}
 			case READ: {
@@ -109,17 +128,17 @@ static void *handle_connection(void *arg) {
 			}
 			case OPEN: {
 				sac_server_logger_info("Recibi OPEN_DIR de SAC_CLI");
-				t_open *open_dir = utils_receive_and_deserialize(fd, protocol);
+/* 				t_open *open_dir = utils_receive_and_deserialize(fd, protocol);
 				sac_server_logger_info("PATHNAME: %s", open_dir->pathname);
-				sac_server_logger_info("ID_SAC_CLI: %d", open_dir->id_sac_cli);
+				sac_server_logger_info("ID_SAC_CLI: %d", open_dir->id_sac_cli); */
 				break;
 			}
 			case MK_DIR: {
 				sac_server_logger_info("Recibi MK_DIR de SAC_CLI");
 				t_mk_directory *mk_dir = utils_receive_and_deserialize(fd, protocol);
-				//int res = sac_server_create_directory(mk_dir->pathname, mk_dir->mode);
-				//int res = sac_server_create_directory("/", mk_dir->mode);
-				//send(fd, &res, sizeof(int), 0);
+				int res = sac_server_create_directory("/testt");
+				sac_server_logger_info("RES: %d", res);
+				send(fd, &res, sizeof(int), 0);
 				break;
 			}
 			case WRITE: {

@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <commons/config.h>
+#include <commons/collections/list.h>
 #include <commons/bitarray.h>
 #include "config/sac_server_config.h"
 #include "logger/sac_server_logger.h"
@@ -100,13 +101,13 @@ int get_size(void);
 
 
 // Funciones de escritura
-int sac_server_create_directory(const char *path, mode_t mode);
+int sac_server_create_directory(const char *path);
 
 // Funciones de lectura
-int sac_server_readdir(const char *path);
+int sac_server_readdir(const char *path, t_list* nodes);
 int sac_server_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
 int sac_server_open(const char *path, struct fuse_file_info *fi);
-int sac_server_getattr(const char *path, struct stat *stbuf);
+int sac_server_getattr(const char *path, struct sac_file_t *node);
 
 
 #endif /* SAC_SERVER_H_ */
