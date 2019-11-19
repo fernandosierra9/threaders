@@ -5,6 +5,7 @@
 static int sac_cli_access(const char* path, int flags);
 static int sac_cli_chmod(const char *path, mode_t mode);
 static int sac_cli_chown(const char *path, uid_t user_data, gid_t group_data);
+static int sac_server_response(int *protocol);
 
 /*
  * Esta es una estructura auxiliar utilizada para almacenar parametros
@@ -23,12 +24,12 @@ struct t_runtime_options {
 
 static struct fuse_operations sac_operations = {
 		.getattr = sac_cli_getattr, // OK a medias
-		.readdir = sac_cli_readdir,
+		.readdir = sac_cli_readdir, // Ok, falta sac-cli que llegue la lista
 		.open = sac_cli_open,
 		.read = sac_cli_read,
 		.mkdir = sac_cli_create_directory,
 		.write = sac_cli_write,
-		.rmdir = sac_cli_rm_directory,
+		.rmdir = sac_cli_rm_directory, // OK, falta sac-cli que llegue la lista
 		.access = sac_cli_access,		// OK
 		.chmod = sac_cli_chmod,		// OK
 		.chown = sac_cli_chown,		// OK
@@ -92,9 +93,8 @@ int sac_cli_init(int argc, char *argv[]) {
 
 int sac_cli_create_directory(const char *path, mode_t mode) {
 	printf("\n SAC CLI: MAKE DIRECTORY, PATH: %s \n", path);
-	int protocol;
-	int server_response;
 	int response;
+	int protocol;
 
 	t_mk_directory* mk_directory_send = malloc(sizeof(t_mk_directory));
 	mk_directory_send->pathname = strdup(path);
@@ -102,15 +102,11 @@ int sac_cli_create_directory(const char *path, mode_t mode) {
 	t_protocol mk_directory_protocol = MK_DIR;
 	utils_serialize_and_send(sac_cli_fd, mk_directory_protocol, mk_directory_send);
 
-	int received_bytes = recv(sac_cli_fd, &server_response, sizeof(int), 0);
-	if (received_bytes <= 0){
-		printf("Error al recibir la operacion del SAC_SERVER");
-		printf("FIN");
-		response = -ENOENT;
-	}
+	int server_response = sac_server_response(&protocol);
+	if (server_response == -1) return server_response;
 
-	printf("\n MAKE DIRECTORY RESPONSE : %d\n", server_response);
-	response = server_response;
+	printf("\n MAKE DIRECTORY RESPONSE : %d\n", protocol);
+	response = protocol;
 	return response;
 };
 
@@ -134,19 +130,32 @@ int sac_cli_create_directory(const char *path, mode_t mode) {
 
 int sac_cli_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
 	printf("\n SAC CLI: READ DIRECTORY\n");
+
+	int protocol;
+	int response;
 	t_read_dir *read_dir_send = malloc(sizeof(t_read_dir));
 	read_dir_send->id_sac_cli = 123;
 	read_dir_send->pathname = strdup(path);
 
-	// "." y ".." obligatorios.
-	filler(buf, ".", NULL, 0);
-	filler(buf, "..", NULL, 0);
-
 	t_protocol read_dir_protocol = READ_DIR;
 	utils_serialize_and_send(sac_cli_fd, read_dir_protocol, read_dir_send);
 
-	int response = recv(sac_cli_fd, &read_dir_protocol, sizeof(t_protocol), 0);
-	return 0;
+	int server_response = sac_server_response(&protocol);
+	if (server_response == -1) return server_response;
+
+	t_read_dir_server *read_dir_response = utils_receive_and_deserialize(sac_cli_fd, protocol);
+
+/* 	// "." y ".." obligatorios.
+	filler(buf, ".", NULL, 0);
+	filler(buf, "..", NULL, 0);
+
+	t_list* nodes = list_create();
+	for (int j=0; j<list_size(nodes); j++) {
+		filler(buf, (char*) list_get(nodes, j), NULL, 0);
+		printf("\n NODO: %s \n", (char*) list_get(nodes, j));
+	} 
+ */
+	return response;
 };
 
 /*
@@ -218,9 +227,8 @@ int sac_cli_open(const char *path, struct fuse_file_info *fi) {
 int sac_cli_getattr(const char *path, struct stat *stbuf) { 
 	printf("\n SAC CLI: GET ATTR\n");
 
-	int protocol;
 	int res;
-	int received_bytes;
+	int protocol;
 	memset(stbuf, 0, sizeof(struct stat));
 
 	/* 	if (strcmp(path, "/") == 0){
@@ -229,49 +237,37 @@ int sac_cli_getattr(const char *path, struct stat *stbuf) {
 	  return 0;
 	} */
 
-	printf("\n UPDATED12 \n");
+	printf("\n UPDATED14 \n");
 	
 	t_get_attr *get_attr_send = malloc(sizeof(t_get_attr));
 	get_attr_send->id_sac_cli = 1011;
 	get_attr_send->pathname = strdup(path);
 	t_protocol get_attr_protocol = GET_ATTR;
 	utils_serialize_and_send(sac_cli_fd, get_attr_protocol, get_attr_send);
-	received_bytes = recv(sac_cli_fd, &protocol, sizeof(int), 0);
 	
-	if (received_bytes <= 0){
-		printf("\n Error al recibir la operacion del SAC_SERVER \n");
-		printf("\n FIN \n");
-		res = -ENOENT;
-	}
+	int server_response = sac_server_response(&protocol);
+	if (server_response == -1) return server_response;
 
 	t_get_attr_server *get_attr_response = utils_receive_and_deserialize(sac_cli_fd, protocol);
-	switch (protocol) {
-		case GET_ATTR_RESPONSE: {
-			printf("\n GET ATTRIBUTE OK \n");
-			if (get_attr_response->state == 2){
-				stbuf->st_mode = S_IFDIR | 0777;
-				stbuf->st_nlink = 2;
-				stbuf->st_size = 4096; // Default para los directorios, es una "convencion".
-				stbuf->st_mtime = get_attr_response->modified_date;
-				stbuf->st_ctime = get_attr_response->creation_date;
-				stbuf->st_atime = time(NULL);
-				res = 0;
-			} else if (get_attr_response->state == 1){
-				stbuf->st_mode = S_IFREG | 0777;
-				stbuf->st_nlink = 1;
-				stbuf->st_size = get_attr_response->file_size;
-				stbuf->st_mtime = get_attr_response->modified_date;
-				stbuf->st_ctime = get_attr_response->creation_date;
-				stbuf->st_atime = time(NULL); 
-				res = 0;
-			}
-			break;
-		}
-		default: {
-			printf("\n DEFAULT \n");
-			break;
-		}
+
+	if (get_attr_response->state == 2) {
+		stbuf->st_mode = S_IFDIR | 0777;
+		stbuf->st_nlink = 2;
+		stbuf->st_size = 4096; // Default para los directorios, es una "convencion".
+		stbuf->st_mtime = get_attr_response->modified_date;
+		stbuf->st_ctime = get_attr_response->creation_date;
+		stbuf->st_atime = time(NULL);
+		res = 0;
+	} else if (get_attr_response->state == 1) {
+		stbuf->st_mode = S_IFREG | 0777;
+		stbuf->st_nlink = 1;
+		stbuf->st_size = get_attr_response->file_size;
+		stbuf->st_mtime = get_attr_response->modified_date;
+		stbuf->st_ctime = get_attr_response->creation_date;
+		stbuf->st_atime = time(NULL); 
+		res = 0;
 	}
+
 	res = -ENOENT;
 	return res;
 };
@@ -285,13 +281,32 @@ int sac_cli_write (const char *path, const char *buf, size_t size, off_t offset,
 	return 0;
 };
 
+/*
+ *	@DESC
+ *		Funcion que borra directorios de fuse.
+ *
+ *	@PARAM
+ *		Path - El path donde tiene que borrar.
+ *
+ *	@RET
+ *		0 Si esta OK, -ENOENT si no pudo.
+ *
+ */
 int sac_cli_rm_directory (const char* path) {
+	int response;
+	int protocol;
 	t_rm_directory *rm_directory_send = malloc(sizeof(t_rm_directory));
 	rm_directory_send->id_sac_cli = 1314;
-	rm_directory_send->pathname = "/";
+	rm_directory_send->pathname = strdup(path);
 	t_protocol rm_dir_protocol = RM_DIR;
 	utils_serialize_and_send(sac_cli_fd, rm_dir_protocol, rm_directory_send);
-	return 0;
+
+	int server_response = sac_server_response(&protocol);
+	if (server_response == -1) return server_response;
+
+	printf("\n REMOVE DIRECTORY RESPONSE : %d\n", protocol);
+	response = protocol;
+	return response;
 };
 
 static int sac_cli_access(const char* path, int flags){
@@ -304,4 +319,15 @@ static int sac_cli_chmod(const char *path, mode_t mode){
 
 static int sac_cli_chown(const char *path, uid_t user_data, gid_t group_data){
 	return 0;
+}
+
+static int sac_server_response(int *protocol) {
+	int response = 0;
+	int received_bytes = recv(sac_cli_fd, protocol, sizeof(int), 0);
+	if (received_bytes <= 0){
+		printf("\n Error al recibir la operacion del SAC_SERVER \n");
+		printf("\n Fin de SAC_CLI \n");
+		response = -1;
+	}
+	return response;
 }

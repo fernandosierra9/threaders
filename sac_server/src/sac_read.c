@@ -45,7 +45,6 @@ int sac_server_readdir(const char *path, t_list* nodes) {
 		if ((nodo==(node->parent_dir_block)) & (((node->state) == DIRECTORY_T) | ((node->state) == FILE_T))) {
 			list_add(nodes, &(node->file_name[0]));
 		}
-		//filler(buf, (char*) &(node->file_name[0]), NULL, 0);
 		node = &node[1];
 	}
 	

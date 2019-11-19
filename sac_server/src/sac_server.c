@@ -41,13 +41,22 @@ static void init_server(int port) {
 		exit_gracefully(EXIT_FAILURE);
 	} else {
 		sac_server_logger_info("Escuchando en el socket %d", sac_server_socket);
+		printf("\n INITIAL \n");
 		t_list* nodes = list_create();
-		int res = sac_server_readdir("/", nodes);
+		sac_server_readdir("/", nodes);
 		for (int j=0; j<list_size(nodes); j++) {
 			printf("\n NODO: %s \n", (char*) list_get(nodes, j));
+		} 
+		printf("\n REMOVE DIRECTORY \n");
+		int response = sac_server_remove_directory("/test");
+		printf("Response: %d", response);
+		t_list* nodes2 = list_create();
+		sac_server_readdir("/", nodes2);
+		for (int j=0; j<list_size(nodes2); j++) {
+			printf("\n NODO: %s \n", (char*) list_get(nodes2, j));
 		}
-	}
 
+		/* 		
 		struct sockaddr_in client_info;
 		socklen_t addrlen = sizeof client_info;
 
@@ -66,11 +75,11 @@ static void init_server(int port) {
 		}
 
 		pthread_attr_destroy(&attrs);
-		close(sac_server_socket); 
+		close(sac_server_socket);  
+		*/
 	}
-	
 }
-
+	
 static void *handle_connection(void *arg) {
 	int received_bytes;
 	int protocol;
@@ -128,16 +137,18 @@ static void *handle_connection(void *arg) {
 			}
 			case OPEN: {
 				sac_server_logger_info("Recibi OPEN_DIR de SAC_CLI");
-/* 				t_open *open_dir = utils_receive_and_deserialize(fd, protocol);
+				/* 				
+				t_open *open_dir = utils_receive_and_deserialize(fd, protocol);
 				sac_server_logger_info("PATHNAME: %s", open_dir->pathname);
-				sac_server_logger_info("ID_SAC_CLI: %d", open_dir->id_sac_cli); */
+				sac_server_logger_info("ID_SAC_CLI: %d", open_dir->id_sac_cli); 
+				*/
 				break;
 			}
 			case MK_DIR: {
 				sac_server_logger_info("Recibi MK_DIR de SAC_CLI");
 				t_mk_directory *mk_dir = utils_receive_and_deserialize(fd, protocol);
 				int res = sac_server_create_directory("/testt");
-				sac_server_logger_info("RES: %d", res);
+				//int res = sac_server_create_directory(mk_dir->pathname);
 				send(fd, &res, sizeof(int), 0);
 				break;
 			}
@@ -151,8 +162,9 @@ static void *handle_connection(void *arg) {
 			case RM_DIR: {
 				sac_server_logger_info("Recibi RM_DIR de SAC_CLI");
 				t_read_dir *rm_dir = utils_receive_and_deserialize(fd, protocol);
-				sac_server_logger_info("PATHNAME: %s", rm_dir->pathname);
-				sac_server_logger_info("ID_SAC_CLI: %d", rm_dir->id_sac_cli);
+				int res = sac_server_remove_directory("/testt");
+				//int res = sac_server_remove_directory(rm_dir->pathname);
+				send(fd, &res, sizeof(int), 0);
 				break;
 			}
 		}

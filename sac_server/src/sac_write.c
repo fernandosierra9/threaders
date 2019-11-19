@@ -35,7 +35,7 @@ int sac_server_create_directory (const char *path){
 	// Si no hay un nodo libre, devuelve un error.
 	if (i > NODE_TABLE_SIZE){
 		res = -EDQUOT;
-		//goto finalizar;
+		goto finalizar;
 	}
 	// Escribe datos del archivo
 	node->state = DIRECTORY_T;
@@ -44,7 +44,7 @@ int sac_server_create_directory (const char *path){
 	node->parent_dir_block = father_node;
 	res = 0;
 
-	//finalizar:
+	finalizar:
 	free(nom_to_free);
 	free(dir_to_free);
 
@@ -53,4 +53,37 @@ int sac_server_create_directory (const char *path){
 	// log_lock_trace(logger, "Mkdir: Devuelve lock escritura. En cola: %d", rwlock.__data.__nr_writers_queued);
 	return res;
 
+}
+
+int sac_server_remove_directory(const char* path) {
+	sac_server_logger_info("Remove directory, Path: %s", path);
+	int nodo_padre = determinar_nodo(path);
+	int i;
+	int res = 0;
+	if (nodo_padre == -1) return -ENOENT;
+	struct sac_file_t *node;
+
+	//log_lock_trace(logger, "Rmdir: Pide lock escritura. Escribiendo: %d. En cola: %d.", rwlock.__data.__writer, rwlock.__data.__nr_writers_queued);
+	//pthread_rwlock_wrlock(&rwlock);
+	//log_lock_trace(logger, "Rmdir: Recibe lock escritura.");
+
+	// Abre conexiones y levanta la tabla de nodos en memoria.
+	node = &(node_table_start[-1]);
+	node = &(node[nodo_padre]);
+
+	// Chequea si el directorio esta vacio. En caso que eso suceda, FUSE se encarga de borrar lo que hay dentro.
+	for (i=0; i < 1024 ;i++){
+		if (((&node_table_start[i])->state != DELETED_T) & ((&node_table_start[i])->parent_dir_block == nodo_padre)) {
+			res = -ENOTEMPTY;
+			goto finalizar;
+		}
+	}
+
+	node->state = DELETED_T; // Aca le dice que el estado queda "Borrado"
+
+	finalizar:
+	// Devuelve el lock de escritura.
+	//pthread_rwlock_unlock(&rwlock);
+	//log_lock_trace(logger, "Rmdir: Devuelve lock escritura. En cola: %d", rwlock.__data.__nr_writers_queued);
+	return res;
 }
