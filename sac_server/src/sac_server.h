@@ -44,6 +44,14 @@
 #define DISC_SIZE_B(p) path_size_in_bytes(p)
 #define ACTUAL_DISC_SIZE_B fuse_disc_size
 #define BITMAP_BLOCK_SIZE header_data.size_bitmap
+#define BITMAP_SIZE_B (int) (get_size() / CHAR_BIT)
+#define BITMAP_SIZE_BITS get_size()
+
+// Se utiliza esta variable para saber si se encuentra en modo "borrar". Esto afecta, principalmente, al delete_nodes_upto
+#define DELETE_MODE _del_mode
+#define ENABLE_DELETE_MODE _del_mode=1
+#define DISABLE_DELETE_MODE _del_mode=0
+int _del_mode;
 
 // Definiciones de tipo de bloque borrado(0), archivo(1), directorio(2)
 #define DELETED_T ((int) 0)
@@ -64,6 +72,8 @@ size_t _bitarray_64_leak;
 char *fuse_disc_path;
 // Tamaño del disco.
 int fuse_disc_size;
+// Se guardara aqui la cantidad de bloques libres en el bitmap
+int bitmap_free_blocks;
 
 //Un bloque
 typedef struct sac_header_t {
@@ -98,11 +108,18 @@ int path_size(const char* path);
 pointerSACBlock determinar_nodo(const char* path);
 int split_path(const char* path, char** super_path, char** name);
 int get_size(void);
+int delete_nodes_upto(struct sac_file_t *file_data, int pointer_upto, int data_upto);
+int set_position (int *pointer_block, int *data_block, size_t size, off_t offset);
+int get_node(void); // ---> REVISAR IMPORTANTEEEEEEEEE
+int obtain_free_blocks(void);
+int add_node(struct sac_file_t *file_data, int node_number);
 
 
 // Funciones de escritura
 int sac_server_create_directory(const char *path);
 int sac_server_remove_directory(const char* path);
+int sac_server_unlink_node(const char* path);
+int sac_server_make_node(const char* path);
 int sac_server_write(const char* path);
 int sac_server_flush();
 

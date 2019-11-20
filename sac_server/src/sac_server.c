@@ -166,6 +166,22 @@ static void *handle_connection(void *arg) {
 				send(fd, &res, sizeof(int), 0);
 				break;
 			}
+			case UNLINK_NODE: {
+				sac_server_logger_info("Recibi UNLINK de SAC_CLI");
+				t_unlink_node *unlink_node = utils_receive_and_deserialize(fd, protocol);
+				sac_server_logger_info("PATHNAME: %s", unlink_node->pathname);
+				int res = sac_server_unlink_node(unlink_node->pathname);
+				send(fd, &res, sizeof(int), 0);
+				break;
+			}
+			case MK_NODE: {
+				sac_server_logger_info("Recibi MAKE NODE de SAC_CLI");
+				t_unlink_node *make_node = utils_receive_and_deserialize(fd, protocol);
+				sac_server_logger_info("PATHNAME: %s", make_node->pathname);
+				int res = sac_server_make_node(make_node->pathname);
+				send(fd, &res, sizeof(int), 0);
+				break;
+			}
 		}
 	}
 }

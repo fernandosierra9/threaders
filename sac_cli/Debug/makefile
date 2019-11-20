@@ -26,7 +26,7 @@ endif
 all: libsac_cli.so
 
 dependents:
-	-cd /media/sf_tp-2019-2c-threaders/shared-common/Debug && $(MAKE) all
+	-cd /media/sf_tp-2019-2c-threaders/shared-common/Debug && $(MAKE) clean all
 
 # Tool invocations
 libsac_cli.so: $(OBJS) $(USER_OBJS) /media/sf_tp-2019-2c-threaders/shared-common/Debug/libshared-common.so

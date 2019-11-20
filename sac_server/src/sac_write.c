@@ -1,5 +1,7 @@
 #include "sac_server.h"
 
+
+
 int sac_server_create_directory (const char *path){
     sac_server_logger_info("Making directory, Path: %s", path);
 	int father_node, i, res = 0;
@@ -89,9 +91,34 @@ int sac_server_remove_directory(const char* path) {
 }
 
 
-/*
- *
- */
+
+int sac_server_make_node(const char* path) {
+
+}
+
+int sac_server_unlink_node(const char* path) {
+	struct sac_file_t* file_data;
+	int node = determinar_nodo(path);
+
+	ENABLE_DELETE_MODE;
+
+	file_data = &(node_table_start[node - 1]);
+
+	// Toma un lock de escritura.
+	// log_lock_trace(logger, "Ulink: Pide lock escritura. Escribiendo: %d. En cola: %d.", rwlock.__data.__writer, rwlock.__data.__nr_writers_queued);
+	// pthread_rwlock_wrlock(&rwlock);
+	// log_lock_trace(logger, "Ulink: Recibe lock escritura.");
+
+	delete_nodes_upto(file_data, 0, 0);
+
+	// Devuelve el lock de escritura.
+	// pthread_rwlock_unlock(&rwlock);
+	// log_lock_trace(logger, "Ulink: Devuelve lock escritura. En cola: %d", rwlock.__data.__nr_writers_queued);
+	DISABLE_DELETE_MODE;
+
+	return sac_server_remove_directory(path);
+}
+
 int sac_server_flush(){
 
 	// Toma un lock de escritura.

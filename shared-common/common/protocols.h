@@ -33,6 +33,8 @@ typedef enum {
 	SEG_FAULT,
 	// SAC_CLI/SAC_SERVER PROTOCOLS
 	GET_ATTR,
+	UNLINK_NODE,
+	MK_NODE,
 	FLUSH,
 	READ_DIR,
 	READ,
@@ -145,6 +147,15 @@ typedef struct {
 	int id_sac_cli;
 } t_flush;
 
+typedef struct {
+	char* pathname;
+	int id_sac_cli;
+} t_unlink_node;
+
+typedef struct {
+	char* pathname;
+	int id_sac_cli;
+} t_mk_node;
 typedef struct {
 	char* pathname;
 	int id_sac_cli;

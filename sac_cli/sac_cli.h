@@ -41,13 +41,20 @@ int sac_cli_fd;
 
 
 int sac_cli_init(int argc, char *argv[]);
-int sac_cli_create_directory(const char *path, mode_t mode);
+
+// Funciones de lectura
+int sac_cli_open(const char *path, struct fuse_file_info *fi);
 int sac_cli_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi);
 int sac_cli_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
-int sac_cli_flush(const char* path, struct fuse_file_info *fi);
-int sac_cli_open(const char *path, struct fuse_file_info *fi);
 int sac_cli_getattr(const char *path, struct stat *stbuf);
-int sac_cli_write (const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
+
+// Funciones de escritura
+int sac_cli_create_directory(const char *path, mode_t mode);
 int sac_cli_rm_directory (const char* path);
+int sac_cli_write (const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
+int sac_cli_flush(const char* path, struct fuse_file_info *fi);
+int sac_cli_mknod (const char* path, mode_t mode, dev_t dev);
+int sac_cli_unlink (const char* path);
+
 
 #endif

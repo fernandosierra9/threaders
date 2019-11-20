@@ -23,17 +23,19 @@ struct t_runtime_options {
  */
 
 static struct fuse_operations sac_operations = {
-		.getattr = sac_cli_getattr, // OK a medias
-		.readdir = sac_cli_readdir, // Ok, falta sac-cli que llegue la lista
-		.open = sac_cli_open, // OK
-		.read = sac_cli_read,
-		.mkdir = sac_cli_create_directory, // OK, falta testear en sac-cli
-		.write = sac_cli_write,
-		.rmdir = sac_cli_rm_directory, // OK, falta testear en sac-cli
-		.access = sac_cli_access,		// OK
-		.chmod = sac_cli_chmod,		// OK
-		.chown = sac_cli_chown,		// OK
-		.flush = sac_cli_flush,		// OK
+		.getattr = sac_cli_getattr, // SE LLAMA AL LEER METADATA DE UN ARCHIVO --> esta a medias
+		.readdir = sac_cli_readdir, // LISTAR ARCHIVOS/DIRECTORIOS --> falta sac-cli que llegue la lista
+		.mknod = sac_cli_mknod, // CREAR ARCHIVO
+		.unlink = sac_cli_unlink, // BORRAR ARCHIVO
+		.read = sac_cli_read, // LEER ARCHIVOS,
+		.write = sac_cli_write, // ESCRIBIR ARCHIVO
+		.open = sac_cli_open, // SE LLAMA CUANDO SE ABRE UN ARCHIVO --> OK
+		.mkdir = sac_cli_create_directory, // CREAR DIRECTORIO, falta testear en sac-cli
+		.rmdir = sac_cli_rm_directory, // ELIMINAR DIRECTORIO, falta testear en sac-cli
+		.access = sac_cli_access, // SETEA PERMISOS--> OK
+		.chmod = sac_cli_chmod, // MODIFICA PERMISOS --> OK
+		.chown = sac_cli_chown, // MODIFICA EL OWNER Y EL OWNER GROUP --> OK
+		.flush = sac_cli_flush, // LIMPIA CACHE (creo que hay que borar este) --> OK
 
 };
 
@@ -320,6 +322,69 @@ int sac_cli_rm_directory (const char* path) {
 	return response;
 };
 
+
+/*
+ *  @DESC
+ *  	Se invoca esta funcion cada vez que fuse quiere hacer un archivo nuevo
+ *
+ *  @PARAM
+ *  	path - Como siempre, el path del archivo relativo al disco
+ *  	mode - Opciones del archivo
+ *  	dev - Otra cosa que no se usa :D
+ *
+ *  @RET
+ *  	Devuelve 0 si le sale OK, num negativo si no.
+ */
+int sac_cli_mknod (const char* path, mode_t mode, dev_t dev) {
+	printf("\n SAC CLI: CREATE NODE, PATH: %s \n", path);
+	int response;
+	int protocol;
+
+	t_mk_node* mk_node_send = malloc(sizeof(t_mk_node));
+	mk_node_send->pathname = strdup(path);
+	mk_node_send->id_sac_cli = 445;
+	t_protocol mk_node_protocol = MK_NODE;
+	utils_serialize_and_send(sac_cli_fd, mk_node_protocol, mk_node_send);
+
+	int server_response = sac_server_response(&protocol);
+	if (server_response == -1) return server_response;
+
+	printf("\n CREATE NODE RESPONSE : %d\n", protocol);
+	response = protocol;
+	return response;
+}
+
+/*
+ *  @DESC
+ *  	Funcion que se llama cuando hay que borrar un archivo
+ *
+ *  @PARAM
+ *  	path - La ruta del archivo a borrar.
+ *
+ *  @RET
+ *  	0 si salio bien
+ *  	Numero negativo, si no
+ */
+
+int sac_cli_unlink (const char* path) {
+	printf("\n SAC CLI: DELETE NODE, PATH: %s \n", path);
+	int response;
+	int protocol;
+
+	t_unlink_node* unlink_node_send = malloc(sizeof(t_unlink_node));
+	unlink_node_send->pathname = strdup(path);
+	unlink_node_send->id_sac_cli = 143;
+	t_protocol unlink_node_protocol = UNLINK_NODE;
+	utils_serialize_and_send(sac_cli_fd, unlink_node_protocol, unlink_node_send);
+
+	int server_response = sac_server_response(&protocol);
+	if (server_response == -1) return server_response;
+
+	printf("\n DELETE NODE RESPONSE : %d\n", protocol);
+	response = protocol;
+	return response;
+}
+
 int sac_cli_flush(const char* path, struct fuse_file_info *fi){
 	printf("\n SAC CLI: FLUSH, PATH: %s \n", path);
 	int response;
@@ -340,14 +405,55 @@ int sac_cli_flush(const char* path, struct fuse_file_info *fi){
 
 }
 
+
+/*
+ *  DESC
+ *  	Settea los permisos de acceso a un file
+ *
+ *  PARAM
+ *  	path - path del archivo
+ *  	flags - flags que corresponden a los permisos del archivo
+ *
+ *  RET
+ *  	0 - Access granted
+ *  	-1 - Access denied
+ */
+
 static int sac_cli_access(const char* path, int flags){
 	return 0;
 }
+
+/*
+ * 	@DESC
+ * 		Modifica los permisos del archivo.
+ * 		Como nosotros no trabajamos con permisos en el FS, esta funcion sera simplemente un hermoso Dummy.
+ *
+ * 	@PARAM
+ * 		path - Ruta del archivo a cambiarle permisos
+ * 		mode - Estructura que contiene los datos a cambiar del archivo
+ *
+ * 	@RETURN
+ * 		0 - Funciona.
+ * 		Negativo - Rompe.
+ */
 
 static int sac_cli_chmod(const char *path, mode_t mode){
 	return 0;
 }
 
+/*
+ * 	@DESC
+ * 		Modifica el owner y owner group del archivo.
+ *
+ * 	@PARAM
+ * 		path - Ruta del archivo a cambiarle permisos
+ *		user_data - Datos del usuario
+ *		group_data - Datos del grupo
+ *
+ * 	@RETURN
+ * 		0 - Funciona.
+ * 		Negativo - Rompe.
+ */
 static int sac_cli_chown(const char *path, uid_t user_data, gid_t group_data){
 	return 0;
 }
