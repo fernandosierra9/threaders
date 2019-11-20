@@ -87,3 +87,20 @@ int sac_server_remove_directory(const char* path) {
 	//log_lock_trace(logger, "Rmdir: Devuelve lock escritura. En cola: %d", rwlock.__data.__nr_writers_queued);
 	return res;
 }
+
+
+/*
+ *
+ */
+int sac_server_flush(){
+
+	// Toma un lock de escritura.
+	//log_lock_trace(logger, "Flush: Pide lock escritura. Escribiendo: %d. En cola: %d.", rwlock.__data.__writer, rwlock.__data.__nr_writers_queued);
+	//pthread_rwlock_wrlock(&rwlock);
+	//log_lock_trace(logger, "Flush: Recibe lock escritura.");
+	fdatasync(discDescriptor);
+	// Devuelve el lock de escritura.
+	//pthread_rwlock_unlock(&rwlock);
+	//log_lock_trace(logger, "Flush: Devuelve lock escritura. En cola: %d", rwlock.__data.__nr_writers_queued);
+	return 0;
+}

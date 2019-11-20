@@ -211,14 +211,6 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 		utils_package_destroy(package);
 		break;
 	}
-	case OPEN: {
-		t_package* package = utils_package_create(protocol);
-		utils_package_add(package, &((t_open*) package_send)->id_sac_cli,sizeof(uint32_t));
-		utils_package_add(package, ((t_open*) package_send)->pathname, strlen(((t_open*) package_send)->pathname)+1);
-		utils_package_send_to(package,socket);
-		utils_package_destroy(package);
-		break;
-	}
 	case GET_ATTR: {
 		t_package* package = utils_package_create(protocol);
 		utils_package_add(package, &((t_get_attr*) package_send)->id_sac_cli,sizeof(uint32_t));
@@ -231,6 +223,14 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 		t_package* package = utils_package_create(protocol);
 		utils_package_add(package, &((t_write*) package_send)->id_sac_cli,sizeof(uint32_t));
 		utils_package_add(package, ((t_write*) package_send)->pathname, strlen(((t_write*) package_send)->pathname)+1);
+		utils_package_send_to(package,socket);
+		utils_package_destroy(package);
+		break;
+	}
+	case FLUSH: {
+		t_package* package = utils_package_create(protocol);
+		utils_package_add(package, &((t_flush*) package_send)->id_sac_cli,sizeof(uint32_t));
+		utils_package_add(package, ((t_flush*) package_send)->pathname, strlen(((t_flush*) package_send)->pathname)+1);
 		utils_package_send_to(package,socket);
 		utils_package_destroy(package);
 		break;
@@ -371,15 +371,6 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}
-	case OPEN: {
-		t_open *get_request = malloc(sizeof(t_open));
-		t_list* list = utils_receive_package(socket);
-		utils_get_from_list_to(&get_request->id_sac_cli,list,0);
-		get_request->pathname = malloc(sizeof(get_request->pathname));
-		utils_get_from_list_to(get_request->pathname, list, 1);
-		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
-		return get_request;
-	}
 	case MK_DIR: {
 		t_mk_directory *get_request = malloc(sizeof(t_mk_directory));
 		t_list* list = utils_receive_package(socket);
@@ -391,6 +382,15 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 	} 
 	case WRITE: {
 		t_write *get_request = malloc(sizeof(t_write));
+		t_list* list = utils_receive_package(socket);
+		utils_get_from_list_to(&get_request->id_sac_cli,list,0);
+		get_request->pathname = malloc(sizeof(get_request->pathname));
+		utils_get_from_list_to(get_request->pathname, list, 1);
+		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
+		return get_request;
+	}
+	case FLUSH: {
+		t_flush *get_request = malloc(sizeof(t_flush));
 		t_list* list = utils_receive_package(socket);
 		utils_get_from_list_to(&get_request->id_sac_cli,list,0);
 		get_request->pathname = malloc(sizeof(get_request->pathname));

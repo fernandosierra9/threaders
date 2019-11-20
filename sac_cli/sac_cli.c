@@ -25,14 +25,15 @@ struct t_runtime_options {
 static struct fuse_operations sac_operations = {
 		.getattr = sac_cli_getattr, // OK a medias
 		.readdir = sac_cli_readdir, // Ok, falta sac-cli que llegue la lista
-		.open = sac_cli_open,
+		.open = sac_cli_open, // OK
 		.read = sac_cli_read,
-		.mkdir = sac_cli_create_directory,
+		.mkdir = sac_cli_create_directory, // OK, falta testear en sac-cli
 		.write = sac_cli_write,
-		.rmdir = sac_cli_rm_directory, // OK, falta sac-cli que llegue la lista
+		.rmdir = sac_cli_rm_directory, // OK, falta testear en sac-cli
 		.access = sac_cli_access,		// OK
 		.chmod = sac_cli_chmod,		// OK
 		.chown = sac_cli_chown,		// OK
+		.flush = sac_cli_flush,		// OK
 
 };
 
@@ -130,7 +131,6 @@ int sac_cli_create_directory(const char *path, mode_t mode) {
 
 int sac_cli_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
 	printf("\n SAC CLI: READ DIRECTORY\n");
-
 	int protocol;
 	int response;
 	t_read_dir *read_dir_send = malloc(sizeof(t_read_dir));
@@ -177,7 +177,7 @@ int sac_cli_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t o
  * 		para la funcion write )
  */
 
-int sac_cli_read(char *path) {
+int sac_cli_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	printf("\n SAC CLI: READ\n");
 	t_read *read_send = malloc(sizeof(t_read));
 	read_send->id_sac_cli = 456;
@@ -202,11 +202,7 @@ int sac_cli_read(char *path) {
  */
 
 int sac_cli_open(const char *path, struct fuse_file_info *fi) { 
-	t_open *open_send = malloc(sizeof(t_open));
-	open_send->id_sac_cli = 789;
-	open_send->pathname = "/";
-	t_protocol open_protocol = OPEN;
-	utils_serialize_and_send(sac_cli_fd, open_protocol, open_send);
+	printf("\n SAC CLI: OPEN\n");
 	return 0;
 };
 
@@ -272,6 +268,21 @@ int sac_cli_getattr(const char *path, struct stat *stbuf) {
 	return res;
 };
 
+
+/*
+ * 	@DESC
+ * 		Funcion que escribe archivos en fuse.
+ *
+ * 	@PARAM
+ * 		path - Dir del archivo
+ * 		buf - Buffer que indica que datos copiar.
+ * 		size - Tam de los datos a copiar
+ * 		offset - Situa una posicion sobre la cual empezar a copiar datos
+ * 		fi - File Info. Contiene flags y otras cosas locas que no hay que usar
+ *
+ * 	@RET
+ * 		Devuelve la cantidad de bytes escritos, siempre y cuando este OK. Caso contrario, numero negativo tipo -ENOENT.
+ */
 int sac_cli_write (const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	t_write *write_send = malloc(sizeof(t_write));
 	write_send->id_sac_cli = 1112;
@@ -308,6 +319,26 @@ int sac_cli_rm_directory (const char* path) {
 	response = protocol;
 	return response;
 };
+
+int sac_cli_flush(const char* path, struct fuse_file_info *fi){
+	printf("\n SAC CLI: FLUSH, PATH: %s \n", path);
+	int response;
+	int protocol;
+
+	t_flush* flush_send = malloc(sizeof(t_flush));
+	flush_send->pathname = strdup(path);
+	flush_send->id_sac_cli = 565;
+	t_protocol flush_protocol = FLUSH;
+	utils_serialize_and_send(sac_cli_fd, flush_protocol, flush_send);
+
+	int server_response = sac_server_response(&protocol);
+	if (server_response == -1) return server_response;
+
+	printf("\n FLUSH RESPONSE : %d\n", protocol);
+	response = protocol;
+	return response;
+
+}
 
 static int sac_cli_access(const char* path, int flags){
 	return 0;

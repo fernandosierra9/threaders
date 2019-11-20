@@ -135,15 +135,6 @@ static void *handle_connection(void *arg) {
 				sac_server_logger_info("ID_SAC_CLI: %d", read_dir->id_sac_cli);
 				break;
 			}
-			case OPEN: {
-				sac_server_logger_info("Recibi OPEN_DIR de SAC_CLI");
-				/* 				
-				t_open *open_dir = utils_receive_and_deserialize(fd, protocol);
-				sac_server_logger_info("PATHNAME: %s", open_dir->pathname);
-				sac_server_logger_info("ID_SAC_CLI: %d", open_dir->id_sac_cli); 
-				*/
-				break;
-			}
 			case MK_DIR: {
 				sac_server_logger_info("Recibi MK_DIR de SAC_CLI");
 				t_mk_directory *mk_dir = utils_receive_and_deserialize(fd, protocol);
@@ -164,6 +155,14 @@ static void *handle_connection(void *arg) {
 				t_read_dir *rm_dir = utils_receive_and_deserialize(fd, protocol);
 				int res = sac_server_remove_directory("/testt");
 				//int res = sac_server_remove_directory(rm_dir->pathname);
+				send(fd, &res, sizeof(int), 0);
+				break;
+			}
+			case FLUSH: {
+				sac_server_logger_info("Recibi FLUSH de SAC_CLI");
+				t_flush *flush_dir = utils_receive_and_deserialize(fd, protocol);
+				sac_server_logger_info("PATHNAME: %s", flush_dir->pathname);
+				int res = sac_server_flush();
 				send(fd, &res, sizeof(int), 0);
 				break;
 			}
