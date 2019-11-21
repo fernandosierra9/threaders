@@ -22,13 +22,20 @@ struct t_runtime_options {
  * Como se observa la estructura contiene punteros a funciones.
  */
 
+// Buffers de write y read, que viajen por sockets
+// Lista de nodos para readdir
+// Falta descomentar los parametros en el server y testear real
+// Falta arreglar problema que llega "pathname" con cualquier contenido
+// agregar codigo para multithreading
+// falta chequear el get_node de sac_operate porque falta una funcion de la commons
+// testear bien todo y ver los memory leaks
 static struct fuse_operations sac_operations = {
 		.getattr = sac_cli_getattr, // SE LLAMA AL LEER METADATA DE UN ARCHIVO --> esta a medias
 		.readdir = sac_cli_readdir, // LISTAR ARCHIVOS/DIRECTORIOS --> falta sac-cli que llegue la lista
-		.mknod = sac_cli_mknod, // CREAR ARCHIVO
-		.unlink = sac_cli_unlink, // BORRAR ARCHIVO
-		.read = sac_cli_read, // LEER ARCHIVOS,
-		.write = sac_cli_write, // ESCRIBIR ARCHIVO
+		.mknod = sac_cli_mknod, // CREAR ARCHIVO, falta tester en sac-cli
+		.unlink = sac_cli_unlink, // BORRAR ARCHIVO, falta testear en sac-cli
+		.read = sac_cli_read, // LEER ARCHIVOS, falta pasar los buffer modificados por socket, testear en sac-cli
+		.write = sac_cli_write, // ESCRIBIR ARCHIVO, falta pasar los buffer modificados por socket, testear en sac-cli
 		.open = sac_cli_open, // SE LLAMA CUANDO SE ABRE UN ARCHIVO --> OK
 		.mkdir = sac_cli_create_directory, // CREAR DIRECTORIO, falta testear en sac-cli
 		.rmdir = sac_cli_rm_directory, // ELIMINAR DIRECTORIO, falta testear en sac-cli
@@ -235,8 +242,6 @@ int sac_cli_getattr(const char *path, struct stat *stbuf) {
 	  return 0;
 	} */
 
-	printf("\n UPDATED14 \n");
-	
 	t_get_attr *get_attr_send = malloc(sizeof(t_get_attr));
 	get_attr_send->id_sac_cli = 1011;
 	get_attr_send->pathname = strdup(path);

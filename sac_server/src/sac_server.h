@@ -38,6 +38,8 @@
 #define BLOCK_SIZE 4096
 #define PTR_BLOCK_SIZE 1024
 
+#define THELARGESTFILE (uint32_t) (BLOCK_INDIRECT*PTR_BLOCK_SIZE*BLOCK_SIZE)
+
 // Utils de Bloques
 #define NODE_TABLE_SIZE 1024
 #define DISC_PATH fuse_disc_path
@@ -120,12 +122,12 @@ int sac_server_create_directory(const char *path);
 int sac_server_remove_directory(const char* path);
 int sac_server_unlink_node(const char* path);
 int sac_server_make_node(const char* path);
-int sac_server_write(const char* path);
+int sac_server_write(const char *path, const char *buf, size_t size, off_t offset);
 int sac_server_flush();
 
 // Funciones de lectura
 int sac_server_readdir(const char *path, t_list* nodes);
-int sac_server_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
+int sac_server_read(const char *path, char *buf, size_t size, off_t offset);
 int sac_server_open(const char *path, struct fuse_file_info *fi);
 int sac_server_getattr(const char *path, struct sac_file_t *node);
 
