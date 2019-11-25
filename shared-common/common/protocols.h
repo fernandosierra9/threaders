@@ -140,6 +140,9 @@ typedef struct {
 typedef struct {
 	char* pathname;
 	int id_sac_cli;
+	char *buf;
+	size_t size;
+	off_t offset;
 } t_write;
 
 typedef struct {
@@ -168,6 +171,7 @@ typedef struct {
 
 typedef struct {
 	t_list* nodes;
+	int res;
 } t_read_dir_server;
 
 

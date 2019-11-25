@@ -23,10 +23,9 @@ struct t_runtime_options {
  */
 
 // Buffers de write y read, que viajen por sockets
-// Lista de nodos para readdir
-// Falta descomentar los parametros en el server y testear real
-// Falta arreglar problema que llega "pathname" con cualquier contenido
 // agregar codigo para multithreading
+// Falta descomentar los parametros en el server y testear real
+// Falta arreglar problema que llega "pathname" con cualquier contenido (no tan grave)
 // falta chequear el get_node de sac_operate porque falta una funcion de la commons
 // testear bien todo y ver los memory leaks
 static struct fuse_operations sac_operations = {
@@ -43,7 +42,6 @@ static struct fuse_operations sac_operations = {
 		.chmod = sac_cli_chmod, // MODIFICA PERMISOS --> OK
 		.chown = sac_cli_chown, // MODIFICA EL OWNER Y EL OWNER GROUP --> OK
 		.flush = sac_cli_flush, // LIMPIA CACHE (creo que hay que borar este) --> OK
-
 };
 
 /** keys for FUSE_OPT_ options */
@@ -141,7 +139,6 @@ int sac_cli_create_directory(const char *path, mode_t mode) {
 int sac_cli_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
 	printf("\n SAC CLI: READ DIRECTORY\n");
 	int protocol;
-	int response;
 	t_read_dir *read_dir_send = malloc(sizeof(t_read_dir));
 	read_dir_send->id_sac_cli = 123;
 	read_dir_send->pathname = strdup(path);
@@ -154,17 +151,15 @@ int sac_cli_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t o
 
 	t_read_dir_server *read_dir_response = utils_receive_and_deserialize(sac_cli_fd, protocol);
 
-/* 	// "." y ".." obligatorios.
+	printf("\n READ DIRECTORY RESPONSE : %d\n", read_dir_response->res);
+ 	// "." y ".." obligatorios.
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
 
-	t_list* nodes = list_create();
-	for (int j=0; j<list_size(nodes); j++) {
-		filler(buf, (char*) list_get(nodes, j), NULL, 0);
-		printf("\n NODO: %s \n", (char*) list_get(nodes, j));
+	for (int j=0; j<list_size(read_dir_response->nodes); j++) {
+		filler(buf, (char*) list_get(read_dir_response->nodes, j), NULL, 0);
 	} 
- */
-	return response;
+	return read_dir_response->res;
 };
 
 /*
@@ -230,17 +225,15 @@ int sac_cli_open(const char *path, struct fuse_file_info *fi) {
  * 		O archivo/directorio fue encontrado. -ENOENT archivo/directorio no encontrado
  */
 int sac_cli_getattr(const char *path, struct stat *stbuf) { 
-	printf("\n SAC CLI: GET ATTR\n");
-
+	printf("\n SAC CLI: GET ATTRIBUTE, PATH: %s \n", path);
 	int res;
 	int protocol;
 	memset(stbuf, 0, sizeof(struct stat));
-
-	/* 	if (strcmp(path, "/") == 0){
+	if (strcmp(path, "/") == 0){
 	  stbuf->st_mode = S_IFDIR | 0777;
 	  stbuf->st_nlink = 2;
 	  return 0;
-	} */
+	} 
 
 	t_get_attr *get_attr_send = malloc(sizeof(t_get_attr));
 	get_attr_send->id_sac_cli = 1011;
@@ -293,7 +286,10 @@ int sac_cli_getattr(const char *path, struct stat *stbuf) {
 int sac_cli_write (const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	t_write *write_send = malloc(sizeof(t_write));
 	write_send->id_sac_cli = 1112;
-	write_send->pathname = "/";
+	write_send->pathname = strdup(path);
+	write_send->buf = strdup(buf);
+	write_send->size = size;
+	write_send->offset = offset;
 	t_protocol write_protocol = WRITE;
 	utils_serialize_and_send(sac_cli_fd, write_protocol, write_send);
 	return 0;
@@ -311,6 +307,7 @@ int sac_cli_write (const char *path, const char *buf, size_t size, off_t offset,
  *
  */
 int sac_cli_rm_directory (const char* path) {
+	printf("\n SAC CLI: REMOVE DIRECTORY, PATH: %s \n", path);
 	int response;
 	int protocol;
 	t_rm_directory *rm_directory_send = malloc(sizeof(t_rm_directory));

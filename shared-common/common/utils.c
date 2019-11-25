@@ -223,6 +223,9 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 		t_package* package = utils_package_create(protocol);
 		utils_package_add(package, &((t_write*) package_send)->id_sac_cli,sizeof(uint32_t));
 		utils_package_add(package, ((t_write*) package_send)->pathname, strlen(((t_write*) package_send)->pathname)+1);
+		utils_package_add(package, ((t_write*) package_send)->buf, strlen(((t_write*) package_send)->buf)+1);
+		utils_package_add(package, &((t_write*) package_send)->size,sizeof(size_t));
+		utils_package_add(package, &((t_write*) package_send)->offset,sizeof(off_t));
 		utils_package_send_to(package,socket);
 		utils_package_destroy(package);
 		break;
@@ -262,7 +265,7 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 	case MK_DIR: {
 		t_package* package = utils_package_create(protocol);
 		utils_package_add(package, &((t_mk_directory*) package_send)->id_sac_cli,sizeof(uint32_t));
-		utils_package_add(package, ((t_mk_directory*) package_send)->pathname, strlen(((t_mk_directory*) package_send)->pathname)+1);
+		utils_package_add(package, ((t_mk_directory*) package_send)->pathname, strlen(((t_mk_directory*) package_send)->pathname) + 1);
 		utils_package_send_to(package,socket);
 		utils_package_destroy(package);
 		break;
@@ -279,7 +282,15 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 	}
 	case READ_DIR_RESPONSE: {
 		t_package* package = utils_package_create(protocol);
-		//utils_package_add(package, &((t_read_dir_server*) package_send)->nodes, sizeof(t_list));
+		utils_package_add(package, &((t_read_dir_server*) package_send)->res, sizeof(uint32_t));
+		for (int j=0; j<list_size(((t_read_dir_server*) package_send)->nodes); j++) {
+			char *node = list_get(((t_read_dir_server*) package_send)->nodes, j);
+			utils_package_add(
+				package,
+				node,
+				strlen(node) + 1
+			);
+		} 
 		utils_package_send_to(package,socket);
 		utils_package_destroy(package);
 		break;
@@ -402,6 +413,10 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		utils_get_from_list_to(&get_request->id_sac_cli,list,0);
 		get_request->pathname = malloc(sizeof(get_request->pathname));
 		utils_get_from_list_to(get_request->pathname, list, 1);
+		get_request->buf = malloc(sizeof(get_request->buf));
+		utils_get_from_list_to(get_request->buf, list, 2);
+		utils_get_from_list_to(&get_request->size, list, 3);
+		utils_get_from_list_to(&get_request->offset, list,4);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}
@@ -454,7 +469,15 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 	case READ_DIR_RESPONSE: {
 		t_read_dir_server *get_request = malloc(sizeof(t_read_dir_server));
 		t_list* list = utils_receive_package(socket);
-		utils_get_from_list_to(&get_request->nodes,list,0);
+		utils_get_from_list_to(&get_request->res,list,0);
+		get_request->nodes = list_create();
+		
+		for(int j=1; j<list_size(list); j++) {
+			char *node = malloc(utils_get_buffer_size(list, j));
+			utils_get_from_list_to(node,list,j);
+			list_add(get_request->nodes, node);
+		}
+
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}
