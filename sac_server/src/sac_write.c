@@ -3,7 +3,6 @@
 
 
 int sac_server_create_directory (const char *path){
-    sac_server_logger_info("Making directory, Path: %s", path);
 	int father_node, i, res = 0;
 	struct sac_file_t* node;
 	char *nombre = malloc(strlen(path) + 1);
@@ -21,7 +20,6 @@ int sac_server_create_directory (const char *path){
 	} else if ((father_node = determinar_nodo(dir_padre)) < 0){
 		return -ENOENT;
 	}
-
 	node = node_table_start;
 
 	// Toma un lock de escritura.
@@ -29,7 +27,6 @@ int sac_server_create_directory (const char *path){
 	// pthread_rwlock_wrlock(&rwlock);
 	// log_lock_trace(logger, "Mkdir: Recibe lock escritura.");
 	// Abrir conexion y traer directorios, guarda el bloque de inicio para luego liberar memoria
-
 	// Busca el primer nodo libre (state 0) y cuando lo encuentra, lo crea:
 	for (i = 0; (node->state != 0) & (i <= NODE_TABLE_SIZE); i++) {
 		node = &(node_table_start[i]);
@@ -58,7 +55,6 @@ int sac_server_create_directory (const char *path){
 }
 
 int sac_server_remove_directory(const char* path) {
-	sac_server_logger_info("Remove directory, Path: %s", path);
 	int nodo_padre = determinar_nodo(path);
 	int i;
 	int res = 0;
@@ -91,9 +87,7 @@ int sac_server_remove_directory(const char* path) {
 }
 
 
-
 int sac_server_make_node(const char* path) {
-	sac_server_logger_info("Make node, Path: %s", path);
 	if (determinar_nodo(path) != -1) return -EEXIST;
 	int nodo_padre, i, res = 0;
 	int new_free_node;
@@ -136,7 +130,7 @@ int sac_server_make_node(const char* path) {
 
 	// Obtiene un bloque libre para escribir.
 	new_free_node = get_node();
-
+	sac_server_logger_info("new_free_node %d", new_free_node);
 	// Actualiza la informacion del archivo.
 	add_node(node, new_free_node);
 
@@ -158,7 +152,6 @@ int sac_server_make_node(const char* path) {
 }
 
 int sac_server_unlink_node(const char* path) {
-	sac_server_logger_info("Unlink node, Path: %s", path);
 	struct sac_file_t* file_data;
 	int node = determinar_nodo(path);
 

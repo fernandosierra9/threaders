@@ -129,6 +129,6 @@ int sac_server_flush();
 int sac_server_readdir(const char *path, t_list* nodes);
 int sac_server_read(const char *path, char *buf, size_t size, off_t offset);
 int sac_server_open(const char *path, struct fuse_file_info *fi);
-int sac_server_getattr(const char *path, struct sac_file_t *node);
+struct sac_file_t* sac_server_getattr(const char *path, int* res);
 
 #endif /* SAC_SERVER_H_ */

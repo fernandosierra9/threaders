@@ -31,7 +31,6 @@ int path_size(const char* path){
  *
  */
 pointerSACBlock determinar_nodo(const char* path){
-
 	// Si es el directorio raiz, devuelve 0:
 	if (!strcmp(path, "/")) {
 		return 0;
@@ -206,6 +205,20 @@ int set_position (int *pointer_block, int *data_block, size_t size, off_t offset
 	return 0;
 }
 
+int bitarray_test_and_set(t_bitarray *self, off_t offset){
+	uint64_t i, res = i*64;
+	uint64_t *array = (uint64_t*) self->bitarray;
+	size_t _max = 64;
+	off_t _off = offset / 64;
+	for (i=0; i<_max ; i++,res++){
+		if (bitarray_test_bit(self, res) == 0){
+			bitarray_set_bit(self,res);
+			return res;
+		}
+	}
+	return -ENOSPC;
+}
+
 /*
  *  @DESC
  *  	Obtiene un bloque libre, actualiza el bitmap.
@@ -223,12 +236,13 @@ int get_node(void){
 	bitarray = bitarray_create((char*) bitmap_start, BITMAP_SIZE_B);
 
 	// Que funcion de la COMMONS es la adyancente a esta???
-	//res = bitarray_test_and_set(bitarray, SAC_FILE_BY_BLOCK+BITMAP_BLOCK_SIZE+SAC_FILE_BY_TABLE);
+	res = bitarray_test_and_set(bitarray, SAC_FILE_BY_BLOCK+BITMAP_BLOCK_SIZE+SAC_FILE_BY_TABLE);
 
 	// Cierra el bitmap
 	bitarray_destroy(bitarray);
 	return res;
 }
+
 
 /*
  * 	@DESC

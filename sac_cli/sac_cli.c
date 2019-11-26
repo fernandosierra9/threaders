@@ -24,20 +24,19 @@ struct t_runtime_options {
 
 // Buffers de write y read, que viajen por sockets
 // agregar codigo para multithreading
-// Falta descomentar los parametros en el server y testear real
-// Falta arreglar problema que llega "pathname" con cualquier contenido (no tan grave)
+// Falta descomentar los parametros en el server y testear real    
 // falta chequear el get_node de sac_operate porque falta una funcion de la commons
 // testear bien todo y ver los memory leaks
 static struct fuse_operations sac_operations = {
-		.getattr = sac_cli_getattr, // SE LLAMA AL LEER METADATA DE UN ARCHIVO --> esta a medias
-		.readdir = sac_cli_readdir, // LISTAR ARCHIVOS/DIRECTORIOS --> falta sac-cli que llegue la lista
+		.getattr = sac_cli_getattr, // SE LLAMA AL LEER METADATA DE UN ARCHIVO --> OK
+		.readdir = sac_cli_readdir, // LISTAR ARCHIVOS/DIRECTORIOS --> OK
 		.mknod = sac_cli_mknod, // CREAR ARCHIVO, falta tester en sac-cli
 		.unlink = sac_cli_unlink, // BORRAR ARCHIVO, falta testear en sac-cli
 		.read = sac_cli_read, // LEER ARCHIVOS, falta pasar los buffer modificados por socket, testear en sac-cli
 		.write = sac_cli_write, // ESCRIBIR ARCHIVO, falta pasar los buffer modificados por socket, testear en sac-cli
 		.open = sac_cli_open, // SE LLAMA CUANDO SE ABRE UN ARCHIVO --> OK
-		.mkdir = sac_cli_create_directory, // CREAR DIRECTORIO, falta testear en sac-cli
-		.rmdir = sac_cli_rm_directory, // ELIMINAR DIRECTORIO, falta testear en sac-cli
+		.mkdir = sac_cli_create_directory, // CREAR DIRECTORIO, OK
+		.rmdir = sac_cli_rm_directory, // ELIMINAR DIRECTORIO, OK
 		.access = sac_cli_access, // SETEA PERMISOS--> OK
 		.chmod = sac_cli_chmod, // MODIFICA PERMISOS --> OK
 		.chown = sac_cli_chown, // MODIFICA EL OWNER Y EL OWNER GROUP --> OK
@@ -228,7 +227,22 @@ int sac_cli_getattr(const char *path, struct stat *stbuf) {
 	printf("\n SAC CLI: GET ATTRIBUTE, PATH: %s \n", path);
 	int res;
 	int protocol;
+
+	// BORRAR ESTE HARDCODING
+	if (
+		strcmp(path, "/.xdg-volume-info") == 0 ||
+		strcmp(path, "/.autorun.inf") == 0 || 
+		strcmp(path, "/autorun.inf") == 0 || 
+		strcmp(path, "/.Trash") == 0 ||
+		strcmp(path, "/.Trash-1000") == 0 ||
+		strcmp(path, "/.directory") == 0 ||
+		string_contains(path, ".directory") == 1
+	){
+	  return 0;
+	}
+
 	memset(stbuf, 0, sizeof(struct stat));
+
 	if (strcmp(path, "/") == 0){
 	  stbuf->st_mode = S_IFDIR | 0777;
 	  stbuf->st_nlink = 2;
@@ -243,6 +257,11 @@ int sac_cli_getattr(const char *path, struct stat *stbuf) {
 	
 	int server_response = sac_server_response(&protocol);
 	if (server_response == -1) return server_response;
+
+	// Si no existe el file dentro de nuestro FS
+	if (protocol == -2) {
+		return -ENOENT; 
+	}
 
 	t_get_attr_server *get_attr_response = utils_receive_and_deserialize(sac_cli_fd, protocol);
 
@@ -264,7 +283,6 @@ int sac_cli_getattr(const char *path, struct stat *stbuf) {
 		res = 0;
 	}
 
-	res = -ENOENT;
 	return res;
 };
 

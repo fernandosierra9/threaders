@@ -1,20 +1,18 @@
 #include "sac_server.h"
 
 
-int sac_server_getattr(const char *path, struct sac_file_t *node) {
-	sac_server_logger_info("Getattr: Path: %s", path);
+struct sac_file_t* sac_server_getattr(const char *path, int* res) {
 	int nodo = determinar_nodo(path);
-	int res;
-	
+	struct sac_file_t* node;
 	if (nodo < 0) {
-		res = -ENOENT;
-	} else {
-		node = node_table_start;
-		node = &(node[nodo-1]);
-		res = 0;
+		*res = -ENOENT;
+		return node;
 	}
+	node = node_table_start;
+	node = &(node[nodo-1]);
+	*res = 0;
 
-	return res; 
+	return node; 
 }
 
 int sac_server_open(const char *path, struct fuse_file_info *fi) {
@@ -28,7 +26,6 @@ int sac_server_open(const char *path, struct fuse_file_info *fi) {
 }
 
 int sac_server_readdir(const char *path, t_list* nodes) {
-	sac_server_logger_info("Readdir: Path: %s ", path);
 	int i;
 	int res = 0;
 	int nodo = determinar_nodo(path);
