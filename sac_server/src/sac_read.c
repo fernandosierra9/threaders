@@ -72,12 +72,12 @@ int sac_server_read(const char *path, char *buf, size_t size, off_t offset) {
 	//log_lock_trace(logger, "Read: Toma lock lectura. Cantidad de lectores: %d", rwlock.__data.__nr_readers);
 
 	if(node->file_size <= offset){
-		sac_server_logger_info("Fuse intenta leer un offset mayor o igual que el tamanio de archivo. Se retorna size 0. File: %s, Size: %d", path, node->file_size);
+		sac_server_logger_info("Fuse1 intenta leer un offset mayor o igual que el tamanio de archivo. Se retorna size 0. File: %s, Size: %d", path, node->file_size);
 		res = 0;
 		goto finalizar;
 	} else if (node->file_size <= (offset+size)){
 		tam = size = ((node->file_size)-(offset));
-		sac_server_logger_info("Fuse intenta leer un offset mayor o igual que el tamanio de archivo. Se retorna size 0. File: %s, Size: %d", path, node->file_size);
+		sac_server_logger_info("Fuse2 intenta leer un offset mayor o igual que el tamanio de archivo. Se retorna size 0. File: %s, Size: %d", path, node->file_size);
 	}
 	// Recorre todos los punteros en el bloque de la tabla de nodos
 	for (bloque_punteros = 0; bloque_punteros < BLOCK_INDIRECT; bloque_punteros++){

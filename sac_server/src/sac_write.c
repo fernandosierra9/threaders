@@ -103,7 +103,6 @@ int sac_server_make_node(const char* path) {
 	// Ubica el nodo correspondiente. Si es el raiz, lo marca como 0, Si es menor a 0, lo crea (mismos permisos).
 	if (strcmp(dir_padre, "/") == 0) nodo_padre = 0;
 	else if ((nodo_padre = determinar_nodo(dir_padre)) < 0) return -ENOENT;
-
 	node = node_table_start;
 
 	// Toma un lock de escritura.

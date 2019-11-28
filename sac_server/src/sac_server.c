@@ -41,6 +41,7 @@ static void init_server(int port) {
 		exit_gracefully(EXIT_FAILURE);
 	} else {
  		sac_server_logger_info("Escuchando en el socket %d", sac_server_socket);
+		
 		struct sockaddr_in client_info;
 		socklen_t addrlen = sizeof client_info;
 
@@ -60,89 +61,6 @@ static void init_server(int port) {
 
 		pthread_attr_destroy(&attrs);
 		close(sac_server_socket);
-/* 		
-
-		int res = sac_server_getattr("/testi/testa=", &node);
-		int res2 = sac_server_getattr("/testi/testazo", &node); */
-		 /* 
-		sac_server_logger_info("Recibi GET_ATTR de SAC_CLI, Path: %s", "/testi/testi2");
-		struct sac_file_t *node;
-		int res = sac_server_getattr("/testi/testi2", &node);
-		sac_server_logger_info("RES %d", res); */
-
-/* 		
-
-		printf("\n READ DIR TEST \n");
-		t_list* nodes = list_create();
-		sac_server_create_directory("/testt");
-		sac_server_create_directory("/test2");
-		sac_server_readdir("/", nodes);
-		for (int j=0; j<list_size(nodes); j++) {
-			printf("\n NODO: %s \n", (char*) list_get(nodes, j));
-		} 
-
-		struct sac_file_t *pointer = node_table_start;
-
-		sac_server_logger_info("TABLA DE NODOS");
-		for (int i = 0; i<NODE_TABLE_SIZE; i++) {
-			sac_server_logger_info("STATE: %d", pointer->state);
-			sac_server_logger_info("FILE SIZE: %d", pointer->file_size);
-			sac_server_logger_info("FILE NAME: %s", pointer->file_name);
-			*pointer++;
-		}
-
-		printf("\n REMOVE DIRECTORY \n");
-		int response = sac_server_remove_directory("/test");
-		printf("Response: %d", response);
-		t_list* nodes2 = list_create();
-		sac_server_readdir("/", nodes2);
-		for (int j=0; j<list_size(nodes2); j++) {
-			printf("\n NODO: %s \n", (char*) list_get(nodes2, j));
-		} 
-
-		int res;
-		struct sac_file_t* node = sac_server_getattr("/testa2/test", &res);
-		sac_server_logger_info("RES %d", res);
- 		t_get_attr_server *get_attr_send_server = malloc(sizeof(t_get_attr_server));
-
-		get_attr_send_server->state = node->state;
-		get_attr_send_server->file_size = node->file_size;
-		sac_server_logger_info("state, %d", get_attr_send_server->state);
-		sac_server_logger_info("file size, %d", get_attr_send_server->file_size);
-		get_attr_send_server->creation_date = node->creation_date;
-		get_attr_send_server->modified_date = node->modified_date;
-
-		struct sac_file_t *node2;
-		node2 = node_table_start;
-
-		for (int j = 0; (j <= 5); j++) {
-			node2 = &(node_table_start[j]);
-			sac_server_logger_info("Nodo: %d", j);
-			sac_server_logger_info("State: %d", node2->state);
-			sac_server_logger_info("FileName: %s", node2->file_name);
-		}
-
-/* 				
-		struct sockaddr_in client_info;
-		socklen_t addrlen = sizeof client_info;
-
-		pthread_attr_t attrs;
-		pthread_attr_init(&attrs);
-		pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_JOINABLE);
-
-		for (;;) {
-			int *accepted_fd = malloc(sizeof(int));
-			*accepted_fd = accept(sac_server_socket, (struct sockaddr *) &client_info, &addrlen);
-
-			sac_server_logger_info("Creando un hilo para atender una conexión en el socket %d", *accepted_fd);
-
-			pthread_t tid;
-			pthread_create(&tid, &attrs, handle_connection, accepted_fd);
-		}
-
-		pthread_attr_destroy(&attrs);
-		close(sac_server_socket); */
-		
 	}
 }
 	
@@ -169,9 +87,8 @@ static void *handle_connection(void *arg) {
 				t_protocol get_attr_protocol_response = GET_ATTR_RESPONSE;
 				int res;
 				t_get_attr_server *get_attr_send_server = malloc(sizeof(t_get_attr_server));
-
  				struct sac_file_t* node = sac_server_getattr(get_attr_dir->pathname, &res);
-				sac_server_logger_info("RES %d", res);
+				sac_server_logger_info("GET_ATTR Response: %d", res);
 				if (res == 0) {
 					get_attr_send_server->state = node->state;
 					get_attr_send_server->file_size = node->file_size;
@@ -189,38 +106,74 @@ static void *handle_connection(void *arg) {
 				sac_server_logger_info("Recibi READ_DIR de SAC_CLI, Path: %s", read_dir->pathname);
 				t_protocol read_dir_protocol_response = READ_DIR_RESPONSE;
 				t_list* nodes = list_create();
-				t_read_dir_server *read_dir_send_server = malloc(sizeof(t_read_dir_server));
+				t_read_dir_server *read_dir_response_server = malloc(sizeof(t_read_dir_server));
 				int res = sac_server_readdir(read_dir->pathname, nodes);
-				read_dir_send_server->nodes = nodes;
-				read_dir_send_server->res = res;
-				utils_serialize_and_send(fd, read_dir_protocol_response, read_dir_send_server);
+				sac_server_logger_info("READ_DIR Response: %d", res);
+				read_dir_response_server->nodes = nodes;
+				read_dir_response_server->res = res;
+				utils_serialize_and_send(fd, read_dir_protocol_response, read_dir_response_server);
 				break;
 			}
 			case READ: {
-				sac_server_logger_info("Recibi READ de SAC_CLI");
 				t_read *read_dir = utils_receive_and_deserialize(fd, protocol);
-				sac_server_logger_info("PATHNAME: %s", read_dir->pathname);
-				sac_server_logger_info("ID_SAC_CLI: %d", read_dir->id_sac_cli);
+				sac_server_logger_info("Recibi READ de SAC_CLI, Path: %s", read_dir->pathname);
+				t_protocol read_response_protocol = READ_RESPONSE;
+				t_read_server *read_response_server = malloc(sizeof(t_read_server));
+				int res = sac_server_read(read_dir->pathname, read_dir->buf, read_dir->size, read_dir->offset);
+				//int res = sac_server_read(read_dir->pathname, &read_dir->buf, &read_dir->size, &read_dir->offset);
+				sac_server_logger_info("READ Response: %d", res);
+				sac_server_logger_info("BUFFER: %s", read_dir->buf);
+				sac_server_logger_info("OFFSET: %d", read_dir->offset);
+				sac_server_logger_info("SIZE: %ld", read_dir->size);
+				
+				if (res == 0) {
+					read_response_server->res = res;
+					read_response_server->buf = read_dir->buf;
+					read_response_server->size = read_dir->size;
+					read_response_server->offset = read_dir->offset;
+					utils_serialize_and_send(fd, read_response_protocol, read_response_server);
+				}
+
+				if (res < 0) {
+					send(fd, &res, sizeof(int), 0);
+				}
+				break;
+			}
+			case WRITE: {
+				t_write *write_dir = utils_receive_and_deserialize(fd, protocol);
+				sac_server_logger_info("Recibi WRITE de SAC_CLI, Path: %s", write_dir->pathname);
+				t_protocol write_response_protocol = WRITE_RESPONSE;
+				t_write_server *write_response_server = malloc(sizeof(t_write_server));
+				int res = sac_server_write(write_dir->pathname, write_dir->buf, write_dir->size, write_dir->offset);
+				//int res = sac_server_write(write_dir->pathname, &write_dir->buf, &write_dir->size, &write_offset);
+				sac_server_logger_info("WRITE Response: %d", res);
+				
+				if (res == 0) {
+					write_response_server->res = res;
+					write_response_server->buf = write_dir->buf;
+					write_response_server->size = write_dir->size;
+					write_response_server->offset = write_dir->offset;
+					utils_serialize_and_send(fd, write_response_protocol, write_response_server);
+				}
+
+				if (res < 0) {
+					send(fd, &res, sizeof(int), 0);
+				}
 				break;
 			}
 			case MK_DIR: {
 				t_mk_directory *mk_dir = utils_receive_and_deserialize(fd, protocol);
 				sac_server_logger_info("Recibi MK_DIR de SAC_CLI, Path: %s", mk_dir->pathname);
 				int res = sac_server_create_directory(mk_dir->pathname);
+				sac_server_logger_info("MK_DIR Response: %d", res);
 				send(fd, &res, sizeof(int), 0);
-				break;
-			}
-			case WRITE: {
-				sac_server_logger_info("Recibi WRITE_DIR de SAC_CLI");
-				t_write *write_dir = utils_receive_and_deserialize(fd, protocol);
-				sac_server_logger_info("PATHNAME: %s", write_dir->pathname);
-				sac_server_logger_info("ID_SAC_CLI: %d", write_dir->id_sac_cli);
 				break;
 			}
 			case RM_DIR: {
 				t_read_dir *rm_dir = utils_receive_and_deserialize(fd, protocol);
 				sac_server_logger_info("Recibi RM_DIR de SAC_CLI, Path: %s", rm_dir->pathname);
 				int res = sac_server_remove_directory(rm_dir->pathname);
+				sac_server_logger_info("RM_DIR Response: %d", res);
 				send(fd, &res, sizeof(int), 0);
 				break;
 			}
@@ -228,22 +181,23 @@ static void *handle_connection(void *arg) {
 				t_flush *flush_dir = utils_receive_and_deserialize(fd, protocol);
 				sac_server_logger_info("Recibi FLUSH de SAC_CLI, Path: %s", flush_dir->pathname);
 				int res = sac_server_flush();
+				sac_server_logger_info("FLUSH Response: %d", res);
 				send(fd, &res, sizeof(int), 0);
 				break;
 			}
 			case UNLINK_NODE: {
-				sac_server_logger_info("Recibi UNLINK de SAC_CLI");
 				t_unlink_node *unlink_node = utils_receive_and_deserialize(fd, protocol);
 				sac_server_logger_info("Recibi UNLINK de SAC_CLI, Path: %s", unlink_node->pathname);
 				int res = sac_server_unlink_node(unlink_node->pathname);
+				sac_server_logger_info("UNLINK Response: %d", res);
 				send(fd, &res, sizeof(int), 0);
 				break;
 			}
 			case MK_NODE: {
-				sac_server_logger_info("Recibi MAKE NODE de SAC_CLI");
 				t_unlink_node *make_node = utils_receive_and_deserialize(fd, protocol);
 				sac_server_logger_info("Recibi MAKE NODE de SAC_CLI, Path: %s", make_node->pathname);
 				int res = sac_server_make_node(make_node->pathname);
+				sac_server_logger_info("MK_NODE Response: %d", res);
 				send(fd, &res, sizeof(int), 0);
 				break;
 			}

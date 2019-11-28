@@ -43,7 +43,9 @@ typedef enum {
 	RM_DIR,
 	GET_ATTR_RESPONSE,
 	MK_DIR_RESPONSE,
-	READ_DIR_RESPONSE
+	READ_DIR_RESPONSE,
+	WRITE_RESPONSE,
+	READ_RESPONSE
 } t_protocol;
 
 typedef struct {
@@ -123,6 +125,9 @@ typedef struct {
 typedef struct {
 	char* pathname;
 	int id_sac_cli;
+	char *buf;
+	size_t size;
+	off_t offset;
 } t_read;
 
 typedef struct {
@@ -174,5 +179,18 @@ typedef struct {
 	int res;
 } t_read_dir_server;
 
+typedef struct {
+	char *buf;
+	size_t size;
+	off_t offset;
+	int res;
+} t_write_server;
+
+typedef struct {
+	char *buf;
+	size_t size;
+	off_t offset;
+	int res;
+} t_read_server;
 
 #endif /* COMMON_PROTOCOLS_H_ */

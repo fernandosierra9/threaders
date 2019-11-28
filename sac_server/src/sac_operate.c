@@ -206,16 +206,27 @@ int set_position (int *pointer_block, int *data_block, size_t size, off_t offset
 }
 
 int bitarray_test_and_set(t_bitarray *self, off_t offset){
-	uint64_t i, res = i*64;
+	uint64_t i, res;
 	uint64_t *array = (uint64_t*) self->bitarray;
-	size_t _max = 64;
+
 	off_t _off = offset / 64;
+	size_t _max = (64);
+
+	for (i=_off; i < (_max); i++){
+		if (((array[i]) ^ (~((uint64_t) 0))) != 0){
+			break;
+		}
+	}
+
+	res = i*64;
+
 	for (i=0; i<_max ; i++,res++){
 		if (bitarray_test_bit(self, res) == 0){
 			bitarray_set_bit(self,res);
 			return res;
 		}
 	}
+
 	return -ENOSPC;
 }
 

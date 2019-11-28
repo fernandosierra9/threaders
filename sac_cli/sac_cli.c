@@ -164,35 +164,6 @@ int sac_cli_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t o
 /*
  * @DESC
  *  Esta función va a ser llamada cuando a la biblioteca de FUSE le llege un pedido
- * para obtener el contenido de un archivo
- *
- * @PARAMETROS
- * 		path - El path es relativo al punto de montaje y es la forma mediante la cual debemos
- * 		       encontrar el archivo o directorio que nos solicitan
- * 		buf - Este es el buffer donde se va a guardar el contenido solicitado
- * 		size - Nos indica cuanto tenemos que leer
- * 		offset - A partir de que posicion del archivo tenemos que leer
- *
- * 	@RETURN
- * 		Si se usa el parametro direct_io los valores de retorno son 0 si  elarchivo fue encontrado
- * 		o -ENOENT si ocurrio un error. Si el parametro direct_io no esta presente se retorna
- * 		la cantidad de bytes leidos o -ENOENT si ocurrio un error. ( Este comportamiento es igual
- * 		para la funcion write )
- */
-
-int sac_cli_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
-	printf("\n SAC CLI: READ\n");
-	t_read *read_send = malloc(sizeof(t_read));
-	read_send->id_sac_cli = 456;
-	read_send->pathname = "/niconico";
-	t_protocol read_protocol = READ;
-	utils_serialize_and_send(sac_cli_fd, read_protocol, read_send);
-	return 0;
-};
-
-/*
- * @DESC
- *  Esta función va a ser llamada cuando a la biblioteca de FUSE le llege un pedido
  * para tratar de abrir un archivo
  *
  * @PARAMETROS
@@ -236,7 +207,8 @@ int sac_cli_getattr(const char *path, struct stat *stbuf) {
 		strcmp(path, "/.Trash") == 0 ||
 		strcmp(path, "/.Trash-1000") == 0 ||
 		strcmp(path, "/.directory") == 0 ||
-		string_contains(path, ".directory") == 1
+		string_contains(path, ".directory") == 1 ||
+		string_contains(path, ".swp") == 1
 	){
 	  return 0;
 	}
@@ -286,6 +258,56 @@ int sac_cli_getattr(const char *path, struct stat *stbuf) {
 	return res;
 };
 
+/*
+ * @DESC
+ *  Esta función va a ser llamada cuando a la biblioteca de FUSE le llege un pedido
+ * para obtener el contenido de un archivo
+ *
+ * @PARAMETROS
+ * 		path - El path es relativo al punto de montaje y es la forma mediante la cual debemos
+ * 		       encontrar el archivo o directorio que nos solicitan
+ * 		buf - Este es el buffer donde se va a guardar el contenido solicitado
+ * 		size - Nos indica cuanto tenemos que leer
+ * 		offset - A partir de que posicion del archivo tenemos que leer
+ *
+ * 	@RETURN
+ * 		Si se usa el parametro direct_io los valores de retorno son 0 si  elarchivo fue encontrado
+ * 		o -ENOENT si ocurrio un error. Si el parametro direct_io no esta presente se retorna
+ * 		la cantidad de bytes leidos o -ENOENT si ocurrio un error. ( Este comportamiento es igual
+ * 		para la funcion write )
+ */
+
+int sac_cli_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
+	printf("\n SAC CLI: READ \n");
+	int res;
+	int protocol;
+	t_read *read_send = malloc(sizeof(t_read));
+	read_send->id_sac_cli = 456;
+	read_send->pathname = strdup(path);
+	read_send->buf = strdup(buf);
+	read_send->size = size;
+	read_send->offset = offset;
+	t_protocol read_protocol = READ;
+	printf("\n BUFFER: %s \n", buf);
+	printf("\n OFFSET: %d \n", offset);
+	printf("\n SIZE: %ld \n", size);
+	utils_serialize_and_send(sac_cli_fd, read_protocol, read_send);
+
+
+	int server_response = sac_server_response(&protocol);
+	if (server_response == -1) return server_response;
+
+	if (protocol < 0) {
+		return protocol; 
+	}
+
+	t_read_server *read_server_response = utils_receive_and_deserialize(sac_cli_fd, protocol);
+	buf = read_server_response->buf;
+	size = read_server_response->size;
+	offset = read_server_response->offset;
+	
+	return read_server_response->res;
+};
 
 /*
  * 	@DESC
@@ -302,6 +324,9 @@ int sac_cli_getattr(const char *path, struct stat *stbuf) {
  * 		Devuelve la cantidad de bytes escritos, siempre y cuando este OK. Caso contrario, numero negativo tipo -ENOENT.
  */
 int sac_cli_write (const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
+	printf("\n SAC CLI: WRITE \n");
+	int res;
+	int protocol;
 	t_write *write_send = malloc(sizeof(t_write));
 	write_send->id_sac_cli = 1112;
 	write_send->pathname = strdup(path);
@@ -310,7 +335,20 @@ int sac_cli_write (const char *path, const char *buf, size_t size, off_t offset,
 	write_send->offset = offset;
 	t_protocol write_protocol = WRITE;
 	utils_serialize_and_send(sac_cli_fd, write_protocol, write_send);
-	return 0;
+
+	int server_response = sac_server_response(&protocol);
+	if (server_response == -1) return server_response;
+
+	if (protocol < 0) {
+		return protocol; 
+	}
+
+	t_write_server *write_server_response = utils_receive_and_deserialize(sac_cli_fd, protocol);
+	buf = write_server_response->buf;
+	size = write_server_response->size;
+	offset = write_server_response->offset;
+	
+	return write_server_response->res;
 };
 
 /*
