@@ -50,7 +50,7 @@ int sac_server_readdir(const char *path, t_list* nodes) {
 	return res;
 }
 
-int sac_server_read(const char *path, char *buf, size_t size, off_t offset) {
+int sac_server_read(const char *path, char **buf, size_t* size, off_t* offset) {
 	sac_server_logger_info("Read: Path: %s ", path);
 	//(void) fi;
 	unsigned int nodo  =determinar_nodo(path);
@@ -58,7 +58,7 @@ int sac_server_read(const char *path, char *buf, size_t size, off_t offset) {
 	struct sac_file_t *node;
 	pointerSACBlock *pointer_block;
 	char *data_block;
-	size_t tam = size;
+	size_t tam = *size;
 	int res;
 
 	if (nodo == -1) return -ENOENT;
@@ -71,19 +71,19 @@ int sac_server_read(const char *path, char *buf, size_t size, off_t offset) {
 	//pthread_rwlock_rdlock(&rwlock); //Toma un lock de lectura.
 	//log_lock_trace(logger, "Read: Toma lock lectura. Cantidad de lectores: %d", rwlock.__data.__nr_readers);
 
-	if(node->file_size <= offset){
+	if(node->file_size <= *offset){
 		sac_server_logger_info("Fuse1 intenta leer un offset mayor o igual que el tamanio de archivo. Se retorna size 0. File: %s, Size: %d", path, node->file_size);
 		res = 0;
 		goto finalizar;
-	} else if (node->file_size <= (offset+size)){
-		tam = size = ((node->file_size)-(offset));
+	} else if (node->file_size <= (*offset+*size)){
+		tam = *size = ((node->file_size)-(*offset));
 		sac_server_logger_info("Fuse2 intenta leer un offset mayor o igual que el tamanio de archivo. Se retorna size 0. File: %s, Size: %d", path, node->file_size);
 	}
 	// Recorre todos los punteros en el bloque de la tabla de nodos
 	for (bloque_punteros = 0; bloque_punteros < BLOCK_INDIRECT; bloque_punteros++){
 		// Chequea el offset y lo acomoda para leer lo que realmente necesita
-		if (offset > BLOCK_SIZE * 1024){
-			offset -= (BLOCK_SIZE * 1024);
+		if (*offset > BLOCK_SIZE * 1024){
+			*offset -= (BLOCK_SIZE * 1024);
 			continue;
 		}
 
@@ -95,8 +95,8 @@ int sac_server_read(const char *path, char *buf, size_t size, off_t offset) {
 		for (num_bloque_datos = 0; num_bloque_datos < 1024; num_bloque_datos++){
 
 			// Chequea el offset y lo acomoda para leer lo que realmente necesita
-			if (offset >= BLOCK_SIZE){
-				offset -= BLOCK_SIZE;
+			if (*offset >= BLOCK_SIZE){
+				*offset -= BLOCK_SIZE;
 				continue;
 			}
 
@@ -105,20 +105,19 @@ int sac_server_read(const char *path, char *buf, size_t size, off_t offset) {
 			data_block = (char *) &(data_block_start[bloque_a_buscar]);
 
 			// Corre el offset hasta donde sea necesario para poder leer lo que quiere.
-			if (offset > 0){
-				data_block += offset;
-				offset = 0;
+			if (*offset > 0){
+				data_block += *offset;
+				*offset = 0;
 			}
-
 			if (tam < BLOCK_SIZE){
-				memcpy(buf, data_block, tam);
-				buf = &(buf[tam]);
+				memcpy(*buf, data_block, tam);
+				*buf = &(*buf[tam]);
 				tam = 0;
 				break;
 			} else {
-				memcpy(buf, data_block, BLOCK_SIZE);
+				memcpy(*buf, data_block, BLOCK_SIZE);
 				tam -= BLOCK_SIZE;
-				buf = &(buf[BLOCK_SIZE]);
+				*buf = &(*buf[BLOCK_SIZE]);
 				if (tam == 0) break;
 			}
 
@@ -126,9 +125,10 @@ int sac_server_read(const char *path, char *buf, size_t size, off_t offset) {
 
 		if (tam == 0) break;
 	}
-	res = size;
+	res = *size;
 
 	finalizar:
+	sac_server_logger_info("RESPUESTA DESDE EL READ %d", res);
 	//pthread_rwlock_unlock(&rwlock); //Devuelve el lock de lectura.
 	//log_lock_trace(logger, "Read: Libera lock lectura. Cantidad de lectores: %d", rwlock.__data.__nr_readers);
 	//log_trace(logger, "Terminada lectura.");

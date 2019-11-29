@@ -255,7 +255,7 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 		t_package* package = utils_package_create(protocol);
 		utils_package_add(package, &((t_read*) package_send)->id_sac_cli,sizeof(uint32_t));
 		utils_package_add(package, ((t_read*) package_send)->pathname, strlen(((t_read*) package_send)->pathname)+1);
-		utils_package_add(package, ((t_read*) package_send)->buf, strlen(((t_read*) package_send)->buf)+1);
+		//utils_package_add(package, ((t_read*) package_send)->buf, strlen(((t_read*) package_send)->buf)+1);
 		utils_package_add(package, &((t_read*) package_send)->size,sizeof(size_t));
 		utils_package_add(package, &((t_read*) package_send)->offset,sizeof(off_t));
 		utils_package_send_to(package,socket);
@@ -300,20 +300,23 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 	}
 	case READ_RESPONSE: {
 		t_package* package = utils_package_create(protocol);
-		utils_package_add(package, &((t_read_server*) package_send)->res, sizeof(uint32_t));
+		utils_package_add(package, &((t_read_server*) package_send)->response, sizeof(uint32_t));
 		utils_package_add(package, ((t_read_server*) package_send)->buf, strlen(((t_read_server*) package_send)->buf)+1);
-		utils_package_add(package, &((t_read_server*) package_send)->size,sizeof(size_t));
-		utils_package_add(package, &((t_read_server*) package_send)->offset,sizeof(off_t));
+		utils_package_add(package, &((t_read_server*) package_send)->size, sizeof(size_t));
+		utils_package_add(package, &((t_read_server*) package_send)->offset, sizeof(off_t));
+		//send(socket, ((t_read_server*) package_send)->response, sizeof(int), 0);
+		/* uint32_t res = ((t_read_server*) package_send)->response;
+		printf("\n En el SERIALIZE UTILS %d \n", res); */
 		utils_package_send_to(package,socket);
 		utils_package_destroy(package);
 		break;
 	}
 	case WRITE_RESPONSE: {
 		t_package* package = utils_package_create(protocol);
-		utils_package_add(package, &((t_write_server*) package_send)->res, sizeof(uint32_t));
 		utils_package_add(package, ((t_write_server*) package_send)->buf, strlen(((t_write_server*) package_send)->buf)+1);
 		utils_package_add(package, &((t_write_server*) package_send)->size,sizeof(size_t));
 		utils_package_add(package, &((t_write_server*) package_send)->offset,sizeof(off_t));
+		utils_package_add(package, &((t_write_server*) package_send)->response, sizeof(int));
 		utils_package_send_to(package,socket);
 		utils_package_destroy(package);
 		break;
@@ -427,10 +430,8 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		utils_get_from_list_to(&get_request->id_sac_cli,list,0);
 		get_request->pathname = malloc(sizeof(get_request->pathname));
 		utils_get_from_list_to(get_request->pathname, list, 1);
-		get_request->buf = malloc(sizeof(get_request->buf));
-		utils_get_from_list_to(get_request->buf, list, 2);
-		utils_get_from_list_to(&get_request->size, list, 3);
-		utils_get_from_list_to(&get_request->offset, list,4);
+		utils_get_from_list_to(&get_request->size, list, 2);
+		utils_get_from_list_to(&get_request->offset, list,3);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}
@@ -498,20 +499,18 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		t_list* list = utils_receive_package(socket);
 		utils_get_from_list_to(&get_request->res,list,0);
 		get_request->nodes = list_create();
-		
 		for(int j=1; j<list_size(list); j++) {
 			char *node = malloc(utils_get_buffer_size(list, j));
 			utils_get_from_list_to(node,list,j);
 			list_add(get_request->nodes, node);
 		}
-
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}
 	case WRITE_RESPONSE: {
 		t_write_server *get_request = malloc(sizeof(t_write_server));
 		t_list* list = utils_receive_package(socket);
-		utils_get_from_list_to(&get_request->res,list,0);
+		utils_get_from_list_to(&get_request->response,list,0);
 		get_request->buf = malloc(sizeof(get_request->buf));
 		utils_get_from_list_to(get_request->buf, list, 1);
 		utils_get_from_list_to(&get_request->size, list, 2);
@@ -520,13 +519,14 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		return get_request;
 	}
 	case READ_RESPONSE: {
-		t_write_server *get_request = malloc(sizeof(t_read_server));
+		t_read_server *get_request = malloc(sizeof(t_read_server));
 		t_list* list = utils_receive_package(socket);
-		utils_get_from_list_to(&get_request->res,list,0);
 		get_request->buf = malloc(sizeof(get_request->buf));
+		utils_get_from_list_to(&get_request->response, list, 0);
 		utils_get_from_list_to(get_request->buf, list, 1);
 		utils_get_from_list_to(&get_request->size, list, 2);
-		utils_get_from_list_to(&get_request->offset, list,3);
+		utils_get_from_list_to(&get_request->offset, list, 3);
+		printf("\n EN EL DESERIALIZE UTILS: %d \n", get_request->response);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}

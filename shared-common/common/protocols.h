@@ -121,15 +121,6 @@ typedef struct {
 	char* pathname;
 	int id_sac_cli;
 } t_read_dir;
-
-typedef struct {
-	char* pathname;
-	int id_sac_cli;
-	char *buf;
-	size_t size;
-	off_t offset;
-} t_read;
-
 typedef struct {
 	char* pathname;
 	int id_sac_cli;
@@ -142,6 +133,13 @@ typedef struct {
 	uint8_t state;
 } t_get_attr_server;
 
+typedef struct {
+	char* pathname;
+	int id_sac_cli;
+	//char *buf;
+	size_t size;
+	off_t offset;
+} t_read;
 typedef struct {
 	char* pathname;
 	int id_sac_cli;
@@ -183,14 +181,14 @@ typedef struct {
 	char *buf;
 	size_t size;
 	off_t offset;
-	int res;
+	int response;
 } t_write_server;
 
 typedef struct {
-	char *buf;
+	uint32_t response;
 	size_t size;
 	off_t offset;
-	int res;
-} t_read_server;
+	char *buf;
+}t_read_server;
 
 #endif /* COMMON_PROTOCOLS_H_ */

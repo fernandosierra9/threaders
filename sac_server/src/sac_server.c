@@ -119,23 +119,23 @@ static void *handle_connection(void *arg) {
 				sac_server_logger_info("Recibi READ de SAC_CLI, Path: %s", read_dir->pathname);
 				t_protocol read_response_protocol = READ_RESPONSE;
 				t_read_server *read_response_server = malloc(sizeof(t_read_server));
-				int res = sac_server_read(read_dir->pathname, read_dir->buf, read_dir->size, read_dir->offset);
-				//int res = sac_server_read(read_dir->pathname, &read_dir->buf, &read_dir->size, &read_dir->offset);
-				sac_server_logger_info("READ Response: %d", res);
-				sac_server_logger_info("BUFFER: %s", read_dir->buf);
-				sac_server_logger_info("OFFSET: %d", read_dir->offset);
-				sac_server_logger_info("SIZE: %ld", read_dir->size);
-				
-				if (res == 0) {
-					read_response_server->res = res;
-					read_response_server->buf = read_dir->buf;
-					read_response_server->size = read_dir->size;
-					read_response_server->offset = read_dir->offset;
+				char* buffer = malloc(read_dir->size);
+				size_t size = read_dir->size;
+				off_t offset = read_dir->offset;
+				int read_res = sac_server_read(read_dir->pathname, &buffer, &size, &offset);
+				if (read_res == 0) {
+					read_response_server->buf = buffer;
+					read_response_server->size = size;
+					read_response_server->offset = offset;
+					read_response_server->response = read_res;
+					sac_server_logger_info("SIZE TO CLI: %d", read_response_server->size);
+					sac_server_logger_info("OFFSET TO CLI: %ld", read_response_server->offset);
 					utils_serialize_and_send(fd, read_response_protocol, read_response_server);
 				}
 
-				if (res < 0) {
-					send(fd, &res, sizeof(int), 0);
+				if (read_res < 0) {
+					send(fd, &read_res, sizeof(int), 0);
+					sac_server_logger_info("after sending res");
 				}
 				break;
 			}
@@ -149,7 +149,7 @@ static void *handle_connection(void *arg) {
 				sac_server_logger_info("WRITE Response: %d", res);
 				
 				if (res == 0) {
-					write_response_server->res = res;
+					write_response_server->response = res;
 					write_response_server->buf = write_dir->buf;
 					write_response_server->size = write_dir->size;
 					write_response_server->offset = write_dir->offset;

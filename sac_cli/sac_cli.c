@@ -279,20 +279,15 @@ int sac_cli_getattr(const char *path, struct stat *stbuf) {
 
 int sac_cli_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	printf("\n SAC CLI: READ \n");
-	int res;
 	int protocol;
+	uint32_t res;
 	t_read *read_send = malloc(sizeof(t_read));
 	read_send->id_sac_cli = 456;
 	read_send->pathname = strdup(path);
-	read_send->buf = strdup(buf);
 	read_send->size = size;
 	read_send->offset = offset;
 	t_protocol read_protocol = READ;
-	printf("\n BUFFER: %s \n", buf);
-	printf("\n OFFSET: %d \n", offset);
-	printf("\n SIZE: %ld \n", size);
 	utils_serialize_and_send(sac_cli_fd, read_protocol, read_send);
-
 
 	int server_response = sac_server_response(&protocol);
 	if (server_response == -1) return server_response;
@@ -302,11 +297,22 @@ int sac_cli_read(const char *path, char *buf, size_t size, off_t offset, struct 
 	}
 
 	t_read_server *read_server_response = utils_receive_and_deserialize(sac_cli_fd, protocol);
-	buf = read_server_response->buf;
+	printf("\n --------------------------------------------------------\n");
+
+	if (read_server_response->response == 0) {
+		return read_server_response->response;
+	}
+	res = read_server_response->response;
+	memcpy(buf, read_server_response->buf, read_server_response->size);
 	size = read_server_response->size;
 	offset = read_server_response->offset;
-	
-	return read_server_response->res;
+
+	printf("\n UPDATE 10 \n");
+	printf("\n SIZE: %d \n", size);
+	printf("\n OFFSET: %ld \n", offset);
+	printf("\n RES: %d \n", res);
+	printf("\n PROTOCOL: %d \n", protocol);
+	return res;
 };
 
 /*
@@ -348,7 +354,7 @@ int sac_cli_write (const char *path, const char *buf, size_t size, off_t offset,
 	size = write_server_response->size;
 	offset = write_server_response->offset;
 	
-	return write_server_response->res;
+	return write_server_response->response;
 };
 
 /*
