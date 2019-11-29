@@ -96,6 +96,23 @@ void utils_package_add(t_package* package, void* value, int size) {
 	memcpy(package->buffer->stream + package->buffer->size, &size, sizeof(int));
 	memcpy(package->buffer->stream + package->buffer->size + sizeof(int), value,
 			size);
+	char *test;
+	if (size == strlen("fernando")+1){
+		test = malloc(strlen("fernando")+1);
+		//memcpy(test,value,strlen("fernando"));
+		//test[strlen("fernando")] = '\0';
+		/*
+		char * algo ;
+		algo = malloc(strlen("fernando")+1);
+		memcpy(algo,value,strlen("fernando"));
+		algo[strlen("fernando")] = '\0';
+
+		*/
+		memcpy(test,package->buffer->stream + package->buffer->size + sizeof(int),
+					size);
+		printf("test: %s \n",test);
+
+	}
 	package->buffer->size += size + sizeof(int);
 }
 
