@@ -44,28 +44,38 @@ void test2()
 int main(int argc, char *argv[])
 {
 
-
+	/*
 	sac_cli_init(argc, argv);
 	sac_read("hi");
-	/* HILOLAY CLIENTS */
+	// HILOLAY CLIENTS
 	//lib_init();
 	//th_create(test1);
 	//th_create(test2);
 
-	/* MUSE CLIENTS */
+	// MUSE CLIENTS
 
-	/*
+	*/
     muse_init((int)getpid(),
     		"127.0.0.1", 5003);
 
-    uint32_t ptr = muse_alloc(200);
+    uint32_t ptr = muse_alloc(190);
     printf("\n ptr nuevo: %d \n" , ptr);
-
-    //ptr = muse_alloc(200);
-
 
     ptr = muse_alloc(2);
     printf("\n ptr nuevo: %d \n" , ptr);
+
+    ptr = muse_alloc(5);
+    printf("\n ptr nuevo: %d \n" , ptr);
+
+    //para agrandar segmento
+    ptr = muse_alloc(200);
+    printf("\n ptr nuevo: %d \n" , ptr);
+
+    ptr = muse_alloc(2);
+    printf("\n ptr nuevo: %d \n" , ptr);
+
+
+    /*
 
     char *  algo = malloc(strlen("fernando")+1);
     memcpy(algo,"fernando",strlen("fernando"));
