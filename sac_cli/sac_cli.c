@@ -292,32 +292,27 @@ int sac_cli_read(const char *path, char *buf, size_t size, off_t offset, struct 
 	int server_response = sac_server_response(&protocol);
 	if (server_response == -1) return server_response;
 
+	printf("PROTOCOL / RESPONSE SERVER: %d", protocol);
+
 	if (protocol < 0) {
-		return protocol; 
+		return -ENOENT; 
+	}
+
+	if (protocol == 0) {
+		return 0;
 	}
 
 	t_read_server *read_server_response = utils_receive_and_deserialize(sac_cli_fd, protocol);
-	printf("\n --------------------------------------------------------\n");
-
-	if (read_server_response->response == 0) {
-		printf("\n UPDATE 13 \n");
-		printf("\n SIZE: %d \n", read_server_response->size);
-		printf("\n OFFSET: %d \n", read_server_response->offset);
-		printf("\n RES: %d \n", read_server_response->response);
-		return read_server_response->response;
-	}
-	printf("\n UPDATE 13 \n");
+	printf("\n UPDATE 15 \n");
 	printf("\n SIZE: %d \n", read_server_response->size);
 	printf("\n OFFSET: %d \n", read_server_response->offset);
 	printf("\n RES: %d \n", read_server_response->response);
 	printf("\n BUFFER: %s \n", read_server_response->buf);
+
 	res = read_server_response->response;
 	memcpy(buf, read_server_response->buf, read_server_response->size);
 	size = read_server_response->size;
 	offset = read_server_response->offset;
-
-	//printf("\n OFFSET: %ld \n", offset);
-	//printf("\n PROTOCOL: %d \n", protocol);
 	return res;
 };
 

@@ -115,7 +115,6 @@ void utils_package_send_to(t_package* t_package, int client_socket) {
 }
 
 void utils_serialize_and_send(int socket, int protocol, void* package_send) {
-	printf("EN EL SERIALIZE");
 	switch (protocol) {
 	case HANDSHAKE: {
 		break;
@@ -300,7 +299,6 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 		break;
 	}
 	case READ_RESPONSE: {
-		printf("llego bien hasta aqui amigo");
 		t_package* package = utils_package_create(protocol);
 		utils_package_add(package, &((t_read_server*) package_send)->response, sizeof(uint32_t));
 		utils_package_add(package, &((t_read_server*) package_send)->size, sizeof(size_t));
