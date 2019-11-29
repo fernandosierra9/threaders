@@ -17,6 +17,18 @@
 
 `export LD_LIBRARY_PATH= ${PATH_PROYECTO}/hilolay/Debug:${PATH_PROYECTO}/libmuse/Debug:${PATH_PROYECTO}/sac_cli/Debug:${PATH_PROYECTO}/shared_common/Debug`
 
+
+#### Para levantar FUSE dentro del *SAC_SERVER*
+
+1) Crear disco
+
+cd /sac_server/scripts
+./createDisk.sh
+
+2) Levantar el servidor
+
+./sac_server.exe --home/utnso/disk.bin 
+
 #### Para levantar FUSE dentro del *SAC_CLI*
 
 _Mount Parameters_
@@ -48,7 +60,7 @@ _Ejemplo_
 
 La sentencia:
 
-    ./sac_cli.exe -d -o direct_io --Disc-Path=/home/utnso/disc.bin /tmp/fuse_test/
+    ./sac_cli.exe -d -o direct_io /tmp/fuse_test/
     
 Monta el FileSystem en modo DEBUG, con la cache DESHABILITADA, en el punto de montaje /tmp/fuse_test/, con los parámetros indicados.
 
