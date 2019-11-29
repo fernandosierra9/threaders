@@ -115,6 +115,7 @@ void utils_package_send_to(t_package* t_package, int client_socket) {
 }
 
 void utils_serialize_and_send(int socket, int protocol, void* package_send) {
+	printf("EN EL SERIALIZE");
 	switch (protocol) {
 	case HANDSHAKE: {
 		break;
@@ -299,14 +300,12 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 		break;
 	}
 	case READ_RESPONSE: {
+		printf("llego bien hasta aqui amigo");
 		t_package* package = utils_package_create(protocol);
 		utils_package_add(package, &((t_read_server*) package_send)->response, sizeof(uint32_t));
-		utils_package_add(package, ((t_read_server*) package_send)->buf, strlen(((t_read_server*) package_send)->buf)+1);
 		utils_package_add(package, &((t_read_server*) package_send)->size, sizeof(size_t));
 		utils_package_add(package, &((t_read_server*) package_send)->offset, sizeof(off_t));
-		//send(socket, ((t_read_server*) package_send)->response, sizeof(int), 0);
-		/* uint32_t res = ((t_read_server*) package_send)->response;
-		printf("\n En el SERIALIZE UTILS %d \n", res); */
+		utils_package_add(package, ((t_read_server*) package_send)->buf, strlen(((t_read_server*) package_send)->buf)+1);
 		utils_package_send_to(package,socket);
 		utils_package_destroy(package);
 		break;
@@ -519,14 +518,14 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		return get_request;
 	}
 	case READ_RESPONSE: {
+		printf("soy el deserialize");
 		t_read_server *get_request = malloc(sizeof(t_read_server));
 		t_list* list = utils_receive_package(socket);
-		get_request->buf = malloc(sizeof(get_request->buf));
 		utils_get_from_list_to(&get_request->response, list, 0);
-		utils_get_from_list_to(get_request->buf, list, 1);
-		utils_get_from_list_to(&get_request->size, list, 2);
-		utils_get_from_list_to(&get_request->offset, list, 3);
-		printf("\n EN EL DESERIALIZE UTILS: %d \n", get_request->response);
+		utils_get_from_list_to(&get_request->size, list, 1);
+		utils_get_from_list_to(&get_request->offset, list, 2);
+		get_request->buf = malloc(utils_get_buffer_size(list, 3));
+		utils_get_from_list_to(get_request->buf, list, 3);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_request;
 	}

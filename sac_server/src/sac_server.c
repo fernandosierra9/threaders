@@ -124,15 +124,15 @@ static void *handle_connection(void *arg) {
 				off_t offset = read_dir->offset;
 				int read_res = sac_server_read(read_dir->pathname, &buffer, &size, &offset);
 				if (read_res == 0) {
-					read_response_server->buf = buffer;
-					read_response_server->size = size;
+					read_response_server->buf = strdup(buffer);
 					read_response_server->offset = offset;
 					read_response_server->response = read_res;
+					read_response_server->size = size;
 					sac_server_logger_info("SIZE TO CLI: %d", read_response_server->size);
 					sac_server_logger_info("OFFSET TO CLI: %ld", read_response_server->offset);
+					sac_server_logger_info("BUFFER: %s", read_response_server->buf);
 					utils_serialize_and_send(fd, read_response_protocol, read_response_server);
 				}
-
 				if (read_res < 0) {
 					send(fd, &read_res, sizeof(int), 0);
 					sac_server_logger_info("after sending res");

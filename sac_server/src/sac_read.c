@@ -128,7 +128,6 @@ int sac_server_read(const char *path, char **buf, size_t* size, off_t* offset) {
 	res = *size;
 
 	finalizar:
-	sac_server_logger_info("RESPUESTA DESDE EL READ %d", res);
 	//pthread_rwlock_unlock(&rwlock); //Devuelve el lock de lectura.
 	//log_lock_trace(logger, "Read: Libera lock lectura. Cantidad de lectores: %d", rwlock.__data.__nr_readers);
 	//log_trace(logger, "Terminada lectura.");
