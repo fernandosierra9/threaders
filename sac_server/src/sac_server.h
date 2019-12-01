@@ -127,7 +127,7 @@ int sac_server_flush();
 
 // Funciones de lectura
 int sac_server_readdir(const char *path, t_list* nodes);
-int sac_server_read(const char *path, char **buf, size_t* size, off_t* offset);
+int sac_server_read(const char *path, char** buf, size_t size, off_t offset);
 int sac_server_open(const char *path, struct fuse_file_info *fi);
 struct sac_file_t* sac_server_getattr(const char *path, int* res);
 

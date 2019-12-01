@@ -7,6 +7,7 @@ static void *handle_connection(void *arg);
 static void exit_gracefully(int status);
 static void init_administrative_structures(char *argv[]);
 static void close_administrative_structures();
+static void destroy_nodes(char* node);
 
 int main(int argc, char *argv[]) {
 
@@ -83,6 +84,7 @@ static void *handle_connection(void *arg) {
 		switch (protocol){
 			case GET_ATTR: {
  				t_get_attr *get_attr_dir = utils_receive_and_deserialize(fd, protocol);
+				sac_server_logger_info("---------------------------------------------------------------------------");
 				sac_server_logger_info("Recibi GET_ATTR de SAC_CLI, Path: %s", get_attr_dir->pathname);
 				t_protocol get_attr_protocol_response = GET_ATTR_RESPONSE;
 				int res;
@@ -99,10 +101,13 @@ static void *handle_connection(void *arg) {
 				if (res < 0) {
 					send(fd, &res, sizeof(int), 0);
 				}
+				free(get_attr_dir);
+				free(get_attr_send_server);
 				break;
 			}
 			case READ_DIR: {
 				t_read_dir *read_dir = utils_receive_and_deserialize(fd, protocol);
+				sac_server_logger_info("---------------------------------------------------------------------------");
 				sac_server_logger_info("Recibi READ_DIR de SAC_CLI, Path: %s", read_dir->pathname);
 				t_protocol read_dir_protocol_response = READ_DIR_RESPONSE;
 				t_list* nodes = list_create();
@@ -112,92 +117,117 @@ static void *handle_connection(void *arg) {
 				read_dir_response_server->nodes = nodes;
 				read_dir_response_server->res = res;
 				utils_serialize_and_send(fd, read_dir_protocol_response, read_dir_response_server);
+				free(read_dir_response_server);
+				free(read_dir);
 				break;
 			}
 			case READ: {
 				t_read *read_dir = utils_receive_and_deserialize(fd, protocol);
+				sac_server_logger_info("---------------------------------------------------------------------------");
 				sac_server_logger_info("Recibi READ de SAC_CLI, Path: %s", read_dir->pathname);
 				t_protocol read_response_protocol = READ_RESPONSE;
 				t_read_server *read_response_server = malloc(sizeof(t_read_server));
-				char* buffer = malloc(read_dir->size);
-				size_t size = read_dir->size;
-				off_t offset = read_dir->offset;
-				int read_res = sac_server_read(read_dir->pathname, &buffer, &size, &offset);
-				
+				sac_server_logger_info("OFFSET: %d", read_dir->offset);
+				sac_server_logger_info("SIZE: %d", read_dir->size);
+				char* buf;
+				int read_res = sac_server_read(read_dir->pathname, &buf, read_dir->size, read_dir->offset);
+				sac_server_logger_info("READ RES: %d", read_res);
 				if (read_res > 0) {
-					read_response_server->buf = strdup(buffer);
+					sac_server_logger_info("BUF: %s", buf);
+					read_response_server->buf = malloc(strlen(buf));
+					memcpy(read_response_server->buf, buf, strlen(buf));
 					read_response_server->response = read_res;
-					read_response_server->offset = offset;
-					read_response_server->size = size;
+					/*read_response_server->offset = offset;
+					read_response_server->size = size; */
 					utils_serialize_and_send(fd, read_response_protocol, read_response_server);
 				}
 
 				if (read_res < 0 || read_res == 0) {
 					send(fd, &read_res, sizeof(int), 0);
-					sac_server_logger_info("NEGATIVE OR CERO RESPONSE");
 				}
+				free(read_dir);
+				free(read_response_server);
+				free(buf);
 				break;
 			}
 			case WRITE: {
 				t_write *write_dir = utils_receive_and_deserialize(fd, protocol);
+				sac_server_logger_info("---------------------------------------------------------------------------");
 				sac_server_logger_info("Recibi WRITE de SAC_CLI, Path: %s", write_dir->pathname);
 				t_protocol write_response_protocol = WRITE_RESPONSE;
 				t_write_server *write_response_server = malloc(sizeof(t_write_server));
+
+				sac_server_logger_info("OFFSET: %d", write_dir->offset);
+				sac_server_logger_info("SIZE: %d", write_dir->size);
+				sac_server_logger_info("BUFFER: %s", write_dir->buf);
 				int res = sac_server_write(write_dir->pathname, write_dir->buf, write_dir->size, write_dir->offset);
-				//int res = sac_server_write(write_dir->pathname, &write_dir->buf, &write_dir->size, &write_offset);
 				sac_server_logger_info("WRITE Response: %d", res);
-				
-				if (res == 0) {
+				send(fd, &res, sizeof(int), 0);
+
+/* 				if (write_res > 0) {
 					write_response_server->response = res;
-					write_response_server->buf = write_dir->buf;
-					write_response_server->size = write_dir->size;
-					write_response_server->offset = write_dir->offset;
+					write_response_server->buf = strdup(buffer);
+					write_response_server->size = size;
+					write_response_server->offset = offset;
 					utils_serialize_and_send(fd, write_response_protocol, write_response_server);
 				}
 
-				if (res < 0) {
+				if (write_res!= 0) {
 					send(fd, &res, sizeof(int), 0);
-				}
+					sac_server_logger_info("NEGATIVE OR CERO RESPONSE");
+				} */
+				free(write_dir);
+				free(write_response_server);
 				break;
 			}
 			case MK_DIR: {
 				t_mk_directory *mk_dir = utils_receive_and_deserialize(fd, protocol);
+				sac_server_logger_info("---------------------------------------------------------------------------");
 				sac_server_logger_info("Recibi MK_DIR de SAC_CLI, Path: %s", mk_dir->pathname);
 				int res = sac_server_create_directory(mk_dir->pathname);
 				sac_server_logger_info("MK_DIR Response: %d", res);
 				send(fd, &res, sizeof(int), 0);
+				free(mk_dir);
 				break;
 			}
 			case RM_DIR: {
 				t_read_dir *rm_dir = utils_receive_and_deserialize(fd, protocol);
+				sac_server_logger_info("---------------------------------------------------------------------------");
 				sac_server_logger_info("Recibi RM_DIR de SAC_CLI, Path: %s", rm_dir->pathname);
 				int res = sac_server_remove_directory(rm_dir->pathname);
 				sac_server_logger_info("RM_DIR Response: %d", res);
 				send(fd, &res, sizeof(int), 0);
+				free(rm_dir);
 				break;
 			}
 			case FLUSH: {
 				t_flush *flush_dir = utils_receive_and_deserialize(fd, protocol);
+				sac_server_logger_info("---------------------------------------------------------------------------");
 				sac_server_logger_info("Recibi FLUSH de SAC_CLI, Path: %s", flush_dir->pathname);
 				int res = sac_server_flush();
 				sac_server_logger_info("FLUSH Response: %d", res);
 				send(fd, &res, sizeof(int), 0);
+				free(flush_dir);
 				break;
 			}
 			case UNLINK_NODE: {
 				t_unlink_node *unlink_node = utils_receive_and_deserialize(fd, protocol);
+				sac_server_logger_info("---------------------------------------------------------------------------");
 				sac_server_logger_info("Recibi UNLINK de SAC_CLI, Path: %s", unlink_node->pathname);
 				int res = sac_server_unlink_node(unlink_node->pathname);
 				sac_server_logger_info("UNLINK Response: %d", res);
 				send(fd, &res, sizeof(int), 0);
+				free(unlink_node);
 				break;
 			}
 			case MK_NODE: {
 				t_unlink_node *make_node = utils_receive_and_deserialize(fd, protocol);
+				sac_server_logger_info("---------------------------------------------------------------------------");
 				sac_server_logger_info("Recibi MAKE NODE de SAC_CLI, Path: %s", make_node->pathname);
 				int res = sac_server_make_node(make_node->pathname);
 				sac_server_logger_info("MK_NODE Response: %d", res);
 				send(fd, &res, sizeof(int), 0);
+				free(make_node);
 				break;
 			}
 		}
@@ -255,4 +285,9 @@ static void close_administrative_structures() {
 
 static void exit_gracefully(int status) {
 	exit(status);
+}
+
+static void destroy_nodes(char* node) {
+	printf("node: %s", node);
+	free(node);
 }

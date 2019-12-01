@@ -56,5 +56,4 @@ int sac_cli_flush(const char* path, struct fuse_file_info *fi);
 int sac_cli_mknod (const char* path, mode_t mode, dev_t dev);
 int sac_cli_unlink (const char* path);
 
-
 #endif

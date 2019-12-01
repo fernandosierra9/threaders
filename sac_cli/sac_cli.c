@@ -6,6 +6,7 @@ static int sac_cli_access(const char* path, int flags);
 static int sac_cli_chmod(const char *path, mode_t mode);
 static int sac_cli_chown(const char *path, uid_t user_data, gid_t group_data);
 static int sac_server_response(int *protocol);
+static int sac_cli_truncate(const char * path, off_t offset);
 
 /*
  * Esta es una estructura auxiliar utilizada para almacenar parametros
@@ -39,6 +40,7 @@ static struct fuse_operations sac_operations = {
 		.rmdir = sac_cli_rm_directory, // ELIMINAR DIRECTORIO, OK
 		.access = sac_cli_access, // SETEA PERMISOS--> OK
 		.chmod = sac_cli_chmod, // MODIFICA PERMISOS --> OK
+		.truncate = sac_cli_truncate, // OK
 		.chown = sac_cli_chown, // MODIFICA EL OWNER Y EL OWNER GROUP --> OK
 		.flush = sac_cli_flush, // LIMPIA CACHE (creo que hay que borar este) --> OK
 };
@@ -99,6 +101,7 @@ int sac_cli_init(int argc, char *argv[]) {
  */
 
 int sac_cli_create_directory(const char *path, mode_t mode) {
+	printf("\n ------------------------------------------------------------------------------------ \n");
 	printf("\n SAC CLI: MAKE DIRECTORY, PATH: %s \n", path);
 	int response;
 	int protocol;
@@ -136,6 +139,7 @@ int sac_cli_create_directory(const char *path, mode_t mode) {
  */
 
 int sac_cli_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
+	printf("\n ------------------------------------------------------------------------------------ \n");
 	printf("\n SAC CLI: READ DIRECTORY\n");
 	int protocol;
 	t_read_dir *read_dir_send = malloc(sizeof(t_read_dir));
@@ -195,6 +199,7 @@ int sac_cli_open(const char *path, struct fuse_file_info *fi) {
  * 		O archivo/directorio fue encontrado. -ENOENT archivo/directorio no encontrado
  */
 int sac_cli_getattr(const char *path, struct stat *stbuf) { 
+	printf("\n ------------------------------------------------------------------------------------ \n");
 	printf("\n SAC CLI: GET ATTRIBUTE, PATH: %s \n", path);
 	int res;
 	int protocol;
@@ -278,6 +283,7 @@ int sac_cli_getattr(const char *path, struct stat *stbuf) {
  */
 
 int sac_cli_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
+	printf("\n ------------------------------------------------------------------------------------ \n");
 	printf("\n SAC CLI: READ \n");
 	int protocol;
 	uint32_t res;
@@ -287,6 +293,8 @@ int sac_cli_read(const char *path, char *buf, size_t size, off_t offset, struct 
 	read_send->size = size;
 	read_send->offset = offset;
 	t_protocol read_protocol = READ;
+	printf("\n SIZE: %d \n", size);
+	printf("\n OFFSET: %d \n", offset);
 	utils_serialize_and_send(sac_cli_fd, read_protocol, read_send);
 
 	int server_response = sac_server_response(&protocol);
@@ -303,16 +311,11 @@ int sac_cli_read(const char *path, char *buf, size_t size, off_t offset, struct 
 	}
 
 	t_read_server *read_server_response = utils_receive_and_deserialize(sac_cli_fd, protocol);
-	printf("\n UPDATE 15 \n");
-	printf("\n SIZE: %d \n", read_server_response->size);
-	printf("\n OFFSET: %d \n", read_server_response->offset);
 	printf("\n RES: %d \n", read_server_response->response);
 	printf("\n BUFFER: %s \n", read_server_response->buf);
 
 	res = read_server_response->response;
 	memcpy(buf, read_server_response->buf, read_server_response->size);
-	size = read_server_response->size;
-	offset = read_server_response->offset;
 	return res;
 };
 
@@ -331,7 +334,8 @@ int sac_cli_read(const char *path, char *buf, size_t size, off_t offset, struct 
  * 		Devuelve la cantidad de bytes escritos, siempre y cuando este OK. Caso contrario, numero negativo tipo -ENOENT.
  */
 int sac_cli_write (const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
-	printf("\n SAC CLI: WRITE \n");
+	printf("\n ------------------------------------------------------------------------------------ \n");
+	printf("\n SAC CLI: WRITE, PATH: %s \n", path);
 	int res;
 	int protocol;
 	t_write *write_send = malloc(sizeof(t_write));
@@ -346,16 +350,14 @@ int sac_cli_write (const char *path, const char *buf, size_t size, off_t offset,
 	int server_response = sac_server_response(&protocol);
 	if (server_response == -1) return server_response;
 
-	if (protocol < 0) {
-		return protocol; 
-	}
-
+	return protocol;
+/* 
 	t_write_server *write_server_response = utils_receive_and_deserialize(sac_cli_fd, protocol);
 	buf = write_server_response->buf;
 	size = write_server_response->size;
 	offset = write_server_response->offset;
 	
-	return write_server_response->response;
+	return write_server_response->response; */
 };
 
 /*
@@ -401,6 +403,7 @@ int sac_cli_rm_directory (const char* path) {
  *  	Devuelve 0 si le sale OK, num negativo si no.
  */
 int sac_cli_mknod (const char* path, mode_t mode, dev_t dev) {
+	printf("\n ------------------------------------------------------------------------------------ \n");
 	printf("\n SAC CLI: CREATE NODE, PATH: %s \n", path);
 	int response;
 	int protocol;
@@ -432,6 +435,7 @@ int sac_cli_mknod (const char* path, mode_t mode, dev_t dev) {
  */
 
 int sac_cli_unlink (const char* path) {
+	printf("\n ------------------------------------------------------------------------------------ \n");
 	printf("\n SAC CLI: DELETE NODE, PATH: %s \n", path);
 	int response;
 	int protocol;
@@ -451,6 +455,7 @@ int sac_cli_unlink (const char* path) {
 }
 
 int sac_cli_flush(const char* path, struct fuse_file_info *fi){
+	printf("\n ------------------------------------------------------------------------------------ \n");
 	printf("\n SAC CLI: FLUSH, PATH: %s \n", path);
 	int response;
 	int protocol;
@@ -520,6 +525,11 @@ static int sac_cli_chmod(const char *path, mode_t mode){
  * 		Negativo - Rompe.
  */
 static int sac_cli_chown(const char *path, uid_t user_data, gid_t group_data){
+	return 0;
+}
+
+
+static int sac_cli_truncate(const char * path, off_t offset) {
 	return 0;
 }
 
