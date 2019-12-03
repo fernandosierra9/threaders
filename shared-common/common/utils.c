@@ -119,6 +119,32 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 	case HANDSHAKE: {
 		break;
 	}
+	case SYNC: {
+		t_package* package = utils_package_create(protocol);
+		utils_package_add(package, &((t_msync*) package_send)->size,
+					sizeof(size_t));
+		utils_package_add(package, &((t_msync*) package_send)->src,
+						sizeof(uint32_t));
+		utils_package_add(package, &((t_msync*) package_send)->id_libmuse,
+								sizeof(int));
+		utils_package_send_to(package, socket);
+		utils_package_destroy(package);
+		break;
+	}
+	case MAP: {
+		t_package* package = utils_package_create(protocol);
+		utils_package_add(package, ((t_mmap*) package_send)->path,
+				strlen(((t_mmap*) package_send)->path)+1);
+		utils_package_add(package, &((t_mmap*) package_send)->flag,
+				sizeof(int));
+		utils_package_add(package, &((t_mmap*) package_send)->size,
+						sizeof(size_t));
+		utils_package_add(package, &((t_mmap*) package_send)->id_libmuse,
+						sizeof(int));
+		utils_package_send_to(package, socket);
+		utils_package_destroy(package);
+		break;
+	}
 	case MALLOC: {
 		t_package* package = utils_package_create(protocol);
 		utils_package_add(package, &((t_malloc*) package_send)->tam,
@@ -271,12 +297,34 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		printf("%d \n", dest);
 	}
 	switch (package_type) {
+	case SYNC: {
+				t_msync *sync_request = malloc(sizeof(t_msync));
+				t_list* list = utils_receive_package(socket);
+			    utils_get_from_list_to(&sync_request->size, list, 0);
+				utils_get_from_list_to(&sync_request->src, list, 1);
+				utils_get_from_list_to(&sync_request->id_libmuse, list, 2);
+				list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
+				return sync_request;
+	}
+
+	case MAP: {
+			t_mmap *map_request = malloc(sizeof(t_mmap));
+			t_list* list = utils_receive_package(socket);
+			map_request->path = malloc(utils_get_buffer_size(list, 0));
+			utils_get_from_list_to(map_request->path, list, 0);
+			utils_get_from_list_to(&map_request->flag, list, 1);
+			utils_get_from_list_to(&map_request->size, list, 2);
+			utils_get_from_list_to(&map_request->id_libmuse, list, 3);
+			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
+			return map_request;
+	}
+
 	case MALLOC: {
 		t_malloc *malloc_request = malloc(sizeof(t_malloc));
-		//Recibe los parametros en una lista
+
 		t_list* list = utils_receive_package(socket);
-		//Muestra el resultado obtenido
-		list_iterate(list, (void*) iterator);
+
+
 		//obtiene y guarda en un puntero desde un nodo de la lista dado un index
 		utils_get_from_list_to(&malloc_request->tam, list, 0);
 		utils_get_from_list_to(&malloc_request->id_libmuse, list, 1);
@@ -417,6 +465,11 @@ void utils_get_from_list_to_malloc(void *parameter, t_list *list, int index) {
 	parameter =  pointer;
 }
 
+int utils_get_buffer_size(t_list *list, int index) {
+	t_buffer *buffer;
+	buffer = list_get(list, index);
+	return buffer->size;
+}
 
 void utils_get_from_list_to(void *parameter, t_list *list, int index) {
 	t_buffer *buffer;

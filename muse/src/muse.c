@@ -59,7 +59,6 @@ void muse_server_init() {
 			muse_logger_info("Size to be allocated: %d", malloc_receive->tam);
 			muse_logger_info("id proceso %d", malloc_receive->id_libmuse);
 
-
 			//toda logica para crear un nuevo proceso y segmentacion/paginacion
 			t_nodo_proceso* nodoProceso = procesar_id(
 					malloc_receive->id_libmuse);
@@ -67,15 +66,19 @@ void muse_server_init() {
 			int cantidad_segmentos=list_size(nodoProceso->list_segmento);
 			if(cantidad_segmentos==0){
 				t_nodo_segmento* nodo_Segmento = crear_nodo_segmento();
-
+				nodo_Segmento->tipo = S_ALLOC;
+				nodo_Segmento->map = NULL;
 				res->ptr = asignar_dir_memoria(nodo_Segmento, malloc_receive->tam);
 				list_add(nodoProceso->list_segmento, nodo_Segmento);
 			}
 			else{
 				t_nodo_segmento* nodoSegmento=list_get(nodoProceso->list_segmento,cantidad_segmentos-1);
-				res->ptr =recorer_segmento_espacio_libre(nodoSegmento,malloc_receive->tam);
+				int resp =recorer_segmento_espacio_libre(nodoSegmento,malloc_receive->tam);
+				if (resp == -1){
+					resp = agrandar_segmento(nodoSegmento,malloc_receive->tam);
+				}
+				res->ptr = resp;
 			}
-
 			t_protocol malloc_protocol = MALLOC_OK;
 			utils_serialize_and_send(libmuse_fd, malloc_protocol, res);
 			break;
@@ -240,10 +243,25 @@ void muse_server_init() {
 
 		}
 		case SYNC: {
-			// TODO: Implementation
+			muse_logger_info("SYNC received\n");
+			t_mmap *msync_receive = utils_receive_and_deserialize(libmuse_fd,
+											protocol);
+			muse_logger_info("id proceso %d", msync_receive->id_libmuse);
+
 		}
 		case MAP: {
 			// TODO: Implementation
+			muse_logger_info("MAP received\n");
+		    t_mmap *map_receive = utils_receive_and_deserialize(libmuse_fd,
+								protocol);
+		    muse_logger_info("**** path %s*****", map_receive->path);
+		    muse_logger_info("****id proceso %d*****", map_receive->id_libmuse);
+		    if(map_receive->flag == MAP_PRIVATE){
+		    	muse_logger_info("**** MAP privado *****");
+		    }
+		    if(map_receive->flag == MAP_SHARED){
+		 		    	muse_logger_info("**** MAP compartido *****");
+		    }
 		}
 		case UNMAP: {
 			// TODO: Implementation
@@ -354,6 +372,7 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 		int primerFrameLibre;
 		int frameLibre;
 		if (existe_memoria_parar_paginas(cantidad_paginas_necesarias)) {
+			pagina =0;
 			for (int i = 0; i < cantidad_paginas_necesarias; i++) {
 
 				frameLibre = asignarFrameLibre();
@@ -361,7 +380,6 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 
 				printf("frame libre: %d \n",frameLibre);
 				printf("indice libre para pagina: %d \n",indiceLibre);
-
 
 				cambiar_estado_pagina(frameLibre, false);
 
@@ -374,7 +392,6 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 				if(i==0){
 					primerFrameLibre = frameLibre;
 				}
-
 
 			}
 
@@ -389,9 +406,11 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 			}
 
 			nodoSegmento->tamanio = cantidad_paginas_necesarias * muse_page_size() -1;
+
 			t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
 			heap->libre = false;
 			heap->size = memoria_reservar;
+
 			memcpy(memoria + primerFrameLibre * muse_page_size(), heap,
 					sizeof(t_heapMetadata));
 
@@ -415,21 +434,6 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 			printf("ubicacion fisica siguiente estructura %d \n" ,dir_proxima_estructura);
 			printf("desplazamiento dentro del frame %d \n" ,bytes_sobran);
 
-			//test de recorrido de segmento
-
-			memoria_reservar = 5;
-			recorer_segmento_espacio_libre(nodoSegmento,memoria_reservar);
-			//pagina = nodoSegmento->base+5;
-
-			heap->size = cantidad_paginas_necesarias * muse_page_size()
-					- memoria_reservar - 5 - 5 - 1;
-			memcpy(
-					memoria + 5 + primerFrameLibre * muse_page_size()
-							+ memoria_reservar, heap, sizeof(t_heapMetadata));
-			pagina = primerFrameLibre;
-//			memoria_reservar = 5;
-//			recorer_segmento_espacio_libre(nodoSegmento, memoria_reservar);
-
 		} else {
 			return -1;
 		}
@@ -443,89 +447,64 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 }
 
 int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,
-		uint32_t memoria_reservar) {
+		uint32_t memoria_reservar)
+{
 	int desde = nodoSegmento->base;
 	int hasta = nodoSegmento->base + nodoSegmento->tamanio;
-
 	int primera_pagina = (desde / muse_page_size());
-
-	int ultima_pagina = (hasta / muse_page_size()) + 1;
-
-	//int offset = primera_pagina*muse_page_size();
+	int ultima_pagina = ((hasta - desde) / muse_page_size()) + 1;
 	int respuesta = -1;
 	t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
-	printf("\n base segmento %d \n",nodoSegmento->base);
-	printf("limite segmento %d \n",ultima_pagina*muse_page_size()-1);
-
-	/*
-	t_list *lista_frames_proceso = list_create();
-	for(int i=0;i<list_size(nodoSegmento->list_paginas);i++){
-		t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,i);
-		t_frames* frame = malloc(sizeof(t_frames));
-		printf("\n indice vector %d :",nodoPagina->indiceVector);
-		frame->nroFrame = vectorAtributoPaginas[nodoPagina->indiceVector].frame;
-		list_add(lista_frames_proceso,frame);
-	}
-
-	for(int i=0;i<list_size(lista_frames_proceso);i++){
-		t_frames* frame =list_get(lista_frames_proceso,i);
-		printf("\n nro frama del proceso %d :",frame->nroFrame);
-	}
-  */
 
 	int offset = 0;
 	int pagina = 0;
 	int offset_frame =0;
-	do{
-
-		t_frames *frame = list_get(nodoSegmento->list_paginas,pagina);
-		memcpy(heap,memoria+frame->nroFrame*muse_page_size()+offset_frame,sizeof(t_heapMetadata));
-		offset =offset + 5;
-		printf(" \n offset despues de leer estructura %d \n",offset);
-		printf(" \n %d \n",offset);
-		if(heap->libre && memoria_reservar < heap->size){
-			printf("\n **** esta libre a partir de este lugar %d ***** \n",offset);
-			int tamanio = heap->size;
-			heap->libre = false;
-			heap->size = memoria_reservar;
-
-			heap->libre = false;
-			heap->size = memoria_reservar;
-			memcpy(memoria+frame->nroFrame*muse_page_size()+offset_frame, heap,
-					sizeof(t_heapMetadata));
-
-			heap->libre = true;
-			heap->size = tamanio - memoria_reservar -5;
-			memcpy(memoria + frame->nroFrame*muse_page_size()+offset_frame+5+memoria_reservar,
-								heap, sizeof(t_heapMetadata));
-
-	int offset = primera_pagina * muse_page_size();
-	int respuesta = -1;
-	t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
-	printf("\n base segmento %d \n", nodoSegmento->base);
-	printf("limite segmento %d \n", ultima_pagina * muse_page_size() - 1);
+	t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,pagina);
+	int frame = vectorAtributoPaginas[nodoPagina->indiceVector].frame;
+	offset = frame * muse_page_size();
 	do {
 		memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
 		offset = offset + 5;
+		//printf(" \n frame %d \n", frame);
 		printf(" \n offset despues de leer estructura %d \n", offset);
-		if (heap->libre && memoria_reservar < heap->size) {
-			printf("\ **** esta libre a partir de este lugar %d ***** \n",
-					offset);
-			respuesta = offset;
-			break;
+		printf(" \n heap size %d \n", heap->size);
+
+		if (heap->libre == true){
+			if ((memoria_reservar+5) < heap->size) {
+				respuesta = offset;
+				printf("\n **** esta libre a partir de este lugar %d ***** \n", offset);
+				int size_heap = heap->size;
+				t_heapMetadata *nuevo_heap = malloc(sizeof(t_heapMetadata));
+				nuevo_heap->libre = false;
+				nuevo_heap->size = memoria_reservar;
+				//printf("dir actual: %d \n", offset);
+				offset = offset -5 ;
+				printf("****offset: %d****** \n", offset);
+				printf("****size dir actual: %d****** \n", heap->size);
+
+				memcpy(memoria + offset, nuevo_heap,sizeof(t_heapMetadata));
+
+				offset = offset + 5 + nuevo_heap->size ;
+
+				heap->libre = true;
+				heap->size  = size_heap - memoria_reservar -5 ;
+
+				memcpy(memoria + offset,heap, sizeof(t_heapMetadata));
+
+				printf("****libre apartir: %d****** \n", offset+5);
+				printf("******espacio libre : %d***** \n", heap->size);
+
+				break;
+			}
 		}
 		offset = offset + heap->size;
+		//estas 2 lineas se usan para memoria virtual
 		pagina = (offset - nodoSegmento->base) / muse_page_size() ;
 		offset_frame = (offset - nodoSegmento->base) - (pagina*muse_page_size());
 
-		printf(" \n memoria reservar %d \n",memoria_reservar);
-		printf(" \n heap size de la estructura %d \n",heap->size);
+		//printf("offset despues de leer el size de  la estructura %d \n",offset);
 
-		printf("offset despues de leer el size de  la estructura %d \n",offset);
-
-	}while (offset <= ultima_pagina*muse_page_size()-1);
-
-	printf("valor respuesta: %d \n", respuesta);
+	}while (offset < ultima_pagina*muse_page_size()-1);
 	return respuesta;
 }
 
@@ -557,7 +536,8 @@ bool estaOcupada(int frame)
 	return vectorFrames[frame].libre;
 }
 
-void estadoFrames(){
+void estadoFrames()
+{
 	for(int i=0;i<cantidad_paginas_totales;i++){
 		if(vectorFrames[i].libre){
 				printf("\n posicion %d libre",i);
@@ -569,16 +549,94 @@ void estadoFrames(){
 				printf("\n cambiado estado %d libre",i);
 		}
 	}
+}
 
-/*
- t_nodo_segmento* nuevo_segmento(uint32_t cantidad_memoria){
- int cantidad_paginas_necesarias= cantidad_memoria /muse_page_size();
- if(existeCantidadPaginasNecesarias(cantidad_paginas_necesarias)){
 
- }
- else{
- return null;
- }
- }
- */
+int agrandar_segmento(t_nodo_segmento* nodoSegmento,
+		uint32_t memoria_reservar){
+	int desde = nodoSegmento->base;
+	int hasta = nodoSegmento->base + nodoSegmento->tamanio;
 
+	int primera_pagina = (desde / muse_page_size());
+	int ultima_pagina = ((hasta - desde) / muse_page_size()) + 1;
+
+	t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
+
+	int offset = 0;
+	int pagina = 0;
+	int offset_frame =0;
+
+	t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,pagina);
+	int frame = vectorAtributoPaginas[nodoPagina->indiceVector].frame;
+	offset = frame * muse_page_size();
+
+	do {
+		memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
+		offset = offset + 5;
+
+		printf(" \n offset despues de leer estructura %d \n", offset);
+
+		offset = offset + heap->size;
+		pagina = (offset - nodoSegmento->base) / muse_page_size() ;
+		offset_frame = (offset - nodoSegmento->base) - (pagina*muse_page_size());
+
+
+	}while (offset < ultima_pagina*muse_page_size()-1);
+
+	//printf(" \n offset desplazado %d \n", offset);
+
+	offset =  offset - heap->size -5;
+
+
+	printf(" \n offset de la estructura libre %d \n", offset);
+	printf(" \n bytes libres %d \n", heap->size);
+
+	int bytes_libres = heap->size;
+	int bytes_faltan = (memoria_reservar+5) - bytes_libres;
+
+	int paginas_necesarias = (bytes_faltan / muse_page_size())+1;
+
+	int cant_paginas = list_size(nodoSegmento->list_paginas);
+
+	//int ultima_pagina = cant_paginas -1;
+
+	printf(" \n cantidad de paginas necesarias %d \n", paginas_necesarias);
+
+	for(int i=0;i<paginas_necesarias;i++){
+		int frameLibre = asignarFrameLibre();
+		int indiceLibre = asignarIndiceVectorLibre();
+		t_nodo_pagina *nodo_pagina = malloc(sizeof(t_nodo_pagina));
+		nodo_pagina->indiceVector = indiceLibre;
+		vectorAtributoPaginas[indiceLibre].frame= frameLibre;
+		vectorAtributoPaginas[indiceLibre].libre =false;
+		cambiar_estado_pagina(frameLibre, false);
+		list_add(nodoSegmento->list_paginas, nodo_pagina);
+	}
+
+	nodoSegmento->tamanio = nodoSegmento->tamanio + paginas_necesarias*muse_page_size();
+
+	int total = heap->size +  paginas_necesarias*muse_page_size();
+
+	printf(" \n bytes libres + 32 %d \n", total);
+
+	heap->size = memoria_reservar;
+	heap->libre = false;
+
+	int respuesta = offset +5;
+
+	memcpy(memoria + offset,heap, sizeof(t_heapMetadata));
+
+	offset = offset + 5 + memoria_reservar;
+
+	heap->size = total - memoria_reservar -5;
+	heap->libre = true;
+
+
+	printf("\n ******bytes libres %d****** \n",heap->size);
+	printf("\n ******offset de estructura libre %d****** \n",offset);
+	memcpy(memoria + offset,heap, sizeof(t_heapMetadata));
+
+	return respuesta;
+
+
+}

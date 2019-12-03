@@ -2,6 +2,12 @@
 #define MUSE_H_
 
 
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -15,6 +21,8 @@
 #include "logger/muse_logger.h"
 #include "../../shared-common/common/sockets.h"
 #include "../../shared-common/common/utils.h"
+
+
 int muse_socket;
 void* memoria ;
 
@@ -24,11 +32,26 @@ typedef struct {
 	t_list *list_segmento;
 } t_nodo_proceso;
 
+typedef enum {
+	S_ALLOC,
+	S_MAP
+}t_segmento;
+
 typedef struct {
 	int base;
 	int tamanio;
 	t_list *list_paginas;
+	t_segmento tipo;
+	void * map;
 } t_nodo_segmento;
+
+
+
+typedef struct {
+	char *path;
+	int cant_links;
+} tipo_map;
+
 
 typedef struct {
 	int indiceVector;
@@ -88,5 +111,7 @@ t_nodo_segmento* procesar_segmentacion(t_list* listaSegmento);
 t_nodo_segmento* crear_nodo_segmento();
 
 int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,uint32_t memoria_reservar);
+int agrandar_segmento(t_nodo_segmento* nodoSegmento,uint32_t memoria_reservar);
+
 
 #endif /* MUSE_H_ */

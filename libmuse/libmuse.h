@@ -22,6 +22,12 @@
     #include <stddef.h>
 	#include "../shared-common/common/sockets.h"
 	#include "../shared-common/common/utils.h"
+	#include <unistd.h>
+	#include <sys/types.h>
+	#include <sys/mman.h>
+	#include <sys/stat.h>
+	#include <fcntl.h>
+	#include <stdio.h>
 
     /**
      * Inicializa la biblioteca de MUSE.

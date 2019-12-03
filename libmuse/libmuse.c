@@ -121,10 +121,25 @@ int muse_cpy(uint32_t dst, void* src, int n) {
 
 /////////////////////////////////////////////////////////////////////////////
 uint32_t muse_map(char *path, size_t length, int flags) {
+
+	t_mmap *map_request = malloc(sizeof(t_mmap));
+	map_request->path = strdup(path);
+	map_request->flag = flags;
+	map_request->size = length;
+	map_request->id_libmuse = getpid();
+	t_protocol map_protocol = MAP;
+	utils_serialize_and_send(muse_fd, map_protocol, map_request);
+
 	return 0;
 }
 
 int muse_sync(uint32_t addr, size_t len) {
+	t_msync *sync_request = malloc(sizeof(t_msync));
+	sync_request->src = addr;
+	sync_request->size = len;
+	sync_request->id_libmuse = getpid();
+	t_protocol sync_protocol = SYNC;
+	utils_serialize_and_send(muse_fd, sync_protocol, sync_request);
 	return 0;
 }
 

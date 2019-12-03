@@ -51,14 +51,29 @@ int main(void)
     muse_init((int)getpid(),
     		"127.0.0.1", 5003);
 
+    printf("\n alloc: %d \n" , 200);
     uint32_t ptr = muse_alloc(200);
     printf("\n ptr nuevo: %d \n" , ptr);
 
     //ptr = muse_alloc(200);
 
-
-    ptr = muse_alloc(2);
+    printf("\n alloc: %d \n" , 1);
+    ptr = muse_alloc(1);
     printf("\n ptr nuevo: %d \n" , ptr);
+
+    printf("\n alloc: %d \n" , 1);
+    ptr = muse_alloc(1);
+    printf("\n ptr nuevo: %d \n" , ptr);
+
+    ptr = muse_alloc(5);
+    printf("\n ptr nuevo: %d \n" , ptr);
+
+    ptr = muse_alloc(5);
+    printf("\n ptr nuevo: %d \n" , ptr);
+
+
+    printf("\n enviar map ");
+    ptr =  muse_map("fernando.txt", 10, MAP_SHARED);
 
     char *  algo = malloc(strlen("fernando")+1);
     memcpy(algo,"fernando",strlen("fernando"));

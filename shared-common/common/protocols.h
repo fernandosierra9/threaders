@@ -48,6 +48,20 @@ typedef struct {
 } t_malloc;
 
 typedef struct {
+	char *path;
+	size_t size;
+	int flag;
+	int id_libmuse;
+} t_mmap;
+
+typedef struct {
+	uint32_t src;
+	size_t size;
+	int id_libmuse;
+} t_msync;
+
+
+typedef struct {
 	uint32_t src;
 	int id_libmuse;
 	int size;
