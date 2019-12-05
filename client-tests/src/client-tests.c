@@ -74,17 +74,21 @@ int main(void)
 
     printf("\n enviar map ");
     ptr =  muse_map("fernando.txt", 10, MAP_SHARED);
+    printf("\n ptr nuevo: %d \n" , ptr);
 
+    /*
     char *  algo = malloc(strlen("fernando")+1);
     memcpy(algo,"fernando",strlen("fernando"));
     algo[strlen("fernando")] = '\0';
-    muse_cpy(ptr, algo,strlen("fernando")+1);
+    muse_cpy(5, algo,strlen("fernando")+1);
+	*/
 
+    printf("enviar copy");
     int num = 9;
-    muse_cpy(ptr, &num, sizeof(num));
+    muse_cpy(5, &num, sizeof(num));
 
     int des;
-    muse_get(&des, ptr, 4);
+    muse_get(&des, 5, 4);
     printf("Read: %d", des);
 
     muse_free(ptr);

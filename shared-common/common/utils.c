@@ -188,17 +188,10 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 		t_package* package = utils_package_create(protocol);
 		utils_package_add(package, &((t_copy*) package_send)->dst,
 				sizeof(uint32_t));
-
 		utils_package_add(package, &((t_copy*) package_send)->self_id,
 				sizeof(int));
 		utils_package_add(package, &((t_copy*) package_send)->size, sizeof(int));
-
-		//int valor = *(int *) ((t_copy*) package_send)->content;
-
-		//printf("\n id recibi %d", valor);
-
 		utils_package_add(package, ((t_copy*) package_send)->content, ((t_copy*) package_send)->size);
-
 		utils_package_send_to(package, socket);
 		utils_package_destroy(package);
 		break;
@@ -367,7 +360,10 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		utils_get_from_list_to(&copy_req->dst, list, 0);
 		utils_get_from_list_to(&copy_req->self_id, list, 1);
 		utils_get_from_list_to(&copy_req->size, list, 2);
-		copy_req->content = malloc(utils_get_buffer_size(copy_req->content,3)); ;
+		//printf("****cantidad %d***",list_size(list));
+		//int size  = utils_get_buffer_size(list,3);
+		//printf("****size %d***",size);
+		copy_req->content = malloc(copy_req->size); ;
 		utils_get_from_list_to(copy_req->content, list, 3);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 
@@ -517,6 +513,7 @@ t_list* utils_receive_package(int socket_cliente) {
 		memcpy(valor->stream, buffer + desplazamiento, tamanio);
 		desplazamiento += tamanio;
 		list_add(valores, valor);
+		printf("****size %d **\n",valor->size);
 	}
 	free(buffer);
 	return valores;

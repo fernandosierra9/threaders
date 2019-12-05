@@ -93,13 +93,14 @@ int muse_get(void* dst, uint32_t src, size_t n) {
 }
 
 int muse_cpy(uint32_t dst, void* src, int n) {
-
+	printf("destino %d",dst);
 	t_copy* copy_send = malloc(sizeof(t_copy));
 	copy_send->self_id = getpid();
 	copy_send->size = n;
 	copy_send->dst = dst;
-	copy_send->content = src;
 
+	copy_send->content = malloc(n);
+	memcpy(copy_send->content,src,n);
 
 	t_protocol copy_protocol = COPY;
 

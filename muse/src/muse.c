@@ -64,6 +64,8 @@ void muse_server_init() {
 			//toda logica para crear un nuevo proceso y segmentacion/paginacion
 			t_nodo_proceso* nodoProceso = procesar_id(
 					malloc_receive->id_libmuse);
+
+			t_nodo_segmento *unSegmento= buscar_segmento(5 ,nodoProceso->list_segmento);
 			t_malloc_ok* res = malloc(sizeof(t_malloc_ok));
 			int cantidad_segmentos=list_size(nodoProceso->list_segmento);
 			if(cantidad_segmentos==0){
@@ -187,8 +189,21 @@ void muse_server_init() {
 
 			else {
 
-				char* content = malloc(get_receive->size);
-				memcpy(&content, memoria + get_receive->src, sizeof(content));
+				void * content = malloc(get_receive->size);
+
+				t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
+				t_nodo_segmento *nodoSegmento = buscar_segmento(get_receive->src,nodo->list_segmento);
+				int pagina = pagina_segmento (get_receive->src,nodoSegmento->base);
+				int offset_del_frame = offset_frame(pagina,get_receive->src,nodoSegmento->base);
+				t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,pagina);
+				t_nodo_atributo_paginas *nodoAlgormito = nodo_algoritmo(nodoPagina->indiceVector);
+				int frame = nodoAlgormito->frame;
+				int offset = frame * muse_page_size() + offset_del_frame ;
+
+				//leo la estructura
+				memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
+
+				memcpy(&content, memoria + get_receive->src, get_receive->size);
 
 				t_get_ok* response = malloc(sizeof(t_get_ok));
 				response->res = content;
@@ -202,21 +217,22 @@ void muse_server_init() {
 		case COPY: {
 			muse_logger_info("Copy received");
 			t_copy* cpy = utils_receive_and_deserialize(libmuse_fd, protocol);
+			int numero = *(int *) cpy->content;
+			printf("******numero %d********",numero);
+
 			muse_logger_info(
 					"Process with pid; %d is trying to copy %d bytes to direction: %d",
 					cpy->self_id, cpy->size, cpy->dst);
 
-			/*
-			int valor;
-			memcpy(&valor,cpy->content,4);
 
-			muse_logger_info("id recibi %d", valor);
-			*/
 
-			muse_logger_info("id proceso %d", cpy->self_id);
-			t_nodo_proceso* nodo = procesar_id(cpy->self_id);
+			t_nodo_proceso* nodoProceso = procesar_id(cpy->self_id);
+			t_nodo_segmento *nodoSegmento = buscar_segmento(cpy->dst,nodoProceso->list_segmento);
+			printf("****--base %d",nodoSegmento->base);
+			printf("****--tamanio %d",nodoSegmento->tamanio);
 			t_protocol cpy_protocol;
-
+			int base =nodoSegmento->base ;
+			int tamanio = nodoSegmento->tamanio;
 			if (!existe_proceso_en_lista(cpy->self_id)) {
 				t_copy_response* copy_res = malloc(sizeof(t_copy_response));
 				copy_res->res = -1;
@@ -224,16 +240,21 @@ void muse_server_init() {
 				utils_serialize_and_send(libmuse_fd, cpy_protocol, copy_res);
 				break;
 			}
-
 			else {
 				t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
-				memcpy(heap, memoria + cpy->dst - 5, sizeof(t_heapMetadata));
+				int pagina = pagina_segmento (cpy->dst,base);
+				int offset_del_frame = offset_frame(pagina,cpy->dst,base);
 
-				if (!heap->libre) {
-					heap->size = cpy->size;
-					memcpy(memoria + cpy->dst - 5, heap,
-							sizeof(t_heapMetadata));
-					memcpy(memoria + cpy->dst, cpy->content, cpy->size);
+				t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,pagina);
+				t_nodo_atributo_paginas *nodoAlgormito = nodo_algoritmo(nodoPagina->indiceVector);
+				int frame = nodoAlgormito->frame;
+				int offset = frame * muse_page_size() + offset_del_frame ;
+				//memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
+
+				if (!heap->libre && heap->size <= cpy->size) {
+					offset = offset + 5;
+					//memcpy(memoria + offset, cpy->content, cpy->size);
+
 				}
 
 				else
@@ -244,18 +265,12 @@ void muse_server_init() {
 					utils_serialize_and_send(libmuse_fd, cpy_protocol, copy_res);
 					break;
 				}
-
-//				int val;
-//				memcpy(&val, cpy->content, sizeof(int));
-//				printf("Received %d", val);
-
 				t_copy_response* copy_res = malloc(sizeof(t_copy_response));
 				copy_res->res = 1;
 				t_protocol cpy_protocol = GET_OK;
 				utils_serialize_and_send(libmuse_fd, cpy_protocol, copy_res);
 				break;
 			}
-
 		}
 		case SYNC: {
 			muse_logger_info("SYNC received\n");
@@ -659,6 +674,8 @@ int agrandar_segmento(t_nodo_segmento* nodoSegmento,
 		offset = offset + heap->size;
 		dir_virtual =  offset;
 
+
+
 	}while (offset < (nodoSegmento->base+nodoSegmento->tamanio)-1);
 
 
@@ -722,7 +739,9 @@ int agrandar_segmento(t_nodo_segmento* nodoSegmento,
 
 t_nodo_segmento *buscar_segmento(uint32_t src,t_list *list) {
 	int existeNodoEnLaLista(t_nodo_segmento *nodo_proceso) {
-			return (nodo_proceso->base + nodo_proceso->tamanio) < src;
+			printf("base %d",nodo_proceso->base);
+			printf("tamanio %d",nodo_proceso->tamanio);
+			return ((nodo_proceso->base < src) && ((nodo_proceso->base + nodo_proceso->tamanio) > src));
 	}
 	return list_find(list, (void*) existeNodoEnLaLista);
 }
