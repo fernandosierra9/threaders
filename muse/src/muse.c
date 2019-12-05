@@ -522,12 +522,18 @@ int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,
 
 	int offset = 0;
 	int pagina = 0;
-	int offset_frame =0;
-	t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,pagina);
-	t_nodo_atributo_paginas * otroNodoAlgoritmo= nodo_algoritmo(nodoPagina->indiceVector);
-	int frame = otroNodoAlgoritmo->frame;
-	offset = frame * muse_page_size();
+	int dir_virtual = nodoSegmento->base ;
 	do {
+
+		pagina = pagina_segmento (dir_virtual,nodoSegmento->base);
+		int offset_del_frame = offset_frame(pagina,dir_virtual,nodoSegmento->base);
+
+		t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,pagina);
+		t_nodo_atributo_paginas * otroNodoAlgoritmo= nodo_algoritmo(nodoPagina->indiceVector);
+
+		int frame = otroNodoAlgoritmo->frame;
+		offset = frame * muse_page_size() + offset_del_frame;
+
 		memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
 		offset = offset + 5;
 		//printf(" \n frame %d \n", frame);
@@ -563,13 +569,9 @@ int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,
 			}
 		}
 		offset = offset + heap->size;
-		//estas 2 lineas se usan para memoria virtual
-		pagina = (offset - nodoSegmento->base) / muse_page_size() ;
-		offset_frame = (offset - nodoSegmento->base) - (pagina*muse_page_size());
+		dir_virtual =  offset;
 
-		//printf("offset despues de leer el size de  la estructura %d \n",offset);
-
-	}while (offset < ultima_pagina*muse_page_size()-1);
+	}while (offset < (nodoSegmento->base+nodoSegmento->tamanio)-1);
 
 	printf("****no se encontro espacio libre en el segmento ***\n");
 	return respuesta;
@@ -625,33 +627,40 @@ int agrandar_segmento(t_nodo_segmento* nodoSegmento,
 	int hasta = nodoSegmento->base + nodoSegmento->tamanio;
 
 	int primera_pagina = (desde / muse_page_size());
-	int ultima_pagina = ((hasta - desde) / muse_page_size()) + 1;
+	int ultima_pagina = list_size(nodoSegmento->list_paginas) -1;
+
+	int dir_virtual = nodoSegmento->base;
+	int dir_fisica = 0;
 
 	t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
 
 	int offset = 0;
-	int pagina = 0;
-	int offset_frame =0;
+	int pagina = primera_pagina;
 
-	t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,pagina);
-	t_nodo_atributo_paginas *nodoAlgormito = nodo_algoritmo(nodoPagina->indiceVector);
-	int frame = nodoAlgormito->frame;
-	offset = frame * muse_page_size();
+
 
 	do {
+		pagina = pagina_segmento (dir_virtual,nodoSegmento->base);
+		int offset_del_frame = offset_frame(pagina,dir_virtual,nodoSegmento->base);
+		t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,pagina);
+		t_nodo_atributo_paginas *nodoAlgormito = nodo_algoritmo(nodoPagina->indiceVector);
+
+		if(pagina +1 <= ultima_pagina ) {
+			t_nodo_pagina* siguienteNodoPagina =list_get(nodoSegmento->list_paginas,pagina+1);
+			t_nodo_atributo_paginas *siguienteNodoAlgormito = nodo_algoritmo(siguienteNodoPagina->indiceVector);
+		}
+
+		int frame = nodoAlgormito->frame;
+		offset = frame * muse_page_size() + offset_del_frame ;
+
 		memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
 		offset = offset + 5;
 
-		printf(" \n offset despues de leer estructura %d \n", offset);
-
 		offset = offset + heap->size;
-		pagina = (offset - nodoSegmento->base) / muse_page_size() ;
-		offset_frame = (offset - nodoSegmento->base) - (pagina*muse_page_size());
+		dir_virtual =  offset;
 
+	}while (offset < (nodoSegmento->base+nodoSegmento->tamanio)-1);
 
-	}while (offset < ultima_pagina*muse_page_size()-1);
-
-	//printf(" \n offset desplazado %d \n", offset);
 
 	offset =  offset - heap->size -5;
 
@@ -831,3 +840,10 @@ void *traer_swap(int frame){
 	return NULL;
 }
 
+int pagina_segmento (int dir_virtual,int base){
+	return (dir_virtual-base)/muse_page_size();
+}
+
+int offset_frame(int pagina,int dir_virtual,int base){
+	return (dir_virtual-base) - (pagina *muse_page_size() );
+}

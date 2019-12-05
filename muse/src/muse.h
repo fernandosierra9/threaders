@@ -150,4 +150,8 @@ int aplicar_algoritmo();
 void flush(int pagina,char *contenido_pagina,char *path);
 void *traer_swap(int frame);
 char * path_segmento (t_nodo_segmento* segmento) ;
+
+int pagina_segmento (int dir_virtual,int base);
+int offset_frame(int pagina,int dir_virtual,int base);
+
 #endif /* MUSE_H_ */
