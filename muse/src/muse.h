@@ -23,10 +23,6 @@
 #include "../../shared-common/common/utils.h"
 
 
-int muse_socket;
-void* memoria ;
-
-int indice;
 void muse_init();
 typedef struct {
 	int id;
@@ -91,18 +87,38 @@ typedef struct {
 }__attribute__((packed))
 t_vector_atributo_paginas;
 
-int cantidad_paginas_totales;
+typedef struct {
+   int unIndice;
+   int frame;
+   bool presencia;
+   int uso;
+   int modificado;
+}__attribute__((packed))
+t_nodo_atributo_paginas;
 
+
+
+int cantidad_paginas_totales;
+int cantidad_frames;
+
+t_bitarray *bitarray;
+
+int muse_socket;
+void* memoria ;
+
+int indice;
+
+t_list *lista_algoritmo;
 
 t_vector_frames *vectorFrames;
 t_vector_atributo_paginas  *vectorAtributoPaginas;
 void estadoFrames();
 
 
-bool existe_memoria_parar_paginas(int cantidad_paginas_necesarias);
+bool existe_memoria_para_frames(int cantidad_paginas_necesarias);
 bool estaOcupada(int pag);
 
-void cambiar_estado_pagina(int pagina,bool estado);
+void cambiar_estado_frame(int pagina,bool estado);
 
 int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,uint32_t recervar);
 int asignarIndiceVectorLibre();
@@ -121,4 +137,17 @@ int agrandar_segmento(t_nodo_segmento* nodoSegmento,uint32_t memoria_reservar);
 
 t_nodo_segmento *buscar_segmento(uint32_t src);
 char * path (t_nodo_segmento* segmento) ;
+
+t_bitarray *crearBitmap(int cantidadDepagina,int diferencia);
+int frameLibre();
+
+void sincronizar(t_nodo_segmento *segmento,size_t size);
+
+void crear_nodo_indice_algoritmo(int indice,int frame,int presencia);
+
+t_nodo_atributo_paginas * nodo_algoritmo(int unIndice);
+int aplicar_algoritmo();
+void flush(int pagina,char *contenido_pagina,char *path);
+void *traer_swap(int frame);
+char * path_segmento (t_nodo_segmento* segmento) ;
 #endif /* MUSE_H_ */
