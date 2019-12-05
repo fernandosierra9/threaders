@@ -724,10 +724,23 @@ void sincronizar(t_nodo_segmento *segmento,uint32_t size){
 			nodo_algoritmo->presencia = 1;
 			nodo_algoritmo->modificado = 0;
 			nodo_algoritmo->frame = frame;
-			flush(pagina,contenido_pagina,segmento);
+			path = path_segmento(segmento)
+			flush(pagina,contenido_pagina,path);
 		}
 		*/
 		pagina ++;
 		copiado = copiado - muse_page_size();
 	}while(copiado >0 && (pagina < list_size(segmento->list_paginas)));
+}
+
+
+char * path_segmento (t_nodo_segmento* segmento) {
+	if (segmento->tipo == MAP_SHARED){
+		char * path = ((tipo_map_shared*) segmento->map)->path;
+		return path;
+	}
+	else{
+		char * path = ((tipo_map_private*) segmento->map)->path;
+		return path;
+	}
 }

@@ -120,5 +120,5 @@ int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,uint32_t memori
 int agrandar_segmento(t_nodo_segmento* nodoSegmento,uint32_t memoria_reservar);
 
 t_nodo_segmento *buscar_segmento(uint32_t src);
-
+char * path (t_nodo_segmento* segmento) ;
 #endif /* MUSE_H_ */
