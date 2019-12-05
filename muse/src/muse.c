@@ -74,9 +74,22 @@ void muse_server_init() {
 				list_add(nodoProceso->list_segmento, nodo_Segmento);
 			}
 			else{
-				t_nodo_segmento* nodoSegmento=list_get(nodoProceso->list_segmento,cantidad_segmentos-1);
-				int resp =recorer_segmento_espacio_libre(nodoSegmento,malloc_receive->tam);
-				if (resp == -1){
+				t_nodo_segmento* nodoSegmento;
+				int i ;
+				int resp;
+				for(i=0;i<cantidad_segmentos;i++){
+					nodoSegmento=list_get(nodoProceso->list_segmento,i);
+					resp=-1;
+					if (nodoSegmento->tipo == S_ALLOC){
+						resp =recorer_segmento_espacio_libre(nodoSegmento,malloc_receive->tam);
+
+					}
+					if (resp != -1 ){
+						break;
+					}
+				}
+				//agrando el ultimo alloc si no se pudo agrandar buscar un espacio libre
+				if(resp ==-1){
 					resp = agrandar_segmento(nodoSegmento,malloc_receive->tam);
 				}
 				res->ptr = resp;
