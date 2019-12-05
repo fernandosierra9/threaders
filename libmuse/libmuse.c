@@ -129,8 +129,10 @@ uint32_t muse_map(char *path, size_t length, int flags) {
 	map_request->id_libmuse = getpid();
 	t_protocol map_protocol = MAP;
 	utils_serialize_and_send(muse_fd, map_protocol, map_request);
-
-	return 0;
+	int response = recv(muse_fd, &map_protocol, sizeof(t_protocol), 0);
+	t_malloc_ok* deserialized_res = utils_receive_and_deserialize(muse_fd,
+			map_protocol);
+	return deserialized_res->ptr;
 }
 
 int muse_sync(uint32_t addr, size_t len) {

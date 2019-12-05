@@ -21,6 +21,7 @@ int main(void) {
 }
 
 void muse_server_init() {
+	indice = 0;
 	muse_socket = socket_create_listener("127.0.0.1", muse_get_listen_port());
 	if (muse_socket < 0) {
 		muse_logger_error("Error al crear server");
@@ -244,10 +245,16 @@ void muse_server_init() {
 		}
 		case SYNC: {
 			muse_logger_info("SYNC received\n");
-			t_mmap *msync_receive = utils_receive_and_deserialize(libmuse_fd,
+			t_msync *msync_receive = utils_receive_and_deserialize(libmuse_fd,
 											protocol);
 			muse_logger_info("id proceso %d", msync_receive->id_libmuse);
-
+			t_nodo_segmento * segmento = buscar_segmento(msync_receive->src);
+			t_protocol protocol = SYNC_OK;
+			if(msync_receive->src+ msync_receive->size <= segmento->tamanio +segmento->base ){
+					sincronizar(segmento,msync_receive->size);
+			}
+			send(libmuse_fd,&protocol,sizeof(protocol),0);
+			break;
 		}
 		case MAP: {
 			// TODO: Implementation
@@ -256,12 +263,57 @@ void muse_server_init() {
 								protocol);
 		    muse_logger_info("**** path %s*****", map_receive->path);
 		    muse_logger_info("****id proceso %d*****", map_receive->id_libmuse);
+		    int flag;
+		    t_nodo_segmento* nodo_Segmento = crear_nodo_segmento();
+		    nodo_Segmento->map = NULL;
 		    if(map_receive->flag == MAP_PRIVATE){
 		    	muse_logger_info("**** MAP privado *****");
+		    	nodo_Segmento->tipo = MAP_PRIVATE;
+		    	tipo_map_private *type = malloc(sizeof(tipo_map_private));
+		    	type->path = strdup(map_receive->path);
 		    }
 		    if(map_receive->flag == MAP_SHARED){
-		 		    	muse_logger_info("**** MAP compartido *****");
+		 		muse_logger_info("**** MAP compartido *****");
+		 		nodo_Segmento->tipo = MAP_SHARED;
+		 		tipo_map_shared *type = malloc(sizeof(tipo_map_shared));
+		 		type->cant_links = 1;
+		 		type->path = strdup(map_receive->path);
+		 		nodo_Segmento->map = type;
 		    }
+
+		    t_nodo_proceso* nodoProceso = procesar_id(
+		    map_receive->id_libmuse);
+
+		    int cantidad_segmentos=list_size(nodoProceso->list_segmento);
+
+		    int cantidad_paginas = (map_receive->size/muse_page_size()+1);
+		    int tamanio = cantidad_paginas*muse_page_size();
+		    if(cantidad_segmentos==0){
+
+		    	nodo_Segmento->base =0;
+		    	nodo_Segmento->tamanio = tamanio;
+		    	list_add(nodoProceso->list_segmento, nodo_Segmento);
+		    }
+		    else{
+		        t_nodo_segmento* otroNodoSegmento=list_get(nodoProceso->list_segmento,cantidad_segmentos-1);
+		        nodo_Segmento->base = otroNodoSegmento->base + otroNodoSegmento->tamanio +1 ;
+		    }
+		    nodo_Segmento->list_paginas = list_create();
+		    for(int i=0;i<cantidad_paginas;i++){
+		    	t_nodo_pagina *nodo_pagina = malloc(sizeof(t_nodo_pagina));
+		    	nodo_pagina->indiceVector = indice;
+		    	list_add(nodo_Segmento->list_paginas,nodo_pagina);
+		    	indice ++;
+		    }
+		    t_malloc_ok* map_res = malloc(sizeof(t_malloc_ok));
+			map_res->ptr = nodo_Segmento->base;
+
+			t_protocol cpy_protocol = MAP_OK;
+			utils_serialize_and_send(libmuse_fd, cpy_protocol, map_res);
+
+
+		    break;
+
 		}
 		case UNMAP: {
 			// TODO: Implementation
@@ -638,5 +690,44 @@ int agrandar_segmento(t_nodo_segmento* nodoSegmento,
 
 	return respuesta;
 
+}
 
+t_nodo_segmento *buscar_segmento(uint32_t src) {
+	int existeNodoEnLaLista(t_nodo_segmento *nodo_proceso) {
+			return (nodo_proceso->base + nodo_proceso->tamanio) < src;
+	}
+	return list_find(lista_procesos, (void*) existeNodoEnLaLista);
+}
+
+void sincronizar(t_nodo_segmento *segmento,uint32_t size){
+	int pagina = 0;
+	int copiado = size;
+	void *contenido_pagina;
+	do{
+		t_nodo_pagina * nodo_pagina = list_create(segmento->list_paginas,pagina);
+		/*
+		t_nodo_algoritmo *nodo_algoritmo = buscar_nodo_algoritmo(nodo_pagina->indiceVector);
+		if(nodo_algoritmo->modificado ==1){
+			int frame = nodo_algoritmo->frame;
+			if(	nodo_algoritmo->presencia ==0){
+				int frame_libre = buscar_frame_libre ();
+				if(	frame_libre	< 0	){
+					frame_libre = aplicar_algoritmo();
+				}
+				cambiar_estado_frame(frame_libre);
+				void * pagina_swap = traer_swap(frame);
+				mycpy(memoria+frame_libre*muse_page_size(),pagina_swap,muse_page_size());
+				frame = frame_libre;
+				free(pagina);
+			}
+			mycpy(memoria+frame_libre*muse_page_size(),contenido_pagina,muse_page_size());
+			nodo_algoritmo->presencia = 1;
+			nodo_algoritmo->modificado = 0;
+			nodo_algoritmo->frame = frame;
+			flush(pagina,contenido_pagina,segmento);
+		}
+		*/
+		pagina ++;
+		copiado = copiado - muse_page_size();
+	}while(copiado >0 && (pagina < list_size(segmento->list_paginas)));
 }

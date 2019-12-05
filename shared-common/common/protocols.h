@@ -88,7 +88,8 @@ typedef struct {
 } t_unmap;
 
 typedef struct {
-  // TODO: Implementation
+	uint32_t ptr;
+	size_t size;
 } t_sync;
 
 typedef struct {

@@ -26,6 +26,7 @@
 int muse_socket;
 void* memoria ;
 
+int indice;
 void muse_init();
 typedef struct {
 	int id;
@@ -34,7 +35,8 @@ typedef struct {
 
 typedef enum {
 	S_ALLOC,
-	S_MAP
+	S_MAP_PRIVATE,
+	S_MAP_SHARED
 }t_segmento;
 
 typedef struct {
@@ -50,7 +52,11 @@ typedef struct {
 typedef struct {
 	char *path;
 	int cant_links;
-} tipo_map;
+} tipo_map_shared;
+
+typedef struct {
+	char *path;
+} tipo_map_private;
 
 
 typedef struct {
@@ -113,5 +119,6 @@ t_nodo_segmento* crear_nodo_segmento();
 int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,uint32_t memoria_reservar);
 int agrandar_segmento(t_nodo_segmento* nodoSegmento,uint32_t memoria_reservar);
 
+t_nodo_segmento *buscar_segmento(uint32_t src);
 
 #endif /* MUSE_H_ */

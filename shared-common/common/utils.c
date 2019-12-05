@@ -155,6 +155,14 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 		utils_package_destroy(package);
 		break;
 	}
+	case MAP_OK: {
+			t_package* package = utils_package_create(protocol);
+			utils_package_add(package, &((t_malloc_ok*) package_send)->ptr,
+					sizeof(uint32_t));
+			utils_package_send_to(package, socket);
+			utils_package_destroy(package);
+			break;
+	}
 	case MEMFREE: {
 		t_package* package = utils_package_create(protocol);
 		utils_package_add(package, &((t_free*) package_send)->dir,
@@ -318,7 +326,13 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 			list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 			return map_request;
 	}
-
+	case MAP_OK: {
+				t_malloc_ok *map_request = malloc(sizeof(t_malloc_ok));
+				t_list* list = utils_receive_package(socket);
+				utils_get_from_list_to(&map_request->ptr, list, 0);
+				list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
+				return map_request;
+	}
 	case MALLOC: {
 		t_malloc *malloc_request = malloc(sizeof(t_malloc));
 
