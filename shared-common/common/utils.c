@@ -213,8 +213,8 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 	}
 	case GET_OK: {
 		t_package* package = utils_package_create(protocol);
-		utils_package_add(package, &((t_get_ok*) package_send)->res,
-				sizeof(void*));
+		utils_package_add(package, ((t_get_ok*) package_send)->res,
+				((t_get_ok*) package_send)->tamres);
 		utils_package_add(package, &((t_get_ok*) package_send)->tamres,
 				sizeof(int));
 		utils_package_send_to(package, socket);
@@ -337,8 +337,6 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		t_malloc *malloc_request = malloc(sizeof(t_malloc));
 
 		t_list* list = utils_receive_package(socket);
-
-
 		//obtiene y guarda en un puntero desde un nodo de la lista dado un index
 		utils_get_from_list_to(&malloc_request->tam, list, 0);
 		utils_get_from_list_to(&malloc_request->id_libmuse, list, 1);
@@ -369,8 +367,7 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		utils_get_from_list_to(&copy_req->dst, list, 0);
 		utils_get_from_list_to(&copy_req->self_id, list, 1);
 		utils_get_from_list_to(&copy_req->size, list, 2);
-
-		copy_req->content = malloc(copy_req->size);
+		copy_req->content = malloc(utils_get_buffer_size(copy_req->content,3)); ;
 		utils_get_from_list_to(copy_req->content, list, 3);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 
@@ -393,7 +390,8 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 	case GET_OK: {
 		t_get_ok* get_recv = malloc(sizeof(t_get_ok));
 		t_list* list = utils_receive_package(socket);
-		utils_get_from_list_to(&get_recv->res, list, 0);
+		get_recv->res = malloc(utils_get_buffer_size(get_recv->res,0)); ;
+		utils_get_from_list_to(get_recv->res, list, 0);
 		utils_get_from_list_to(&get_recv->tamres, list, 1);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
 		return get_recv;
