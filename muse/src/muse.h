@@ -135,7 +135,7 @@ t_nodo_segmento* crear_nodo_segmento();
 int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,uint32_t memoria_reservar);
 int agrandar_segmento(t_nodo_segmento* nodoSegmento,uint32_t memoria_reservar);
 
-t_nodo_segmento *buscar_segmento(uint32_t src);
+t_nodo_segmento *buscar_segmento(uint32_t src,t_list *list);
 char * path (t_nodo_segmento* segmento) ;
 
 t_bitarray *crearBitmap(int cantidadDepagina,int diferencia);

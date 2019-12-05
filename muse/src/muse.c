@@ -13,6 +13,7 @@ int main(void) {
 		muse_logger_destroy();
 		return response;
 	}
+	printf("entra al init");
 	muse_init();
 	muse_server_init();
 	muse_config_free();
@@ -248,7 +249,9 @@ void muse_server_init() {
 			t_msync *msync_receive = utils_receive_and_deserialize(libmuse_fd,
 											protocol);
 			muse_logger_info("id proceso %d", msync_receive->id_libmuse);
-			t_nodo_segmento * segmento = buscar_segmento(msync_receive->src);
+			t_nodo_proceso* nodoProceso = procesar_id(
+					msync_receive->id_libmuse);
+			t_nodo_segmento * segmento = buscar_segmento(msync_receive->src,nodoProceso->list_segmento);
 			t_protocol protocol = SYNC_OK;
 			if(msync_receive->src+ msync_receive->size <= segmento->tamanio +segmento->base ){
 
@@ -328,7 +331,9 @@ void muse_init() {
 	lista_algoritmo = list_create();
 	memoria = malloc(muse_memory_size());
 	int cantidad_paginas_reales = muse_memory_size() / muse_page_size();
+	int diferencia= cantidad_frames % 8;
 	cantidad_frames = cantidad_paginas_reales;
+	crearBitmap(cantidad_frames,diferencia);
 	int cantidad_paginas_virtuales = muse_swap_size() / muse_page_size();
 	cantidad_paginas_totales = cantidad_paginas_reales
 			+ cantidad_paginas_virtuales;
@@ -445,6 +450,7 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 				t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,i);
 				t_frames* frame = malloc(sizeof(t_frames));
 				printf("\n indice vector: %d ",nodoPagina->indiceVector);
+				printf("\n size lista algoritmo: %d ",list_size(lista_algoritmo));
 				t_nodo_atributo_paginas * nodoAlgoritmo = nodo_algoritmo(nodoPagina->indiceVector);
 				frame->nroFrame = nodoAlgoritmo->frame;
 				list_add(lista_frames_proceso,frame);
@@ -497,7 +503,7 @@ int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,
 	int desde = nodoSegmento->base;
 	int hasta = nodoSegmento->base + nodoSegmento->tamanio;
 	int primera_pagina = (desde / muse_page_size());
-	int ultima_pagina = ((hasta - desde) / muse_page_size()) + 1;
+	int ultima_pagina = list_size(nodoSegmento->list_paginas);
 	int respuesta = -1;
 	t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
 
@@ -551,6 +557,8 @@ int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,
 		//printf("offset despues de leer el size de  la estructura %d \n",offset);
 
 	}while (offset < ultima_pagina*muse_page_size()-1);
+
+	printf("****no se encontro espacio libre en el segmento ***\n");
 	return respuesta;
 }
 
@@ -613,7 +621,8 @@ int agrandar_segmento(t_nodo_segmento* nodoSegmento,
 	int offset_frame =0;
 
 	t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,pagina);
-	int frame = vectorAtributoPaginas[nodoPagina->indiceVector].frame;
+	t_nodo_atributo_paginas *nodoAlgormito = nodo_algoritmo(nodoPagina->indiceVector);
+	int frame = nodoAlgormito->frame;
 	offset = frame * muse_page_size();
 
 	do {
@@ -689,11 +698,11 @@ int agrandar_segmento(t_nodo_segmento* nodoSegmento,
 
 }
 
-t_nodo_segmento *buscar_segmento(uint32_t src) {
+t_nodo_segmento *buscar_segmento(uint32_t src,t_list *list) {
 	int existeNodoEnLaLista(t_nodo_segmento *nodo_proceso) {
 			return (nodo_proceso->base + nodo_proceso->tamanio) < src;
 	}
-	return list_find(lista_procesos, (void*) existeNodoEnLaLista);
+	return list_find(list, (void*) existeNodoEnLaLista);
 }
 
 void sincronizar(t_nodo_segmento *segmento,size_t size){
@@ -756,7 +765,8 @@ t_bitarray *crearBitmap(int cantidadDepagina,int diferencia){
 		bitarray = bitarray_create_with_mode(bmap,tamanio, MSB_FIRST);
 		size_t	cantidadDebits= bitarray_get_max_bit (bitarray);
 		for (int i=0;i<cantidadDebits;i++){
-			//printf("posicion %d valor %d:\n",i,bitarray_test_bit(bitarray,i));
+			//printf("*****posicion %d valor %d *****:\n",i,bitarray_test_bit(bitarray,i));
+
 		}
 		return bitarray;
 
@@ -766,7 +776,7 @@ t_nodo_atributo_paginas * nodo_algoritmo(int unIndice){
 	int existeNodoEnLaLista(t_nodo_atributo_paginas *nodo_proceso) {
 			return nodo_proceso->unIndice ==  unIndice;
 	}
-    return list_find(lista_procesos, (void*) existeNodoEnLaLista);
+    return list_find(lista_algoritmo, (void*) existeNodoEnLaLista);
 }
 
 void crear_nodo_indice_algoritmo(int indice,int frame,int presencia){
