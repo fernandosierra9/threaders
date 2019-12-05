@@ -249,28 +249,25 @@ void muse_server_init() {
 				t_nodo_atributo_paginas *nodoAlgormito = nodo_algoritmo(nodoPagina->indiceVector);
 				int frame = nodoAlgormito->frame;
 				int offset = frame * muse_page_size() + offset_del_frame ;
-				//memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
+
+				memcpy(heap, memoria + offset-5, sizeof(t_heapMetadata));
 
 				if (!heap->libre && heap->size <= cpy->size) {
 					offset = offset + 5;
-					//memcpy(memoria + offset, cpy->content, cpy->size);
-
+					memcpy(memoria + offset, cpy->content, cpy->size);
+					printf("----->size %d \n",heap->size);
 				}
 
 				else
 				{
-					t_copy_response* copy_res = malloc(sizeof(t_copy_response));
-					copy_res->res = -1;
 					cpy_protocol = SEG_FAULT;
-					utils_serialize_and_send(libmuse_fd, cpy_protocol, copy_res);
-					break;
+					send(libmuse_fd,&cpy_protocol,sizeof(protocol),0);
 				}
-				t_copy_response* copy_res = malloc(sizeof(t_copy_response));
-				copy_res->res = 1;
 				t_protocol cpy_protocol = GET_OK;
-				utils_serialize_and_send(libmuse_fd, cpy_protocol, copy_res);
-				break;
+				send(libmuse_fd,&cpy_protocol,sizeof(protocol),0);
+
 			}
+			break;
 		}
 		case SYNC: {
 			muse_logger_info("SYNC received\n");

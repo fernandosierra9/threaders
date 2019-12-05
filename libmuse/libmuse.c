@@ -107,10 +107,8 @@ int muse_cpy(uint32_t dst, void* src, int n) {
 	utils_serialize_and_send(muse_fd, copy_protocol, copy_send);
 
 	int response = recv(muse_fd, &copy_protocol, sizeof(t_protocol), 0);
-	t_copy_response* deserialized_res = utils_receive_and_deserialize(muse_fd,
-			copy_protocol);
 
-	if (deserialized_res->res == 1) {
+	if (copy_protocol == GET_OK) {
 		puts("Operation has been successful");
 		return 0;
 	}
