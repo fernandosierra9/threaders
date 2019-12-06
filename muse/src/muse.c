@@ -274,7 +274,7 @@ void muse_server_init() {
 
 				memcpy(heap, memoria + offset-5, sizeof(t_heapMetadata));
 
-				if (!heap->libre && heap->size > cpy->size) {
+				if (!heap->libre && heap->size >= cpy->size) {
 					offset = offset + 5;
 					memcpy(memoria + offset, cpy->content, cpy->size);
 					printf("----->size %d \n",heap->size);
