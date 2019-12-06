@@ -189,7 +189,7 @@ void muse_server_init() {
 
 			else {
 
-				void * content = malloc(get_receive->size);
+
 
 				t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
 				t_nodo_segmento *nodoSegmento = buscar_segmento(get_receive->src,nodo->list_segmento);
@@ -200,16 +200,38 @@ void muse_server_init() {
 				int frame = nodoAlgormito->frame;
 				int offset = frame * muse_page_size() + offset_del_frame ;
 
+				void * content = malloc(sizeof(int));
 				//leo la estructura
 				memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
 
-				memcpy(&content, memoria + get_receive->src, get_receive->size);
+				memcpy(content, memoria + get_receive->src, get_receive->size);
 
 				t_get_ok* response = malloc(sizeof(t_get_ok));
+
+				int d= 11;
+				memcpy(content,&d,sizeof(int));
+
 				response->res = content;
-				response->tamres = sizeof(get_receive->size);
+
+				int numero = *(int *) response->res;
+				printf("---*** numero %d \n",numero);
+				response->tamres = sizeof(int);
+
+				printf("---*** tamres %d \n",response->tamres);
 				t_protocol get_protocol = GET_OK;
-				utils_serialize_and_send(libmuse_fd, get_protocol, response);
+				//utils_serialize_and_send(libmuse_fd, get_protocol, response);
+
+				t_copy* copy_send = malloc(sizeof(t_copy));
+				copy_send->self_id = get_receive->id_libmuse ;
+				copy_send->size = sizeof(int);
+				copy_send->dst = get_receive->src;
+				copy_send->content = malloc(sizeof(int));
+
+				memcpy(copy_send->content,content,sizeof(int));
+
+    			t_protocol copy_protocol = GET_OK;
+
+				utils_serialize_and_send(libmuse_fd, copy_protocol, copy_send);
 				break;
 			}
 		}
@@ -217,8 +239,8 @@ void muse_server_init() {
 		case COPY: {
 			muse_logger_info("Copy received");
 			t_copy* cpy = utils_receive_and_deserialize(libmuse_fd, protocol);
-			int numero = *(int *) cpy->content;
-			printf("******numero %d********",numero);
+
+			//printf("******numero %d********",numero);
 
 			muse_logger_info(
 					"Process with pid; %d is trying to copy %d bytes to direction: %d",

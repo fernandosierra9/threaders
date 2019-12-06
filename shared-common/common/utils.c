@@ -109,6 +109,7 @@ void utils_package_send_to(t_package* t_package, int client_socket) {
 	int bytes = t_package->buffer->size + 2 * sizeof(int);
 	void* to_send = serializer_serialize_package(t_package, bytes);
 
+	printf("----->bytes %d \n",bytes);
 	send(client_socket, to_send, bytes, 0);
 
 	free(to_send);
@@ -206,10 +207,12 @@ void utils_serialize_and_send(int socket, int protocol, void* package_send) {
 	}
 	case GET_OK: {
 		t_package* package = utils_package_create(protocol);
-		utils_package_add(package, ((t_get_ok*) package_send)->res,
-				((t_get_ok*) package_send)->tamres);
-		utils_package_add(package, &((t_get_ok*) package_send)->tamres,
+		utils_package_add(package, &((t_copy*) package_send)->dst,
+				sizeof(uint32_t));
+		utils_package_add(package, &((t_copy*) package_send)->self_id,
 				sizeof(int));
+		utils_package_add(package, &((t_copy*) package_send)->size, sizeof(int));
+		utils_package_add(package, ((t_copy*) package_send)->content, ((t_copy*) package_send)->size);
 		utils_package_send_to(package, socket);
 		utils_package_destroy(package);
 		break;
@@ -384,13 +387,19 @@ void* utils_receive_and_deserialize(int socket, int package_type)
 		return free_recv;
 	}
 	case GET_OK: {
-		t_get_ok* get_recv = malloc(sizeof(t_get_ok));
+		t_copy *copy_req = malloc(sizeof(t_copy));
 		t_list* list = utils_receive_package(socket);
-		get_recv->res = malloc(utils_get_buffer_size(get_recv->res,0)); ;
-		utils_get_from_list_to(get_recv->res, list, 0);
-		utils_get_from_list_to(&get_recv->tamres, list, 1);
+		utils_get_from_list_to(&copy_req->dst, list, 0);
+		utils_get_from_list_to(&copy_req->self_id, list, 1);
+		utils_get_from_list_to(&copy_req->size, list, 2);
+		//printf("****cantidad %d***",list_size(list));
+		//int size  = utils_get_buffer_size(list,3);
+		//printf("****size %d***",size);
+		copy_req->content = malloc(copy_req->size); ;
+		utils_get_from_list_to(copy_req->content, list, 3);
 		list_destroy_and_destroy_elements(list, (void*) utils_destroy_list);
-		return get_recv;
+
+		return copy_req;
 	}
 	case GET_ATTR: {
 		t_get_attr *get_request = malloc(sizeof(t_get_attr));
@@ -474,9 +483,23 @@ void utils_get_from_list_to_malloc(void *parameter, t_list *list, int index) {
 }
 
 int utils_get_buffer_size(t_list *list, int index) {
+	if(list_size(list)>0){
+		printf("**********cantidad de elemento %d ******\n",list_size(list));
+		t_buffer *buffer;
+		buffer = list_get(list, index);
+		return buffer->size;
+	}
+	return 0;
+}
+
+void utils_get_from_list_to2(void *parameter, t_list *list, int index) {
 	t_buffer *buffer;
 	buffer = list_get(list, index);
-	return buffer->size;
+	//memcpy(parameter, buffer->stream, buffer->size);
+	memcpy(parameter, buffer->stream, sizeof(int));
+	int numero = *(int *) parameter	;
+	printf("---*** numero %d \n",numero);
+
 }
 
 void utils_get_from_list_to(void *parameter, t_list *list, int index) {
@@ -510,10 +533,11 @@ t_list* utils_receive_package(int socket_cliente) {
 		t_buffer* valor = malloc(sizeof(t_buffer));
 		valor->stream = malloc(tamanio);
 		valor->size = tamanio;
+		printf("****size %d **\n",tamanio);
 		memcpy(valor->stream, buffer + desplazamiento, tamanio);
 		desplazamiento += tamanio;
 		list_add(valores, valor);
-		printf("****size %d **\n",valor->size);
+
 	}
 	free(buffer);
 	return valores;

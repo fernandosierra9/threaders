@@ -81,8 +81,8 @@ int muse_get(void* dst, uint32_t src, size_t n) {
 
 	switch (get_protocol) {
 	case GET_OK: {
-		t_get_ok* get = utils_receive_and_deserialize(muse_fd, get_protocol);
-		memcpy(dst, &get->res, get->tamres);
+		t_copy* get = utils_receive_and_deserialize(muse_fd, get_protocol);
+		memcpy(dst, get->content, sizeof(int));
 		return 0;
 	}
 
