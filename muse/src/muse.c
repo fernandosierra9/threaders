@@ -278,6 +278,8 @@ void muse_server_init() {
 					offset = offset + 5;
 					memcpy(memoria + offset, cpy->content, cpy->size);
 					printf("----->size %d \n",heap->size);
+					t_protocol cpy_protocol = GET_OK;
+					send(libmuse_fd,&cpy_protocol,sizeof(protocol),0);
 				}
 
 				else
@@ -285,8 +287,7 @@ void muse_server_init() {
 					cpy_protocol = SEG_FAULT;
 					send(libmuse_fd,&cpy_protocol,sizeof(protocol),0);
 				}
-				t_protocol cpy_protocol = GET_OK;
-				send(libmuse_fd,&cpy_protocol,sizeof(protocol),0);
+
 
 			}
 			break;
