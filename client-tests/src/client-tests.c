@@ -85,7 +85,7 @@ int main(void)
 
     printf("enviar copy");
     int num = 9;
-    //muse_cpy(5, &num, sizeof(num));
+    muse_cpy(5, &num, sizeof(num));
 
     int des;
     muse_get(&des, 5, 4);
