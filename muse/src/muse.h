@@ -37,7 +37,7 @@ typedef enum {
 
 typedef struct {
 	int base;
-	int tamanio;
+	int  ;
 	t_list *list_paginas;
 	t_segmento tipo;
 	void * map;
@@ -153,5 +153,7 @@ char * path_segmento (t_nodo_segmento* segmento) ;
 
 int pagina_segmento (int dir_virtual,int base);
 int offset_frame(int pagina,int dir_virtual,int base);
+
+void test_map (char * path);
 
 #endif /* MUSE_H_ */

@@ -345,10 +345,13 @@ void muse_server_init() {
 
 		    int cantidad_paginas = (map_receive->size/muse_page_size()+1);
 		    int tamanio = cantidad_paginas*muse_page_size();
-		    if(cantidad_segmentos==0){
 
+
+		    muse_logger_info("****cantidad de paginas para map %d*****", cantidad_paginas);
+
+		    nodo_Segmento->tamanio = tamanio;
+		    if(cantidad_segmentos==0){
 		    	nodo_Segmento->base =0;
-		    	nodo_Segmento->tamanio = tamanio;
 		    	list_add(nodoProceso->list_segmento, nodo_Segmento);
 		    }
 		    else{
@@ -369,6 +372,7 @@ void muse_server_init() {
 			t_protocol cpy_protocol = MAP_OK;
 			utils_serialize_and_send(libmuse_fd, cpy_protocol, map_res);
 
+			test_map (map_receive->path);
 
 		    break;
 
@@ -891,3 +895,37 @@ int pagina_segmento (int dir_virtual,int base){
 int offset_frame(int pagina,int dir_virtual,int base){
 	return (dir_virtual-base) - (pagina *muse_page_size() );
 }
+
+
+
+
+void test_map (char * path){
+		int fd;
+	    char *data;
+	    struct stat sbuf;
+
+
+	    if ((fd = open(path, O_RDONLY)) == -1) {
+	        perror("open");
+	        exit(1);
+	    }
+
+	    if (stat(path, &sbuf) == -1) {
+	        perror("stat");
+	        exit(1);
+	    }
+
+
+	    data = (char *) mmap (0, sbuf.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+
+		if (data == (caddr_t)(-1)) {
+	        perror("mmap");
+	        exit(1);
+	    }
+		 char  * t = "x";
+		 //memcpy(data + 1 ,t,1);
+		 printf("data de map %s \n",data);
+
+}
+
+
