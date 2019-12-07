@@ -63,6 +63,17 @@ int main(void)
     printf("Read: %d", des);
 
 
+
+
+    char * test = strdup("fernando");
+    char *result = malloc(strlen("fernando")+1);
+    muse_cpy(ptr, test, strlen("fernando")+1);
+
+    muse_get(result, ptr, strlen("fernando")+1);
+    printf("Read: %s", result);
+
+
+
     //ptr = muse_alloc(200);
 
     printf("\n alloc: %d \n" , 1);

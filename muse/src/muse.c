@@ -178,9 +178,6 @@ void muse_server_init() {
 
 			t_nodo_proceso* nodo = procesar_id(get_receive->id_libmuse);
 
-//			char* content = malloc(sizeof(get_receive->size));
-//			memcpy(content, memoria + get_receive->src,get_receive->size );
-
 			if (!existe_proceso_en_lista(get_receive->id_libmuse)) {
 				t_protocol get_failed = SEG_FAULT;
 				send(libmuse_fd, &get_failed, sizeof(t_protocol), 0);
@@ -191,6 +188,20 @@ void muse_server_init() {
 
 				t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
 				t_nodo_segmento *nodoSegmento = buscar_segmento(get_receive->src,nodo->list_segmento);
+
+				t_protocol copy_protocol = GET_OK;
+				if (nodoSegmento == NULL){
+					copy_protocol = SEG_FAULT;
+					send(libmuse_fd,&copy_protocol,sizeof(protocol),0);
+					break;
+				}
+				if ((nodoSegmento->base + nodoSegmento->tamanio) < get_receive->src + get_receive->size){
+					copy_protocol = SEG_FAULT;
+					send(libmuse_fd,&copy_protocol,sizeof(protocol),0);
+					break;
+				}
+
+				//falta ver get oara map
 				int pagina = pagina_segmento (get_receive->src,nodoSegmento->base);
 				int offset_del_frame = offset_frame(pagina,get_receive->src,nodoSegmento->base);
 				t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,pagina);
@@ -198,27 +209,35 @@ void muse_server_init() {
 				int frame = nodoAlgormito->frame;
 				int offset = frame * muse_page_size() + offset_del_frame ;
 
-				void * content = malloc(sizeof(int));
+				void * content = malloc(get_receive->size);
 				//leo la estructura
 				memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
 
-				//memcpy(content, memoria + get_receive->src, get_receive->size);
-				offset = offset + 5;
 
 
-				memcpy(content, memoria + offset, get_receive->size);
+				if (!heap->libre && heap->size >= get_receive->size) {
+					offset = offset + 5;
+					memcpy(content, memoria + offset, get_receive->size);
 
-				t_copy* copy_send = malloc(sizeof(t_copy));
-				copy_send->self_id = get_receive->id_libmuse ;
-				copy_send->size = sizeof(int);
-				copy_send->dst = get_receive->src;
-				copy_send->content = malloc(sizeof(int));
+					t_copy* copy_send = malloc(sizeof(t_copy));
+					copy_send->self_id = get_receive->id_libmuse ;
+					copy_send->size = get_receive->size;
+					copy_send->dst = get_receive->src;
+					copy_send->content = malloc(get_receive->size);
 
-				memcpy(copy_send->content,content,sizeof(int));
+					memcpy(copy_send->content,content,get_receive->size);
 
-    			t_protocol copy_protocol = GET_OK;
+					utils_serialize_and_send(libmuse_fd, copy_protocol, copy_send);
 
-				utils_serialize_and_send(libmuse_fd, copy_protocol, copy_send);
+				}
+
+				else
+				{
+					copy_protocol = SEG_FAULT;
+					send(libmuse_fd,&copy_protocol,sizeof(protocol),0);
+				}
+
+
 				break;
 			}
 		}
@@ -227,7 +246,7 @@ void muse_server_init() {
 			muse_logger_info("Copy received");
 			t_copy* cpy = utils_receive_and_deserialize(libmuse_fd, protocol);
 
-			//printf("******numero %d********",numero);
+
 
 			muse_logger_info(
 					"Process with pid; %d is trying to copy %d bytes to direction: %d",
