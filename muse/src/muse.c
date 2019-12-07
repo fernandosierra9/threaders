@@ -717,7 +717,16 @@ int agrandar_segmento(t_nodo_segmento* nodoSegmento,
 	int bytes_libres = heap->size;
 	int bytes_faltan = (memoria_reservar+5) - bytes_libres;
 
-	int paginas_necesarias = (bytes_faltan / muse_page_size())+1;
+	int paginas_necesarias;
+
+	if (bytes_faltan % muse_page_size() == 0)
+	{
+		paginas_necesarias = bytes_faltan/muse_page_size();
+	}
+	else
+	{
+		paginas_necesarias = bytes_faltan/muse_page_size() +1;
+	}
 
 	int cant_paginas = list_size(nodoSegmento->list_paginas);
 
