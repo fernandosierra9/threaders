@@ -922,8 +922,8 @@ void test_map (char * path){
 	        perror("mmap");
 	        exit(1);
 	    }
-		 char  * t = "x";
-		 //memcpy(data + 1 ,t,1);
+		 char  * t = strdup("x");
+		 //memcpy(data + 1 ,t,strlen(t)+1);
 		 printf("data de map %s \n",data);
 
 }
