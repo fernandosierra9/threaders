@@ -201,12 +201,17 @@ void muse_server_init() {
 					break;
 				}
 
-				//falta ver get oara map
+
+
+				//falta ver get para map
 				int pagina = pagina_segmento (get_receive->src,nodoSegmento->base);
 				int offset_del_frame = offset_frame(pagina,get_receive->src,nodoSegmento->base);
 				t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,pagina);
 				t_nodo_atributo_paginas *nodoAlgormito = nodo_algoritmo(nodoPagina->indiceVector);
 				int frame = nodoAlgormito->frame;
+
+				//verificar flag presencia y/o aplicar algoritmo
+
 				int offset = frame * muse_page_size() + offset_del_frame ;
 
 				void * content = malloc(get_receive->size);
@@ -389,8 +394,10 @@ void muse_init() {
 	memoria = malloc(muse_memory_size());
 	int cantidad_paginas_reales = muse_memory_size() / muse_page_size();
 	int diferencia= cantidad_frames % 8;
+	path_bitmap = "bitmap.bit";
 	cantidad_frames = cantidad_paginas_reales;
-	crearBitmap(cantidad_frames,diferencia);
+	creacionDeArchivoBitmap(cantidad_frames);
+	bitarray=crearBitmap(cantidad_frames,diferencia);
 	int cantidad_paginas_virtuales = muse_swap_size() / muse_page_size();
 	cantidad_paginas_totales = cantidad_paginas_reales
 			+ cantidad_paginas_virtuales;
@@ -500,6 +507,8 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 				}
 
 			}
+
+			estadoFrames();
 			//ESto se va a usar para calcular donde escribir la estructura
 			//ahora hace escritura contigua
 			t_list *lista_frames_proceso = list_create();
@@ -643,10 +652,16 @@ bool existe_memoria_para_frames(int cantidad_paginas_necesarias) {
 //true   1 como ocupado
 //false  0 como libre
 void cambiar_estado_frame(int frame, bool estado) {
+
+	printf("-----cambiar frame %d\n",frame);
+
 	if ( estado == false) {
+		printf("-----cambiar a ocupado %d\n",frame);
 		bitarray_clean_bit(bitarray, frame);
+
 	}
 	if (estado == true){
+		printf("-----cambiar a libre %d\n",frame);
 		bitarray_set_bit(bitarray, frame);
 	}
 }
@@ -659,9 +674,8 @@ bool estaOcupada(int frame)
 void estadoFrames()
 {
 	for(int i=0;i<cantidad_frames;i++){
-		if(bitarray_test_bit(bitarray, i)){
-				printf("\n posicion %d libre",i);
-		}
+		printf("\n posicion %d libre",bitarray_test_bit(bitarray,i));
+
 	}
 }
 
@@ -698,9 +712,15 @@ int agrandar_segmento(t_nodo_segmento* nodoSegmento,
 		offset = frame * muse_page_size() + offset_del_frame ;
 
 		memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
+
+		printf("offset antes de leer la estructura %d \n",offset);
 		offset = offset + 5;
 
+		printf("offset despues de leer la estructura %d \n",offset);
 		offset = offset + heap->size;
+
+		printf("offset despues de leer el size %d \n",offset);
+
 		dir_virtual =  offset;
 
 
@@ -708,7 +728,7 @@ int agrandar_segmento(t_nodo_segmento* nodoSegmento,
 	}while (offset < (nodoSegmento->base+nodoSegmento->tamanio)-1);
 
 
-	offset =  offset - heap->size -5;
+	offset =  offset -heap->size -5;
 
 
 	printf(" \n offset de la estructura libre %d \n", offset);
@@ -733,21 +753,27 @@ int agrandar_segmento(t_nodo_segmento* nodoSegmento,
 	//int ultima_pagina = cant_paginas -1;
 
 	printf(" \n cantidad de paginas necesarias %d \n", paginas_necesarias);
-
+	printf(" \n cantidad de paginas antes %d \n", list_size(nodoSegmento->list_paginas));
 	//agrega los nodos de para algoritmo
+	int unframeLibre;
+
 	for(int i=0;i<paginas_necesarias;i++){
-		int frameLibre = asignarFrameLibre();
+		int unframeLibre = asignarFrameLibre();
 		int indiceLibre = asignarIndiceVectorLibre();
+
 		t_nodo_pagina *nodo_pagina = malloc(sizeof(t_nodo_pagina));
 		nodo_pagina->indiceVector = indiceLibre;
 
-		crear_nodo_indice_algoritmo(indiceLibre,frameLibre,1);
+		crear_nodo_indice_algoritmo(indiceLibre,unframeLibre,1);
+		printf(" \n -------frame %d \n", indiceLibre);
+		cambiar_estado_frame(unframeLibre, true);
+		printf(" \n -------frame %d \n", unframeLibre);
 
-		cambiar_estado_frame(frameLibre, true);
 
 		list_add(nodoSegmento->list_paginas, nodo_pagina);
 	}
 
+	printf(" \n cantidad de paginas despues %d \n", list_size(nodoSegmento->list_paginas));
 	nodoSegmento->tamanio = nodoSegmento->tamanio + paginas_necesarias*muse_page_size();
 
 	int total = heap->size +  paginas_necesarias*muse_page_size();
@@ -769,7 +795,63 @@ int agrandar_segmento(t_nodo_segmento* nodoSegmento,
 
 	printf("\n ******bytes libres %d****** \n",heap->size);
 	printf("\n ******offset de estructura libre %d****** \n",offset);
+
+	dir_virtual = offset;
+	pagina = pagina_segmento (dir_virtual,nodoSegmento->base);
+	printf("\n ******dirvirtual %d****** \n",offset);
+	printf("\n ******pagina %d****** \n",pagina);
+
+
+
+	int offset_del_frame = offset_frame(pagina,dir_virtual,nodoSegmento->base);
+	t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,pagina);
+	t_nodo_atributo_paginas *nodoAlgormito = nodo_algoritmo(nodoPagina->indiceVector);
+	int otroframe = nodoAlgormito->frame;
+
+	printf("\n ******frame %d****** \n",otroframe);
+
+	offset = otroframe * muse_page_size() + offset_del_frame ;
+
+	printf("\n ******offset %d****** \n",offset);
 	memcpy(memoria + offset,heap, sizeof(t_heapMetadata));
+
+
+	offset = 0;
+	pagina = primera_pagina;
+	dir_virtual = nodoSegmento->base;
+
+
+	do {
+		pagina = pagina_segmento (dir_virtual,nodoSegmento->base);
+		int offset_del_frame = offset_frame(pagina,dir_virtual,nodoSegmento->base);
+		t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,pagina);
+		t_nodo_atributo_paginas *nodoAlgormito = nodo_algoritmo(nodoPagina->indiceVector);
+
+		if(pagina +1 <= ultima_pagina ) {
+			t_nodo_pagina* siguienteNodoPagina =list_get(nodoSegmento->list_paginas,pagina+1);
+			t_nodo_atributo_paginas *siguienteNodoAlgormito = nodo_algoritmo(siguienteNodoPagina->indiceVector);
+		}
+
+		int frame = nodoAlgormito->frame;
+		offset = frame * muse_page_size() + offset_del_frame ;
+
+		memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
+
+		printf("offset antes de leer la estructura %d \n",offset);
+		offset = offset + 5;
+
+		printf("offset despues de leer la estructura %d \n",offset);
+		offset = offset + heap->size;
+
+		printf("offset despues de leer el size %d \n",offset);
+
+		printf("heap size %d \n",heap->size);
+		dir_virtual =  offset;
+
+
+
+	}while (offset < (nodoSegmento->base+nodoSegmento->tamanio)-1);
+
 
 	return respuesta;
 
@@ -832,22 +914,39 @@ char * path_segmento (t_nodo_segmento* segmento) {
 
 
 t_bitarray *crearBitmap(int cantidadDepagina,int diferencia){
+
+		//FILE* bloque_crear;
+		//bloque_crear->_IO_buf_base
+		char *direccionArchivoBitMap = path_bitmap;
+		int bitmap = open(direccionArchivoBitMap, O_RDWR);
+		struct stat mystat;
+		//puts(bitmap);
+		if (fstat(bitmap, &mystat) < 0) {
+		//printf("Error al establecer fstat\n");
+	    close(bitmap);
+		}
+    	char *bmap ;
+		bmap = mmap(NULL, mystat.st_size, PROT_WRITE | PROT_READ, MAP_SHARED, bitmap, 0);
+
+		if (bmap == MAP_FAILED) {
+			//printf("Error al mapear a memoria: %s\n", strerror(errno));
+
+		}
+
 		size_t tamanio =cantidadDepagina/8;
 		if (diferencia >0){
 			tamanio++;
 
 		}
-		char bmap[tamanio];
 
-		bzero(bmap,tamanio);
-
-		bitarray = bitarray_create_with_mode(bmap,tamanio, MSB_FIRST);
-		size_t	cantidadDebits= bitarray_get_max_bit (bitarray);
+		t_bitarray *unbitarray = bitarray_create_with_mode(bmap,tamanio, MSB_FIRST);
+		size_t	cantidadDebits= bitarray_get_max_bit (unbitarray);
 		for (int i=0;i<cantidadDebits;i++){
-			//printf("*****posicion %d valor %d *****:\n",i,bitarray_test_bit(bitarray,i));
+			//bitarray_clean_bit(bitarray,i);
+			printf("*****posicion %d valor %d *****:\n",i,bitarray_test_bit(unbitarray,i));
 
 		}
-		return bitarray;
+		return unbitarray;
 
 }
 
@@ -934,6 +1033,21 @@ void test_map (char * path){
 		 char  * t = strdup("x");
 		 //memcpy(data + 1 ,t,strlen(t)+1);
 		 printf("data de map %s \n",data);
+
+}
+
+
+
+int creacionDeArchivoBitmap(int cantidad){
+	int x = 0;
+    FILE *fh = fopen (path_bitmap, "wb");
+    for(int i=0;i<cantidad;i++){
+        if (fh != NULL) {
+                fwrite (&x, sizeof (x), 1, fh);
+        }
+    }
+    fclose(fh);
+    return 0;
 
 }
 

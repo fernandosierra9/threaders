@@ -155,5 +155,10 @@ int pagina_segmento (int dir_virtual,int base);
 int offset_frame(int pagina,int dir_virtual,int base);
 
 void test_map (char * path);
+void estado_bit_array();
+
+int creacionDeArchivoBitmap(int cantidad);
+
+char *path_bitmap;
 
 #endif /* MUSE_H_ */
