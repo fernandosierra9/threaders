@@ -354,6 +354,8 @@ void muse_server_init() {
 
 		    muse_logger_info("****cantidad de paginas para map %d*****", cantidad_paginas);
 
+		    test_map (map_receive->path);
+
 		    nodo_Segmento->tamanio = tamanio;
 		    if(cantidad_segmentos==0){
 		    	nodo_Segmento->base =0;
@@ -377,7 +379,7 @@ void muse_server_init() {
 			t_protocol cpy_protocol = MAP_OK;
 			utils_serialize_and_send(libmuse_fd, cpy_protocol, map_res);
 
-			test_map (map_receive->path);
+
 
 		    break;
 
@@ -962,7 +964,7 @@ void test_map (char * path){
 	    struct stat sbuf;
 
 
-	    if ((fd = open(path, O_RDONLY)) == -1) {
+	    if ((fd = open(path, O_RDWR)) == -1) {
 	        perror("open");
 	        exit(1);
 	    }
@@ -973,15 +975,29 @@ void test_map (char * path){
 	    }
 
 
-	    data = (char *) mmap (0, sbuf.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	    data = (char *) mmap (0, sbuf.st_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 
 		if (data == (caddr_t)(-1)) {
 	        perror("mmap");
 	        exit(1);
 	    }
-		 char  * t = strdup("x");
-		 //memcpy(data + 1 ,t,strlen(t)+1);
+		 char  * t = strdup("xxxx");
+		 memcpy(data + 1 ,t,strlen(t));
 		 printf("data de map %s \n",data);
+
+
+		 int test=45;
+		 int *numero = malloc (sizeof(int)) ;
+		 numero = &test;
+		 memcpy(data + 1 ,numero,sizeof(int));
+
+		  if ( (munmap( data, sbuf.st_size ) ) == -1) {
+		      printf("munmap failed with error:");
+		   }
+		 close(fd);
+
+
+
 
 }
 
