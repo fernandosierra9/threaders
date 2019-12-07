@@ -6,12 +6,15 @@ t_program* program_create(int pid)
 	program->pid = pid;
 	program->state = NEW;
 	program->threads = list_create();
+	program->thread_exec = NULL;
+	program->queue_ready = list_create();
 	return program;
 }
 
 void program_destroy(t_program* program)
 {
 	list_destroy_and_destroy_elements(program->threads, (void*)program_destroy_thread);
+	list_clean(program->queue_ready);
 	free(program);
 }
 

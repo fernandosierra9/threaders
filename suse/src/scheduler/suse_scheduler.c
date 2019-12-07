@@ -1,15 +1,13 @@
 #include "suse_scheduler.h"
 
-t_list* queue_new;
-t_list* queue_ready;
-t_list* queue_blocked;
-t_list* queue_exit;
-
 t_list* semphores;
 t_list* programs;
 t_list* threads;
 
-t_thread* thread_exec;
+t_list* queue_new;
+t_list* queue_blocked;
+t_list* queue_exit;
+
 t_program* program_exec;
 
 int pid, tid = 0;
@@ -20,7 +18,6 @@ void scheduler_init()
 	programs = list_create();
 	threads = list_create();
 	queue_new = list_create();
-	queue_ready = list_create();
 	queue_blocked = list_create();
 	queue_exit = list_create();
 	suse_logger_info("Todas las colas de estados fueron creadas!");
@@ -43,13 +40,12 @@ void scheduler_init_semaphores()
 
 void scheduler_destroy()
 {
-	list_destroy_and_destroy_elements(queue_new, (void*)program_destroy);
-	list_destroy_and_destroy_elements(queue_ready, (void*)program_destroy);
-	list_destroy_and_destroy_elements(queue_blocked, (void*)program_destroy);
-	list_destroy_and_destroy_elements(queue_exit, (void*)program_destroy);
 	list_destroy_and_destroy_elements(semphores, (void*)semaphore_destroy);
 	list_destroy_and_destroy_elements(programs, (void*)program_destroy);
 	list_destroy_and_destroy_elements(threads, (void*)program_destroy_thread);
+	list_destroy(queue_new);
+	list_destroy(queue_blocked);
+	list_destroy(queue_exit);
 	pthread_mutex_destroy(&scheduler_mutex);
 	suse_logger_info("Todas las estructuras de planificacion fueron destruidas!");
 }
@@ -97,8 +93,10 @@ bool _thread_is_blocked(t_thread* thread) {
 	return thread->state == BLOCKED;
 }
 
-bool _thread_is_the_running(t_thread* thread) {
-	return thread->state == EXEC && thread_exec != NULL && thread->tid == thread_exec->tid && thread->pid == thread_exec->pid;
+bool _thread_is_the_running(t_thread* thread)
+{
+	t_program* pr_e = _scheduler_find_program_by_id(thread->pid);
+	return thread->state == EXEC && pr_e->thread_exec != NULL && thread->tid == pr_e->thread_exec->tid && thread->pid == pr_e->thread_exec->pid;
 }
 
 void _scheduler_list_programs(t_program *p)
@@ -137,13 +135,13 @@ void scheduler_print_metrics()
 
 void scheduler_add_new_program(t_program* program)
 {
-	pthread_mutex_lock(&scheduler_mutex);
 	for(int i = 0; i < list_size(program->threads); i++)
 	{
 		t_thread* thread = list_get(program->threads, i);
+		pthread_mutex_lock(&scheduler_mutex);
 		list_add(queue_new, thread);
+		pthread_mutex_unlock(&scheduler_mutex);
 	}
-	pthread_mutex_unlock(&scheduler_mutex);
 }
 
 void scheduler_execute_program(t_program* program)
@@ -164,7 +162,8 @@ void scheduler_ready_program(t_program* program)
 void scheduler_set_ready_thread(t_thread* thread)
 {
 	thread->state = READY;
-	list_add(queue_ready, thread);
+	t_program* pr = _scheduler_find_program_by_id(thread->pid);
+	list_add(pr->queue_ready, thread);
 }
 
 void scheduler_execute_thread(t_thread* thread)
@@ -173,9 +172,9 @@ void scheduler_execute_thread(t_thread* thread)
 	thread->wait_time += wait_time;
 	thread->state = EXEC;
 	pthread_mutex_lock(&scheduler_mutex);
-	thread_exec = thread;
-	t_program* program = _scheduler_find_program_by_id(thread->pid);
-	program_exec = program;
+	t_program* pr = _scheduler_find_program_by_id(thread->pid);
+	pr->thread_exec = thread;
+	program_exec = pr;
 	pthread_mutex_unlock(&scheduler_mutex);
 }
 
@@ -213,10 +212,11 @@ void scheduler_run_long_term_scheduler()
 	for (i = 0; i < list_size(queue_new); i++)
 	{
 		t_thread* thread = list_get(queue_new, i);
-		if (list_size(queue_ready) <= suse_get_max_multiprog())
+		t_program* program = _scheduler_find_program_by_id(thread->pid);
+		if (list_size(program->queue_ready) <= suse_get_max_multiprog())
 		{
 			list_remove(queue_new, i);
-			list_add(queue_ready, thread);
+			list_add(program->queue_ready, thread);
 			suse_decrease_multiprog();
 		}
 	}
@@ -231,13 +231,14 @@ t_thread* _scheduler_get_sjf(t_thread* th1, t_thread* th2) {
 void scheduler_run_short_term_scheduler()
 {
 	int i;
-	for (i = 0; i < list_size(queue_ready); i++)
+	for (i = 0; i < list_size(programs); i++)
 	{
-		t_thread* thread = list_get(queue_ready, i);
-		t_thread* sjf_thread = (t_thread*) list_fold(queue_ready, thread, (void*) _scheduler_get_sjf);
+		t_program* pr = list_get(programs, i);
+		t_thread* thread = list_get(pr->threads, 0);
+		t_thread* sjf_thread = (t_thread*) list_fold(pr->queue_ready, thread, (void*) _scheduler_get_sjf);
 		if (thread == sjf_thread)
 		{
-			list_remove(queue_ready, i);
+			list_remove(pr->queue_ready, i);
 			scheduler_execute_thread(sjf_thread);
 			suse_increase_multiprog();
 			return;

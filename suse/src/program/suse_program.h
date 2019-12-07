@@ -26,6 +26,8 @@ typedef struct
 	int pid;
 	e_states state;
 	t_list* threads;
+	t_list* queue_ready;
+	t_thread* thread_exec;
 } t_program;
 
 t_program* program_create(int pid);
