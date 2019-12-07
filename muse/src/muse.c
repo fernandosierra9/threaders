@@ -802,57 +802,6 @@ int agrandar_segmento(t_nodo_segmento* nodoSegmento,
 	printf("\n ******pagina %d****** \n",pagina);
 
 
-
-	int offset_del_frame = offset_frame(pagina,dir_virtual,nodoSegmento->base);
-	t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,pagina);
-	t_nodo_atributo_paginas *nodoAlgormito = nodo_algoritmo(nodoPagina->indiceVector);
-	int otroframe = nodoAlgormito->frame;
-
-	printf("\n ******frame %d****** \n",otroframe);
-
-	offset = otroframe * muse_page_size() + offset_del_frame ;
-
-	printf("\n ******offset %d****** \n",offset);
-	memcpy(memoria + offset,heap, sizeof(t_heapMetadata));
-
-
-	offset = 0;
-	pagina = primera_pagina;
-	dir_virtual = nodoSegmento->base;
-
-
-	do {
-		pagina = pagina_segmento (dir_virtual,nodoSegmento->base);
-		int offset_del_frame = offset_frame(pagina,dir_virtual,nodoSegmento->base);
-		t_nodo_pagina* nodoPagina =list_get(nodoSegmento->list_paginas,pagina);
-		t_nodo_atributo_paginas *nodoAlgormito = nodo_algoritmo(nodoPagina->indiceVector);
-
-		if(pagina +1 <= ultima_pagina ) {
-			t_nodo_pagina* siguienteNodoPagina =list_get(nodoSegmento->list_paginas,pagina+1);
-			t_nodo_atributo_paginas *siguienteNodoAlgormito = nodo_algoritmo(siguienteNodoPagina->indiceVector);
-		}
-
-		int frame = nodoAlgormito->frame;
-		offset = frame * muse_page_size() + offset_del_frame ;
-
-		memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
-
-		printf("offset antes de leer la estructura %d \n",offset);
-		offset = offset + 5;
-
-		printf("offset despues de leer la estructura %d \n",offset);
-		offset = offset + heap->size;
-
-		printf("offset despues de leer el size %d \n",offset);
-
-		printf("heap size %d \n",heap->size);
-		dir_virtual =  offset;
-
-
-
-	}while (offset < (nodoSegmento->base+nodoSegmento->tamanio)-1);
-
-
 	return respuesta;
 
 }
