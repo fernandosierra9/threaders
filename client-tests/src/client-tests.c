@@ -92,7 +92,7 @@ int main(void)
 
 
     printf("\n enviar map ");
-    ptr =  muse_map("/home/utnso/tp-2019-2c-threaders/muse/Debug/test.txt", 774, MAP_SHARED);
+    ptr =  muse_map("/home/utnso/tp-2019-2c-threaders/muse/Debug/test.txt", 837, MAP_SHARED);
     printf("\n ptr nuevo: %d \n" , ptr);
 
 

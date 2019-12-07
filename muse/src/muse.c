@@ -23,6 +23,7 @@ int main(void) {
 
 void muse_server_init() {
 	indice = 0;
+
 	muse_socket = socket_create_listener("127.0.0.1", muse_get_listen_port());
 	if (muse_socket < 0) {
 		muse_logger_error("Error al crear server");
@@ -326,6 +327,7 @@ void muse_server_init() {
 		    muse_logger_info("**** path %s*****", map_receive->path);
 		    muse_logger_info("****id proceso %d*****", map_receive->id_libmuse);
 		    int flag;
+
 		    t_nodo_segmento* nodo_Segmento = crear_nodo_segmento();
 		    nodo_Segmento->map = NULL;
 		    if(map_receive->flag == MAP_PRIVATE){
@@ -354,6 +356,9 @@ void muse_server_init() {
 
 		    muse_logger_info("****cantidad de paginas para map %d*****", cantidad_paginas);
 
+
+
+
 		    nodo_Segmento->tamanio = tamanio;
 		    if(cantidad_segmentos==0){
 		    	nodo_Segmento->base =0;
@@ -362,7 +367,15 @@ void muse_server_init() {
 		    else{
 		        t_nodo_segmento* otroNodoSegmento=list_get(nodoProceso->list_segmento,cantidad_segmentos-1);
 		        nodo_Segmento->base = otroNodoSegmento->base + otroNodoSegmento->tamanio +1 ;
+		        list_add(nodoProceso->list_segmento, nodo_Segmento);
 		    }
+
+		    for(int i=0;i<list_size(nodoProceso->list_segmento);i++){
+		    	t_nodo_segmento* nodo = list_get(nodoProceso->list_segmento,i);
+		    	printf("base %d tananio %d \n",nodo->base,nodo->tamanio);
+
+		    }
+
 		    nodo_Segmento->list_paginas = list_create();
 		    for(int i=0;i<cantidad_paginas;i++){
 		    	t_nodo_pagina *nodo_pagina = malloc(sizeof(t_nodo_pagina));
@@ -371,13 +384,20 @@ void muse_server_init() {
 		    	//no necesito un frame
 		    	crear_nodo_indice_algoritmo(nodo_pagina->indiceVector,-1,0);
 		    }
+			char *unPath= "/home/utnso/tp-2019-2c-threaders/muse/Debug/test.txt";
+			test_map (unPath);
+
 		    t_malloc_ok* map_res = malloc(sizeof(t_malloc_ok));
 			map_res->ptr = nodo_Segmento->base;
 
 			t_protocol cpy_protocol = MAP_OK;
+
+
+
+
 			utils_serialize_and_send(libmuse_fd, cpy_protocol, map_res);
 
-			test_map (map_receive->path);
+
 
 		    break;
 
@@ -962,7 +982,7 @@ void test_map (char * path){
 	    struct stat sbuf;
 
 
-	    if ((fd = open(path, O_RDONLY)) == -1) {
+	    if ((fd = open(path, O_RDWR)) == -1) {
 	        perror("open");
 	        exit(1);
 	    }
@@ -973,16 +993,44 @@ void test_map (char * path){
 	    }
 
 
-	    data = (char *) mmap (0, sbuf.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	    data = mmap (0, sbuf.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
 		if (data == (caddr_t)(-1)) {
 	        perror("mmap");
 	        exit(1);
 	    }
-		 char  * t = strdup("x");
-		 //memcpy(data + 1 ,t,strlen(t)+1);
-		 printf("data de map %s \n",data);
+		char *untes = "derek34";
+		for(int i = 0; i<strlen(untes);i++){
+			data[i+9] =untes[i];
+		}
 
+		int algo = 9;
+		int *otro ;
+		otro = &algo;
+
+		for(int i = 0; i<sizeof(int);i++){
+			data[i+9] = otro[i];
+		}
+
+
+		int *rest = malloc(sizeof(int));
+
+		for(int i = 0; i<sizeof(int);i++){
+			//memcpy(&rest[i],&data[i+9],1) ;
+			rest[i] = data[i+9];
+		}
+
+		int otro2;
+		otro2=*rest;
+		//printf("data de map %d \n",otro2);
+
+		 //printf("data de map %s \n",data);
+		 if(munmap(data,sbuf.st_size)==-1)
+		 {
+			 perror("error munmap");
+		 }
+		 //free(rest);
+		 close(fd);
 }
 
 
