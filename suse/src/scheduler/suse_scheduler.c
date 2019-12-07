@@ -159,20 +159,20 @@ void scheduler_ready_program(t_program* program)
  * THREADS
  * */
 
-void scheduler_set_ready_thread(t_thread* thread)
+void scheduler_set_ready_thread(t_thread* thread, t_program* pr, int pos)
 {
+	list_remove(queue_new, pos);
 	thread->state = READY;
-	t_program* pr = _scheduler_find_program_by_id(thread->pid);
 	list_add(pr->queue_ready, thread);
 }
 
-void scheduler_execute_thread(t_thread* thread)
+void scheduler_execute_thread(t_thread* thread, t_program* pr, int pos)
 {
 	clock_t wait_time = clock();
 	thread->wait_time += wait_time;
 	thread->state = EXEC;
 	pthread_mutex_lock(&scheduler_mutex);
-	t_program* pr = _scheduler_find_program_by_id(thread->pid);
+	list_remove(pr->queue_ready, pos);
 	pr->thread_exec = thread;
 	program_exec = pr;
 	pthread_mutex_unlock(&scheduler_mutex);
@@ -215,9 +215,10 @@ void scheduler_run_long_term_scheduler()
 		t_program* program = _scheduler_find_program_by_id(thread->pid);
 		if (list_size(program->queue_ready) <= suse_get_max_multiprog())
 		{
-			list_remove(queue_new, i);
-			list_add(program->queue_ready, thread);
+			pthread_mutex_lock(&scheduler_mutex);
+			scheduler_set_ready_thread(thread, program, i);
 			suse_decrease_multiprog();
+			pthread_mutex_unlock(&scheduler_mutex);
 		}
 	}
 }
@@ -233,13 +234,12 @@ void scheduler_run_short_term_scheduler()
 	int i;
 	for (i = 0; i < list_size(programs); i++)
 	{
-		t_program* pr = list_get(programs, i);
-		t_thread* thread = list_get(pr->threads, 0);
-		t_thread* sjf_thread = (t_thread*) list_fold(pr->queue_ready, thread, (void*) _scheduler_get_sjf);
-		if (thread == sjf_thread)
+		t_program* program = list_get(programs, i);
+		t_thread* thread = list_get(program->threads, 0);
+		t_thread* sjf_thread = (t_thread*) list_fold(program->queue_ready, thread, (void*) _scheduler_get_sjf);
+		if (thread->tid == sjf_thread->tid)
 		{
-			list_remove(pr->queue_ready, i);
-			scheduler_execute_thread(sjf_thread);
+			scheduler_execute_thread(sjf_thread, program, i);
 			suse_increase_multiprog();
 			return;
 		}
