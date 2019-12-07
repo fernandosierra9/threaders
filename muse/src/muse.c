@@ -189,8 +189,6 @@ void muse_server_init() {
 
 			else {
 
-
-
 				t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
 				t_nodo_segmento *nodoSegmento = buscar_segmento(get_receive->src,nodo->list_segmento);
 				int pagina = pagina_segmento (get_receive->src,nodoSegmento->base);
@@ -204,22 +202,11 @@ void muse_server_init() {
 				//leo la estructura
 				memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
 
-				memcpy(content, memoria + get_receive->src, get_receive->size);
+				//memcpy(content, memoria + get_receive->src, get_receive->size);
+				offset = offset + 5;
 
-				t_get_ok* response = malloc(sizeof(t_get_ok));
 
-				int d= 11;
-				memcpy(content,&d,sizeof(int));
-
-				response->res = content;
-
-				int numero = *(int *) response->res;
-				printf("---*** numero %d \n",numero);
-				response->tamres = sizeof(int);
-
-				printf("---*** tamres %d \n",response->tamres);
-				t_protocol get_protocol = GET_OK;
-				//utils_serialize_and_send(libmuse_fd, get_protocol, response);
+				memcpy(content, memoria + offset, get_receive->size);
 
 				t_copy* copy_send = malloc(sizeof(t_copy));
 				copy_send->self_id = get_receive->id_libmuse ;
