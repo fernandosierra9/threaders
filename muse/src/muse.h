@@ -37,7 +37,7 @@ typedef enum {
 
 typedef struct {
 	int base;
-	int  ;
+	int tamanio;
 	t_list *list_paginas;
 	t_segmento tipo;
 	void * map;
