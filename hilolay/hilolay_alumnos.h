@@ -21,5 +21,6 @@
 	hilolay_operations *main_ops;
 
 	void init_internal(struct hilolay_operations*);
+	int suse_connected();
 
 #endif // hilolay_alumnos_h__

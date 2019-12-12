@@ -8,27 +8,35 @@ int max_tid = 0;
 
 char *ip_suse = "127.0.0.1";
 int puerto_suse = 5003;
-int suse_fd;
+int suse_fd = -1;
+
 
 int suse_create(int tid){
 	if (tid > max_tid) max_tid = tid;
 
-	printf("HELLO SUSE");
-	suse_fd = socket_connect_to_server(ip_suse, puerto_suse);
+	puts("HELLO SUSE");
 
-	if (suse_fd < 0)
+	if ( suse_fd < 0 )
 	{
-		socket_close_conection(suse_fd);
-		return -1;
+		suse_fd = socket_connect_to_server(ip_suse, puerto_suse);
+		if (suse_fd < 0)
+		{
+			socket_close_conection(suse_fd);
+			return -1;
+		}
+		puts("Conexion con Suse establecida");
+
 	}
-	puts("Conexion con Suse establecida");
+
+	// Ver por que no rompe
 
 	t_new_thread *new_thread_send = malloc(sizeof(t_new_thread));
+
 	new_thread_send->pid = 200;
 	new_thread_send->tid = tid;
+
 	t_protocol newthread_protocol = NEW_THREAD;
 
-	utils_serialize_and_send(suse_fd, newthread_protocol, new_thread_send);
 	utils_serialize_and_send(suse_fd, newthread_protocol, new_thread_send);
 
 	return 0;
@@ -44,23 +52,26 @@ int suse_schedule_next(void){
 int suse_join(int tid){
 
 	printf("SUSE THREAD JOIN");
-	suse_fd = socket_connect_to_server(ip_suse, puerto_suse);
-
-	if (suse_fd < 0)
+	if ( suse_fd < 0 )
 	{
-		socket_close_conection(suse_fd);
-		return -1;
+		suse_fd = socket_connect_to_server(ip_suse, puerto_suse);
+		if (suse_fd < 0)
+		{
+			socket_close_conection(suse_fd);
+			return -1;
+		}
+		puts("Conexion con Suse establecida");
+
 	}
-	puts("Conexion con Suse establecida");
 
 	t_thread_join *thread_join_send = malloc(sizeof(t_thread_join));
 	thread_join_send->tid = tid;
 	t_protocol thread_join_protocol = THREAD_JOIN;
 
 	utils_serialize_and_send(suse_fd, thread_join_protocol, thread_join_send);
-	utils_serialize_and_send(suse_fd, thread_join_protocol, thread_join_send);
 
 	return 0;
+
 }
 
 int suse_close(int tid){
@@ -68,20 +79,22 @@ int suse_close(int tid){
 	max_tid--;
 
 	printf("SUSE THREAD CLOSE");
-	suse_fd = socket_connect_to_server(ip_suse, puerto_suse);
-
-	if (suse_fd < 0)
+	if ( suse_fd < 0 )
 	{
-		socket_close_conection(suse_fd);
-		return -1;
+		suse_fd = socket_connect_to_server(ip_suse, puerto_suse);
+		if (suse_fd < 0)
+		{
+			socket_close_conection(suse_fd);
+			return -1;
+		}
+		puts("Conexion con Suse establecida");
+
 	}
-	puts("Conexion con Suse establecida");
 
 	t_thread_close *thread_close_send = malloc(sizeof(t_thread_close));
 	thread_close_send->tid = tid;
 	t_protocol thread_close_protocol = THREAD_JOIN;
 
-	utils_serialize_and_send(suse_fd, thread_close_protocol, thread_close_send);
 	utils_serialize_and_send(suse_fd, thread_close_protocol, thread_close_send);
 
 	return 0;
