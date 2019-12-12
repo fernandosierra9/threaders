@@ -17,6 +17,8 @@ void scheduler_init_semaphores();
 void scheduler_add_new_program(t_program* program);
 void scheduler_execute_metrics();
 void scheduler_destroy();
+int scheduler_get_next_pid();
+t_program* _scheduler_find_program_by_fd(int fd);
 
 pthread_mutex_t scheduler_mutex;
 

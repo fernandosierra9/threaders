@@ -12,7 +12,7 @@ t_list* threads;
 t_thread* thread_exec;
 t_program* program_exec;
 
-int pid, tid = 0;
+int pid = 0;
 
 void scheduler_init()
 {
@@ -61,6 +61,14 @@ void scheduler_destroy()
 t_program* _scheduler_find_program_by_id(int id) {
 	int _is_the_program(t_program *p) {
 		return id == p->pid;
+	}
+
+	return list_find(programs, (void*) _is_the_program);
+}
+
+t_program* _scheduler_find_program_by_fd(int fd) {
+	int _is_the_program(t_program *p) {
+		return fd == p->fd;
 	}
 
 	return list_find(programs, (void*) _is_the_program);
@@ -144,17 +152,6 @@ void scheduler_add_new_program(t_program* program)
 		list_add(queue_new, thread);
 	}
 	pthread_mutex_unlock(&scheduler_mutex);
-}
-
-void scheduler_execute_program(t_program* program)
-{
-	program->state = EXEC;
-	program_exec = program;
-}
-
-void scheduler_ready_program(t_program* program)
-{
-	program->state = READY;
 }
 
 /**
@@ -257,9 +254,4 @@ void scheduler_execute_metrics()
 int scheduler_get_next_pid()
 {
 	return pid++;
-}
-
-int scheduler_get_next_tid()
-{
-	return tid++;
 }

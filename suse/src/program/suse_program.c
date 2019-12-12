@@ -1,9 +1,10 @@
 #include "suse_program.h"
 
-t_program* program_create(int pid)
+t_program* program_create(int pid, int fd)
 {
 	t_program* program = malloc(sizeof(t_program));
 	program->pid = pid;
+	program->fd = fd;
 	program->threads = list_create();
 	program->thread_exec = NULL;
 	program->queue_ready = list_create();

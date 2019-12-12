@@ -24,13 +24,13 @@ typedef struct
 typedef struct
 {
 	int pid;
-	e_states state;
+	int fd;
 	t_list* threads;
 	t_thread* thread_exec;
 	t_list* queue_ready;
 } t_program;
 
-t_program* program_create(int pid);
+t_program* program_create(int pid, int fd);
 void program_destroy(t_program* program);
 t_thread* program_create_thread(int pid, int tid);
 void program_destroy_thread(t_thread* thread);

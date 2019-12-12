@@ -92,14 +92,23 @@ void suse_server_init()
 			case NEW_THREAD:
 			{
 				suse_logger_info("Recibi NEW_THREAD de hilolay");
-				t_new_thread *newthread_recive =  utils_receive_and_deserialize(hilolay_fd,protocol);
-				suse_logger_info("NT: Program ID: %d", newthread_recive->pid);
+				t_new_thread *newthread_recive =  utils_receive_and_deserialize(hilolay_fd, protocol);
 				suse_logger_info("NT: Thread ID: %d", newthread_recive->tid);
 
-				t_program* program_id = program_create(newthread_recive->pid);
-				t_thread* program_thread = program_create_thread(newthread_recive->pid, newthread_recive->tid);
-				list_add(program_id->threads, program_thread);
-				scheduler_add_new_program(program_id);
+				t_program* program = NULL;
+				int pid;
+				if(newthread_recive->tid == 0) {
+					pid = scheduler_get_next_pid();
+					program = program_create(pid, hilolay_fd);
+				} else {
+					program = _scheduler_find_program_by_fd(hilolay_fd);
+					if(program != NULL) {
+						pid = program->pid;
+					}
+				}
+				t_thread* program_thread = program_create_thread(pid, newthread_recive->tid);
+				list_add(program->threads, program_thread);
+				scheduler_add_new_program(program);
 				break;
 			}
 			case THREAD_JOIN:
