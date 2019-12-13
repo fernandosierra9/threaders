@@ -97,12 +97,15 @@ void suse_server_init()
 
 				t_program* program = NULL;
 				int pid;
-				if(newthread_recive->tid == 0) {
+				if(newthread_recive->tid == 0)
+				{
 					pid = scheduler_get_next_pid();
 					program = program_create(pid, hilolay_fd);
-				} else {
+				} else
+				{
 					program = _scheduler_find_program_by_fd(hilolay_fd);
-					if(program != NULL) {
+					if(program != NULL)
+					{
 						pid = program->pid;
 					}
 				}

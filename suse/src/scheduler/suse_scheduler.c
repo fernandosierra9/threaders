@@ -151,6 +151,7 @@ void scheduler_add_new_program(t_program* program)
 		t_thread* thread = list_get(program->threads, i);
 		list_add(queue_new, thread);
 	}
+	list_add(programs, program);
 	pthread_mutex_unlock(&scheduler_mutex);
 }
 
@@ -191,6 +192,16 @@ void scheduler_finish_thread(t_thread* thread)
 	thread->state = EXIT;
 	pthread_mutex_lock(&scheduler_mutex);
 	list_add(queue_exit, thread);
+	t_program* program = _scheduler_find_program_by_id(thread->pid);
+	int i;
+	for (i = 0; i < list_size(programs); i++)
+	{
+		t_program* pr = list_get(programs, i);
+		if (pr->pid == program->pid)
+		{
+			list_remove_and_destroy_element(programs, i, (void*)program_destroy);
+		}
+	}
 	pthread_mutex_unlock(&scheduler_mutex);
 	scheduler_print_metrics();
 }
