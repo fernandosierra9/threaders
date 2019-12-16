@@ -5,7 +5,7 @@ t_list* queue_ready;
 t_list* queue_blocked;
 t_list* queue_exit;
 
-t_list* semphores;
+t_list* semaphores;
 t_list* programs;
 t_list* threads;
 
@@ -28,14 +28,14 @@ void scheduler_init()
 
 void scheduler_init_semaphores()
 {
-	semphores = list_create();
+	semaphores = list_create();
 	suse_logger_info("Se creo lista de semaforos..");
 	for(int i = 0; suse_get_sem_ids()[i] != NULL && suse_get_sem_init()[i] != NULL && suse_get_sem_max()[i] != NULL; i++)
 	{
 		char* sem_id = suse_get_sem_ids()[i];
 		int sem_init = atoi(suse_get_sem_init()[i]);
 		int sem_max = atoi(suse_get_sem_max()[i]);
-		list_add(semphores, semaphore_create(sem_id, sem_init, sem_max));
+		list_add(semaphores, semaphore_create(sem_id, sem_init, sem_max));
 		suse_logger_info("Se agrego un nuevo semaforo con ID: %s, init: %d y max: %d", sem_id, sem_init, sem_max);
 	}
 	suse_logger_info("Se han cargado los semaforos correctamente");
@@ -47,7 +47,7 @@ void scheduler_destroy()
 	list_destroy_and_destroy_elements(queue_ready, (void*)program_destroy);
 	list_destroy_and_destroy_elements(queue_blocked, (void*)program_destroy);
 	list_destroy_and_destroy_elements(queue_exit, (void*)program_destroy);
-	list_destroy_and_destroy_elements(semphores, (void*)semaphore_destroy);
+	list_destroy_and_destroy_elements(semaphores, (void*)semaphore_destroy);
 	list_destroy_and_destroy_elements(programs, (void*)program_destroy);
 	list_destroy_and_destroy_elements(threads, (void*)program_destroy_thread);
 	pthread_mutex_destroy(&scheduler_mutex);
@@ -58,23 +58,48 @@ void scheduler_destroy()
  * METRICS
  * */
 
-t_program* _scheduler_find_program_by_id(int id) {
-	int _is_the_program(t_program *p) {
+t_program* _scheduler_find_program_by_id(int id)
+{
+	int _is_the_program(t_program *p)
+	{
 		return id == p->pid;
 	}
 
 	return list_find(programs, (void*) _is_the_program);
 }
 
-t_program* _scheduler_find_program_by_fd(int fd) {
-	int _is_the_program(t_program *p) {
+t_program* _scheduler_find_program_by_fd(int fd)
+{
+	int _is_the_program(t_program *p)
+	{
 		return fd == p->fd;
 	}
 
 	return list_find(programs, (void*) _is_the_program);
 }
 
-int thread_add_exec_time(int accum, t_thread* thread) {
+t_thread* _scheduler_find_thread_by_fd(int tid)
+{
+	int _is_the_thread(t_thread *t)
+	{
+		return tid == t->tid;
+	}
+
+	return list_find(threads, (void*) _is_the_thread);
+}
+
+t_semaphore* _scheduler_find_semaphore_by_name(char* name)
+{
+	int _is_the_semaphore(t_semaphore *s)
+	{
+		return string_equals_ignore_case(name, s->id);
+	}
+
+	return list_find(semaphores, (void*) _is_the_semaphore);
+}
+
+int thread_add_exec_time(int accum, t_thread* thread)
+{
 	return accum + thread->exec_time;
 }
 
@@ -93,19 +118,23 @@ void _scheduler_list_threads(t_thread *t)
 	suse_logger_info("Porcentaje del tiempo de ejecución: %d", t->exec_time_percent);
 }
 
-bool _thread_is_new(t_thread* thread) {
+bool _thread_is_new(t_thread* thread)
+{
 	return thread->state == NEW;
 }
 
-bool _thread_is_ready(t_thread* thread) {
+bool _thread_is_ready(t_thread* thread)
+{
 	return thread->state == READY;
 }
 
-bool _thread_is_blocked(t_thread* thread) {
+bool _thread_is_blocked(t_thread* thread)
+{
 	return thread->state == BLOCKED;
 }
 
-bool _thread_is_the_running(t_thread* thread) {
+bool _thread_is_the_running(t_thread* thread)
+{
 	return thread->state == EXEC && thread_exec != NULL && thread->tid == thread_exec->tid && thread->pid == thread_exec->pid;
 }
 
@@ -135,7 +164,7 @@ void scheduler_print_metrics()
 	suse_logger_info("########POR PROGRAMA########");
 	list_iterate(programs, (void*) _scheduler_list_programs);
 	suse_logger_info("########DEL SISTEMA########");
-	list_iterate(semphores, (void*) _scheduler_list_semaphores);
+	list_iterate(semaphores, (void*) _scheduler_list_semaphores);
 	suse_logger_info("********FIN DE METRICAS********");
 }
 
@@ -150,6 +179,7 @@ void scheduler_add_new_program(t_program* program)
 	{
 		t_thread* thread = list_get(program->threads, i);
 		list_add(queue_new, thread);
+		list_add(threads, thread);
 	}
 	list_add(programs, program);
 	pthread_mutex_unlock(&scheduler_mutex);
@@ -182,9 +212,75 @@ void scheduler_block_thread(t_thread* thread)
 	clock_t cpu_time = clock();
 	thread->cpu_time += cpu_time;
 	thread->state = BLOCKED;
-	pthread_mutex_lock(&scheduler_mutex);
 	list_add(queue_blocked, thread);
-	pthread_mutex_unlock(&scheduler_mutex);
+}
+
+void scheduler_unblock_thread(t_thread* thread)
+{
+	int i;
+	for(i = 0; i < list_size(queue_blocked); i++)
+	{
+		t_thread* th = list_get(queue_blocked, i);
+		if(thread->pid == th->tid && thread->tid == th->tid)
+		{
+			pthread_mutex_lock(&scheduler_mutex);
+			list_remove(queue_blocked, i);
+			pthread_mutex_unlock(&scheduler_mutex);
+		}
+	}
+}
+
+void scheduler_semaphore_wait(int thread_id, char* sem_name)
+{
+	t_semaphore* semaphore = _scheduler_find_semaphore_by_name(sem_name);
+	if(semaphore == NULL)
+	{
+		suse_logger_warn("No se encontro semaforo con el ID: %s", sem_name);
+		return;
+	}
+	t_thread* thread = _scheduler_find_thread_by_fd(thread_id);
+	if(thread == NULL)
+	{
+		suse_logger_warn("No se encontro hilo con el TID: %s", thread_id);
+		return;
+	}
+
+	semaphore->value--;
+	if(semaphore->value)
+	{
+		pthread_mutex_lock(&scheduler_mutex);
+		semaphore_lock_thread(semaphore, thread);
+		scheduler_block_thread(thread);
+		pthread_mutex_unlock(&scheduler_mutex);
+	}
+}
+
+void scheduler_semaphore_signal(int thread_id, char* sem_name)
+{
+	t_semaphore* semaphore = _scheduler_find_semaphore_by_name(sem_name);
+	if(semaphore == NULL)
+	{
+		suse_logger_warn("No se encontro semaforo con el ID: %s", sem_name);
+		return;
+	}
+	t_thread* thread = _scheduler_find_thread_by_fd(thread_id);
+	if(thread == NULL)
+	{
+		suse_logger_warn("No se encontro hilo con el TID: %s", thread_id);
+		return;
+	}
+	if(semaphore->value < semaphore->max_value)
+	{
+		semaphore->value++;
+		if(semaphore->value <= 0)
+		{
+			pthread_mutex_lock(&scheduler_mutex);
+			t_thread* unlocked_thread = semaphore_unlock_thread(semaphore);
+			scheduler_unblock_thread(unlocked_thread);
+			scheduler_set_ready_thread(unlocked_thread);
+			pthread_mutex_unlock(&scheduler_mutex);
+		}
+	}
 }
 
 void scheduler_finish_thread(t_thread* thread)
@@ -230,7 +326,8 @@ void scheduler_run_long_term_scheduler()
 	}
 }
 
-t_thread* _scheduler_get_sjf(t_thread* th1, t_thread* th2) {
+t_thread* _scheduler_get_sjf(t_thread* th1, t_thread* th2)
+{
 	float f1 = scheduler_calculate_exponential_mean(th1->cpu_time);
 	float f2 = scheduler_calculate_exponential_mean(th2->cpu_time);
 	return f1 <= f2 ? th1 : th2;
