@@ -351,10 +351,8 @@ void muse_server_init() {
 		    int cantidad_paginas = (map_receive->size/muse_page_size()+1);
 		    int tamanio = cantidad_paginas*muse_page_size();
 
-
 		    muse_logger_info("****cantidad de paginas para map %d*****", cantidad_paginas);
 
-		    test_map (map_receive->path);
 
 		    nodo_Segmento->tamanio = tamanio;
 		    if(cantidad_segmentos==0){
@@ -394,15 +392,30 @@ void muse_server_init() {
 void muse_init() {
 	lista_algoritmo = list_create();
 	memoria = malloc(muse_memory_size());
+
 	int cantidad_paginas_reales = muse_memory_size() / muse_page_size();
 	int diferencia= cantidad_frames % 8;
 	path_bitmap = "bitmap.bit";
 	cantidad_frames = cantidad_paginas_reales;
-	creacionDeArchivoBitmap(cantidad_frames);
-	bitarray=crearBitmap(cantidad_frames,diferencia);
+	creacionDeArchivoBitmap(cantidad_frames,path_bitmap);
+
+	bitarray=crearBitmap(cantidad_frames,diferencia,path_bitmap);
 	int cantidad_paginas_virtuales = muse_swap_size() / muse_page_size();
 	cantidad_paginas_totales = cantidad_paginas_reales
 			+ cantidad_paginas_virtuales;
+
+
+	int cantidad_paginas_swap = muse_swap_size() / muse_page_size();
+	diferencia= cantidad_paginas_swap % 8;
+	path_bitmap = "bitmap_swap.bit";
+	cantidad_frames_swap = cantidad_paginas_swap;
+	creacionDeArchivoBitmap(cantidad_frames,path_bitmap);
+
+	bitarray_swap=crearBitmap(cantidad_frames,diferencia,path_bitmap);
+
+
+
+
 
 	vectorFrames = (t_vector_frames*)calloc(cantidad_paginas_totales, sizeof(t_vector_frames));
 	vectorAtributoPaginas = (t_vector_atributo_paginas*)calloc(cantidad_paginas_totales, sizeof(t_vector_atributo_paginas));
@@ -452,10 +465,20 @@ t_nodo_proceso* procesar_id(int id) {
 	}
 	return unNodo;
 }
+
 int asignarFrameLibre() {
-	return frameLibre();
+	int libre  = frameLibre();
+	if (libre == -1){
+		libre  = aplicar_algoritmo();
+	}
+	return libre;
 
 }
+
+int asignarFrameLibreSWAP() {
+	return frameLibreSWAP();
+}
+
 
 
 int asignarIndiceVectorLibre() {
@@ -668,6 +691,22 @@ void cambiar_estado_frame(int frame, bool estado) {
 	}
 }
 
+void cambiar_estado_frame_swap(int frame, bool estado) {
+
+	printf("-----cambiar frame %d\n",frame);
+
+	if ( estado == false) {
+		printf("-----cambiar a ocupado %d\n",frame);
+		bitarray_clean_bit(bitarray_swap, frame);
+
+	}
+	if (estado == true){
+		printf("-----cambiar a libre %d\n",frame);
+		bitarray_set_bit(bitarray_swap, frame);
+	}
+}
+
+
 bool estaOcupada(int frame)
 {
 	return bitarray_test_bit(bitarray, frame);
@@ -826,8 +865,8 @@ void sincronizar(t_nodo_segmento *segmento,size_t size){
 
 		t_nodo_atributo_paginas *nodoAlgoritmo = nodo_algoritmo(nodo_pagina->indiceVector);
 		int frame_libre;
+		int frame = nodoAlgoritmo->frame;
 		if(nodoAlgoritmo->modificado ==1){
-			int frame = nodoAlgoritmo->frame;
 			if(	nodoAlgoritmo->presencia ==0){
 				frame_libre = asignarFrameLibre();
 				if(	frame_libre	< 0	){
@@ -839,7 +878,7 @@ void sincronizar(t_nodo_segmento *segmento,size_t size){
 				frame = frame_libre;
 				free(pagina_swap);
 			}
-			memcpy(contenido_pagina,memoria+frame_libre*muse_page_size(),muse_page_size());
+			memcpy(contenido_pagina,memoria+frame*muse_page_size(),muse_page_size());
 			nodoAlgoritmo->presencia = 1;
 			nodoAlgoritmo->modificado = 0;
 			nodoAlgoritmo->frame = frame;
@@ -864,11 +903,11 @@ char * path_segmento (t_nodo_segmento* segmento) {
 }
 
 
-t_bitarray *crearBitmap(int cantidadDepagina,int diferencia){
+t_bitarray *crearBitmap(int cantidadDepagina,int diferencia,char * path){
 
 		//FILE* bloque_crear;
 		//bloque_crear->_IO_buf_base
-		char *direccionArchivoBitMap = path_bitmap;
+		char *direccionArchivoBitMap = path;
 		int bitmap = open(direccionArchivoBitMap, O_RDWR);
 		struct stat mystat;
 		//puts(bitmap);
@@ -934,17 +973,55 @@ int frameLibre(){
 	return libre;
 }
 
-void flush(int pagina,char *contenido_pagina,char *path){
+int frameLibreSWAP(){
+	size_t	cantidadDebits= cantidad_frames_swap;
+	int i;
+	int libre=-1;
+	for (i=0;i<cantidadDebits;i++){
+		if(bitarray_test_bit(bitarray_swap,i)==0){
+			libre=i;
+			break;
+		}
+	}
+	return libre;
+}
 
+
+
+
+void flush(int pagina,char *contenido_pagina,char *path){
+	grabar_archivo(path, muse_page_size(), pagina * muse_page_size (),contenido_pagina);
 }
 
 int aplicar_algoritmo(){
-	return 0;
+	int size = list_size(lista_algoritmo);
+	int i=0;
+	int flag = -1;
+	int frame;
+	while (flag == 0){
+		t_nodo_atributo_paginas * nodo = list_get(lista_algoritmo,i);
+		//falta ver lo de presencia
+		if(nodo->uso == 0 && nodo->modificado ==0){
+			int frame_swap = asignarFrameLibreSWAP();
+			cambiar_estado_frame_swap(frame_swap,true);
+			frame = nodo->frame;
+			void *grabar = malloc(muse_page_size());
+			memcpy(grabar,memoria+frame*muse_page_size(),muse_page_size());
+			grabar_archivo(path_swap,muse_page_size(),muse_page_size()*frame_swap ,grabar) ;
+			nodo->frame = frame_swap;
+			nodo->presencia = 0;
+			nodo->uso = 0;
+			nodo->modificado = 0;
+			break;
+		}
+	}
+	return frame;
 }
 
 void *traer_swap(int frame){
+	cambiar_estado_frame_swap(frame,false);
+	return traer_archivo(path_swap, muse_page_size() ,frame*muse_page_size());
 
-	return NULL;
 }
 
 int pagina_segmento (int dir_virtual,int base){
@@ -957,41 +1034,71 @@ int offset_frame(int pagina,int dir_virtual,int base){
 
 
 
+void * traer_archivo(char * path, int size , int offset){
+	int fd;
+    char *data;
+    struct stat sbuf;
+    		void *content = malloc(size);
+		    if ((fd = open(path, O_RDWR)) == -1) {
+		        perror("open");
+		        content = NULL;
+		    }
 
-void test_map (char * path){
-		int fd;
-	    char *data;
-	    struct stat sbuf;
-
-
-	    if ((fd = open(path, O_RDONLY)) == -1) {
-	        perror("open");
-	        exit(1);
-	    }
-
-	    if (stat(path, &sbuf) == -1) {
-	        perror("stat");
-	        exit(1);
-	    }
+		    if (stat(path, &sbuf) == -1) {
+		        perror("stat");
+		        content = NULL;
+		    }
 
 
-	    data = (char *) mmap (0, sbuf.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+		    data = (char *) mmap (0, sbuf.st_size, PROT_READ| PROT_WRITE, MAP_SHARED, fd, 0);
 
-		if (data == (caddr_t)(-1)) {
-	        perror("mmap");
-	        exit(1);
-	    }
-		 char  * t = strdup("x");
-		 //memcpy(data + 1 ,t,strlen(t)+1);
-		 printf("data de map %s \n",data);
+			if (data == (caddr_t)(-1)) {
+		        perror("mmap");
+		        content = NULL;
+		    }
+	       memcpy( content,data + offset,size);
+	       return content;
+
+}
+
+
+void grabar_archivo(char * path, int size , int offset, void *content){
+	int fd;
+    char *data;
+    struct stat sbuf;
+    	    if ((fd = open(path, O_RDWR   		)) == -1) {
+		        perror("open");
+
+		    }
+
+		    if (stat(path, &sbuf) == -1) {
+		        perror("stat");
+
+		    }
+
+
+		    data = (char *) mmap (0, sbuf.st_size, PROT_READ| PROT_WRITE, MAP_SHARED, fd, 0);
+
+			if (data == (caddr_t)(-1)) {
+		        perror("mmap");
+		        content = NULL;
+		    }
+
+	       memcpy( data + offset , content,size);
+
+	       munmap(data,sbuf.st_size);
+	       close(fd);
 
 }
 
 
 
-int creacionDeArchivoBitmap(int cantidad){
+
+
+
+int creacionDeArchivoBitmap(int cantidad,char *path){
 	int x = 0;
-    FILE *fh = fopen (path_bitmap, "wb");
+    FILE *fh = fopen (path, "wb");
     for(int i=0;i<cantidad;i++){
         if (fh != NULL) {
                 fwrite (&x, sizeof (x), 1, fh);
@@ -1001,5 +1108,17 @@ int creacionDeArchivoBitmap(int cantidad){
     return 0;
 
 }
+
+int analizar_nodo_algoritmo(t_nodo_atributo_paginas * nodo){
+	int frame = nodo->frame ;
+	if (nodo->presencia == 0){
+		frame = asignarFrameLibre ();
+		nodo->presencia = 1;
+		nodo->frame =frame;
+	}
+	return frame;
+}
+
+
 
 

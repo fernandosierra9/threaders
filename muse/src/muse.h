@@ -100,7 +100,10 @@ t_nodo_atributo_paginas;
 
 int cantidad_paginas_totales;
 int cantidad_frames;
+int cantidad_frames_swap;
 
+
+t_bitarray *bitarray_swap;
 t_bitarray *bitarray;
 
 int muse_socket;
@@ -113,12 +116,13 @@ t_list *lista_algoritmo;
 t_vector_frames *vectorFrames;
 t_vector_atributo_paginas  *vectorAtributoPaginas;
 void estadoFrames();
-
+char * path_swap = "muse.swap";
 
 bool existe_memoria_para_frames(int cantidad_paginas_necesarias);
 bool estaOcupada(int pag);
 
 void cambiar_estado_frame(int pagina,bool estado);
+void cambiar_estado_frame_swap(int frame, bool estado);
 
 int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,uint32_t recervar);
 int asignarIndiceVectorLibre();
@@ -129,6 +133,8 @@ t_nodo_proceso* procesar_id(int id);
 t_nodo_proceso* existe_proceso_en_lista(int id);
 
 int asignarFrameLibre();
+int asignarFrameLibreSWAP();
+
 t_nodo_segmento* procesar_segmentacion(t_list* listaSegmento);
 t_nodo_segmento* crear_nodo_segmento();
 
@@ -138,8 +144,9 @@ int agrandar_segmento(t_nodo_segmento* nodoSegmento,uint32_t memoria_reservar);
 t_nodo_segmento *buscar_segmento(uint32_t src,t_list *list);
 char * path (t_nodo_segmento* segmento) ;
 
-t_bitarray *crearBitmap(int cantidadDepagina,int diferencia);
+t_bitarray *crearBitmap(int cantidadDepagina,int diferencia,char *path);
 int frameLibre();
+int frameLibreSWAP();
 
 void sincronizar(t_nodo_segmento *segmento,size_t size);
 
@@ -154,11 +161,14 @@ char * path_segmento (t_nodo_segmento* segmento) ;
 int pagina_segmento (int dir_virtual,int base);
 int offset_frame(int pagina,int dir_virtual,int base);
 
-void test_map (char * path);
 void estado_bit_array();
 
-int creacionDeArchivoBitmap(int cantidad);
+int creacionDeArchivoBitmap(int cantidad,char *path);
 
 char *path_bitmap;
+void grabar_archivo(char * path, int size , int offset, void *content);
+void * traer_archivo(char * path, int size , int offset);
+
+int analizar_nodo_algoritmo(t_nodo_atributo_paginas * nodo);
 
 #endif /* MUSE_H_ */
