@@ -179,7 +179,7 @@ void muse_server_init() {
 			muse_logger_info("id proceso %d", get_receive->id_libmuse);
 
 			t_nodo_proceso* nodo = procesar_id(get_receive->id_libmuse);
-
+			/*
 			if (!existe_proceso_en_lista(get_receive->id_libmuse)) {
 				t_protocol get_failed = SEG_FAULT;
 				send(libmuse_fd, &get_failed, sizeof(t_protocol), 0);
@@ -187,7 +187,7 @@ void muse_server_init() {
 			}
 
 			else {
-
+			*/
 				t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
 				t_nodo_segmento *nodoSegmento = buscar_segmento(
 						get_receive->src, nodo->list_segmento);
@@ -218,15 +218,15 @@ void muse_server_init() {
 
 				//verificar flag presencia y/o aplicar algoritmo
 
-				int offset = frame * muse_page_size() + offset_del_frame;
+				int offset = frame * muse_page_size() + offset_del_frame -5;
 
 				void * content = malloc(get_receive->size);
 				//leo la estructura
 				memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
 
 				if (!heap->libre && heap->size >= get_receive->size) {
-					offset = offset + 5;
-					printf("%d offset\n", offset);
+					offset = offset +5;
+					printf("\n offset %d\n", offset);
 					memcpy(content, memoria + offset, get_receive->size);
 					printf("%d content \n", *((int*) content));
 					t_copy* copy_send = malloc(sizeof(t_copy));
@@ -248,7 +248,7 @@ void muse_server_init() {
 				}
 
 				break;
-			}
+			//}
 		}
 
 		case COPY: {
@@ -302,6 +302,7 @@ void muse_server_init() {
 
 					printf("----->Copy 4 bytes en el offset %d y el contenido es %d \n",
 												offset,*((int*) cpy->content));
+
 					t_protocol cpy_protocol = GET_OK;
 					send(libmuse_fd, &cpy_protocol, sizeof(protocol), 0);
 				//}
@@ -876,8 +877,8 @@ int agrandar_segmento(t_nodo_segmento* nodoSegmento, uint32_t memoria_reservar) 
 
 t_nodo_segmento *buscar_segmento(uint32_t src, t_list *list) {
 	int existeNodoEnLaLista(t_nodo_segmento *nodo_proceso) {
-		printf("base %d", nodo_proceso->base);
-		printf("tamanio %d", nodo_proceso->tamanio);
+		printf("\n base %d", nodo_proceso->base);
+		printf("\n tamanio %d", nodo_proceso->tamanio);
 		return ((nodo_proceso->base < src)
 				&& ((nodo_proceso->base + nodo_proceso->tamanio) > src));
 	}

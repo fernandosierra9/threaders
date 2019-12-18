@@ -26,5 +26,16 @@ int main(void)
 {
 	muse_init(getpid(), "127.0.0.1", 5003);
 	recursiva(10);
+
+	/*
+	int num = 1;
+	uint32_t ptr = muse_alloc(4);
+	muse_cpy(ptr, &num, 4);
+	printf("%d copy\n", num);
+	int algo = 0; // Se pisa para probar que muse_get cargue el valor adecuado
+	muse_get(&algo, ptr, 4);
+	printf("%d algo\n", algo);
+	*/
 	muse_close();
+
 }
