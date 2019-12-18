@@ -170,5 +170,5 @@ void grabar_archivo(char * path, int size , int offset, void *content);
 void * traer_archivo(char * path, int size , int offset);
 
 int analizar_nodo_algoritmo(t_nodo_atributo_paginas * nodo);
-
+void crear_archivo_swap ();
 #endif /* MUSE_H_ */

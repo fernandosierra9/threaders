@@ -403,6 +403,7 @@ void muse_server_init() {
 
 }
 void muse_init() {
+	crear_archivo_swap ();
 	lista_algoritmo = list_create();
 	memoria = malloc(muse_memory_size());
 
@@ -1139,4 +1140,13 @@ int analizar_nodo_algoritmo(t_nodo_atributo_paginas * nodo) {
 	}
 	return frame;
 }
+
+void crear_archivo_swap (){
+	FILE* file_ptr = fopen(path_swap, "w");
+	char *write = malloc(muse_swap_size());
+	memset(write, '\0',muse_swap_size() );
+	fwrite(write,muse_swap_size(),1,file_ptr);
+	fclose(file_ptr);
+}
+
 
