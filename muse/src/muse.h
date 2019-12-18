@@ -171,4 +171,6 @@ void * traer_archivo(char * path, int size , int offset);
 
 int analizar_nodo_algoritmo(t_nodo_atributo_paginas * nodo);
 void crear_archivo_swap ();
+t_heapMetadata* obtener_heap(int dir_virtual ,t_nodo_segmento* nodoSegmento);
+void *get_contenido_virtual (int dir_virtual , t_nodo_segmento* nodoSegmento , int size);
 #endif /* MUSE_H_ */

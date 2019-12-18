@@ -44,7 +44,7 @@ void recursiva(int num)
 
 	puts(estrofa);
 
-	muse_free(ptr);
+	//muse_free(ptr);
 	free(estrofa);
 	sleep(1);
 }
