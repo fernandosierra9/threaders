@@ -109,7 +109,7 @@ void utils_package_send_to(t_package* t_package, int client_socket) {
 	int bytes = t_package->buffer->size + 2 * sizeof(int);
 	void* to_send = serializer_serialize_package(t_package, bytes);
 
-	printf("----->bytes %d \n",bytes);
+	//printf("----->bytes %d \n",bytes);
 	send(client_socket, to_send, bytes, 0);
 
 	free(to_send);
@@ -484,7 +484,7 @@ void utils_get_from_list_to_malloc(void *parameter, t_list *list, int index) {
 
 int utils_get_buffer_size(t_list *list, int index) {
 	if(list_size(list)>0){
-		printf("**********cantidad de elemento %d ******\n",list_size(list));
+		//printf("**********cantidad de elemento %d ******\n",list_size(list));
 		t_buffer *buffer;
 		buffer = list_get(list, index);
 		return buffer->size;
@@ -498,7 +498,7 @@ void utils_get_from_list_to2(void *parameter, t_list *list, int index) {
 	//memcpy(parameter, buffer->stream, buffer->size);
 	memcpy(parameter, buffer->stream, sizeof(int));
 	int numero = *(int *) parameter	;
-	printf("---*** numero %d \n",numero);
+	//printf("---*** numero %d \n",numero);
 
 }
 
@@ -533,7 +533,7 @@ t_list* utils_receive_package(int socket_cliente) {
 		t_buffer* valor = malloc(sizeof(t_buffer));
 		valor->stream = malloc(tamanio);
 		valor->size = tamanio;
-		printf("****size %d **\n",tamanio);
+		//printf("****size %d **\n",tamanio);
 		memcpy(valor->stream, buffer + desplazamiento, tamanio);
 		desplazamiento += tamanio;
 		list_add(valores, valor);
