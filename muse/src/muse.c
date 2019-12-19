@@ -87,7 +87,7 @@ void muse_server_init() {
 					resp = -1;
 					if (nodoSegmento->tipo == S_ALLOC) {
 						muse_logger_info("Recorrer Segmento");
-						resp = recorer_segmento_espacio_libre(nodoSegmento,
+						resp = recorrer_segmento_espacio_libre(nodoSegmento,
 								malloc_receive->tam);
 
 					}
@@ -575,7 +575,7 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 	return pagina * muse_page_size() + 5;
 }
 
-int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,
+int recorrer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,
 		uint32_t memoria_reservar) {
 	int desde = nodoSegmento->base;
 	int hasta = nodoSegmento->base + nodoSegmento->tamanio;
@@ -588,12 +588,10 @@ int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,
 	int pagina = 0;
 	int dir_virtual = nodoSegmento->base;
 	do {
-		pagina = pagina_segmento(dir_virtual, nodoSegmento->base);
-		int offset_del_frame = offset_frame(pagina, dir_virtual,
-				nodoSegmento->base);
 		heap = obtener_heap(dir_virtual , nodoSegmento);
-		offset = offset + 5;
+		printf(" \n direccion virtual %d \n", dir_virtual);
 		printf(" \n heap size %d \n", heap->size);
+		offset = offset + 5;
 		if (heap->libre == true) {
 			if ((memoria_reservar + 5) < heap->size) {
 				respuesta = offset;
@@ -1153,20 +1151,23 @@ t_heapMetadata* obtener_heap(int dir_virtual , t_nodo_segmento* nodoSegmento){
 						pagina);
 	t_nodo_atributo_paginas *nodoAlgormito = nodo_algoritmo(
 			nodoPagina->indiceVector);
-
-	printf("\n\n----->pagina %d \n", pagina);
+	printf("\n----->dir_virtual %d \n", dir_virtual);
+	printf("----->pagina %d \n", pagina);
 	printf("----->offset del frame %d \n", offset_del_frame);
 	int frame = nodoAlgormito->frame;
 	int offset;
 	if (nodoAlgormito->presencia == 0){
 		 printf("\n\n----->presencia es 0\n");
-		 int frame = aplicar_algoritmo();
+		 int frame_libre = aplicar_algoritmo();
+		 printf("\n\n----->frame %d para direccion es virtual %d \n",frame,dir_virtual);
 		 nodoAlgormito->presencia = 1;
-		 nodoAlgormito->frame = frame;
+		 nodoAlgormito->frame = frame_libre;
 		 void  * pagina = traer_archivo(path_swap, muse_page_size() *nodoAlgormito->frame,muse_page_size() );
-		 offset = frame * muse_page_size();
+		 offset = frame_libre * muse_page_size();
 		 memcpy(memoria + offset,pagina, muse_page_size());
+		 //test de heap
 		 //falta liberar el frame de swap
+		 frame = nodoAlgormito->frame;
 		 if(frame == 1){
 			 t_heapMetadata*heap = malloc(sizeof(t_heapMetadata));
 			 memcpy(heap,pagina, sizeof(t_heapMetadata));
