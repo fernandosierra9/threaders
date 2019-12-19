@@ -37,7 +37,7 @@ void recursiva(int num)
 	char* estrofa = pasa_palabra(num);
 	int longitud = strlen(estrofa)+1;
 	uint32_t ptr = muse_alloc(longitud);
-
+	printf("\n ptr %d alloc %d",ptr,longitud);
 	//muse_cpy(ptr, estrofa, longitud);
 	recursiva(num - 1);
 	//muse_get(estrofa, ptr, longitud);

@@ -115,6 +115,8 @@ t_list *lista_algoritmo;
 
 t_vector_frames *vectorFrames;
 t_vector_atributo_paginas  *vectorAtributoPaginas;
+
+int flag_algoritmo;
 void estadoFrames();
 char * path_swap = "muse.swap";
 
@@ -175,5 +177,8 @@ t_heapMetadata* obtener_heap(int dir_virtual ,t_nodo_segmento* nodoSegmento);
 void *get_contenido_virtual (int dir_virtual , t_nodo_segmento* nodoSegmento , int size);
 void  copy_contenido_virtual (int dir_virtual , t_nodo_segmento* nodoSegmento , int size,void *contenido);
 void estado_heap(t_nodo_segmento*  nodoSegmento);
-
+int agregar_paginas (int bytes_faltan ,t_nodo_segmento* nodoSegmento);
+void actualizar_heap(t_heapMetadata* heap,int offset,t_nodo_segmento* segmento);
+void estado_algoritmo();
+void test_swap();
 #endif /* MUSE_H_ */
