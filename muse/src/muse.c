@@ -86,6 +86,7 @@ void muse_server_init() {
 					//estado_heap(nodoSegmento);
 					resp = -1;
 					if (nodoSegmento->tipo == S_ALLOC) {
+						muse_logger_info("Recorrer Segmento");
 						resp = recorer_segmento_espacio_libre(nodoSegmento,
 								malloc_receive->tam);
 
@@ -93,7 +94,6 @@ void muse_server_init() {
 					if (resp != -1) {
 						break;
 					}
-					muse_logger_info("Recorrer Segmento");
 					printf(" \n direccion virtual asignada %d \n",resp);
 				}
 				//agrando el ultimo alloc si no se pudo agrandar buscar un espacio libre
@@ -188,15 +188,6 @@ void muse_server_init() {
 
 			t_nodo_proceso* nodo = procesar_id(get_receive->id_libmuse);
 
-			/*
-			if (!existe_proceso_en_lista(get_receive->id_libmuse)) {
-				t_protocol get_failed = SEG_FAULT;
-				send(libmuse_fd, &get_failed, sizeof(t_protocol), 0);
-				break;
-			}
-
-			else {
-			*/
 				t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
 				t_nodo_segmento *nodoSegmento = buscar_segmento(
 						get_receive->src, nodo->list_segmento);
@@ -487,7 +478,7 @@ t_nodo_segmento* crear_nodo_segmento() {
 
 int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 		uint32_t memoria_reservar) {
-	int memoria_reservar2 = memoria_reservar + 5;
+	int memoria_reservar2 = memoria_reservar + 10;
 	int cantidad_paginas_necesarias;
 	int pagina = -1;
 	if (list_size(nodoSegmento->list_paginas) == 0) {
@@ -557,7 +548,7 @@ int asignar_dir_memoria(t_nodo_segmento* nodoSegmento,
 
 			memcpy(memoria + dir_proxima_estructura, heap,
 					sizeof(t_heapMetadata));
-			test_swap();
+			//test_swap();
 			printf("cantidad de paginas %d \n", cantidad_paginas_necesarias);
 			printf("tamanio de cantidad de paginas %d \n",
 					cantidad_paginas_necesarias * muse_page_size());
@@ -610,13 +601,13 @@ int recorer_segmento_espacio_libre(t_nodo_segmento* nodoSegmento,
 						offset);
 				int size_heap = heap->size;
 				t_heapMetadata *nuevo_heap = malloc(sizeof(t_heapMetadata));
-				nuevo_heap->libre = false;
-				nuevo_heap->size = memoria_reservar;
+				heap->libre = false;
+				heap->size = memoria_reservar;
 				//printf("dir actual: %d \n", offset);
 				offset = offset - 5;
-				actualizar_heap(heap,offset,nodoSegmento);
-				offset = offset + 5 + nuevo_heap->size;
-
+				actualizar_heap(heap,dir_virtual,nodoSegmento);
+				offset = offset + 5 + heap->size;
+				dir_virtual = offset;
 				heap->libre = true;
 				heap->size = size_heap - memoria_reservar - 5;
 				actualizar_heap(heap,offset,nodoSegmento);
@@ -980,7 +971,7 @@ int aplicar_algoritmo() {
 }
 
 void *traer_swap(int frame) {
-	cambiar_estado_frame_swap(frame, false);
+	//cambiar_estado_frame_swap(frame, false);
 	return traer_archivo(path_swap, muse_page_size(), frame * muse_page_size());
 
 }
@@ -1023,6 +1014,10 @@ void * traer_archivo(char * path, int size, int offset) {
 void grabar_archivo(char * path, int size, int offset, void *content) {
 	int fd;
 	char *data;
+
+	printf("\n ---->archivo %s:",path);
+	printf("\n ---->offset %d:",offset);
+
 	struct stat sbuf;
 	if ((fd = open(path, O_RDWR)) == -1) {
 		perror("open");
@@ -1046,6 +1041,14 @@ void grabar_archivo(char * path, int size, int offset, void *content) {
 
 	munmap(data, sbuf.st_size);
 	close(fd);
+	if (offset ==0){
+			void * contenido = traer_archivo(path_swap,muse_page_size(),0);
+			t_heapMetadata*heap = malloc(sizeof(t_heapMetadata));
+			memcpy(heap,contenido, sizeof(t_heapMetadata));
+			printf("\n ******heap %d****** \n", heap->size);
+			memcpy(heap,contenido+12, sizeof(t_heapMetadata));
+			printf("\n ******heap %d****** \n", heap->size);
+	}
 
 }
 
@@ -1329,6 +1332,7 @@ void actualizar_heap(t_heapMetadata* heap,int offset,t_nodo_segmento* segmento){
 			frame_libre = aplicar_algoritmo();
 			cambiar_estado_frame(frame_libre, true);
 			void * pagina_swap = traer_swap(frame);
+			memset(memoria+ frame_libre * muse_page_size(),0,muse_memory_size());
 			memcpy(memoria + frame_libre * muse_page_size(), pagina_swap,
 						muse_page_size());
 			frame = frame_libre;
