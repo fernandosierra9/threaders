@@ -91,13 +91,16 @@ void muse_server_init() {
 					if (resp != -1) {
 						break;
 					}
+					estado_heap(nodoSegmento);
 				}
 				//agrando el ultimo alloc si no se pudo agrandar buscar un espacio libre
 				if (resp == -1) {
 					resp = agrandar_segmento(nodoSegmento, malloc_receive->tam);
 				}
 				res->ptr = resp;
+
 			}
+
 			t_protocol malloc_protocol = MALLOC_OK;
 			utils_serialize_and_send(libmuse_fd, malloc_protocol, res);
 			break;
@@ -270,8 +273,6 @@ void muse_server_init() {
 			printf("\n ****--base %d", nodoSegmento->base);
 			printf("\n ****--tamanio %d", nodoSegmento->tamanio);
 			t_protocol cpy_protocol;
-			int base = nodoSegmento->base;
-			int tamanio = nodoSegmento->tamanio;
 			if (!existe_proceso_en_lista(cpy->self_id)) {
 				t_copy_response* copy_res = malloc(sizeof(t_copy_response));
 				copy_res->res = -1;
@@ -279,42 +280,9 @@ void muse_server_init() {
 				utils_serialize_and_send(libmuse_fd, cpy_protocol, copy_res);
 				break;
 			} else {
-				t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
-				int pagina = pagina_segmento(cpy->dst, base);
-				int offset_del_frame = offset_frame(pagina, cpy->dst, base);
-
-				t_nodo_pagina* nodoPagina = list_get(nodoSegmento->list_paginas,
-						pagina);
-				t_nodo_atributo_paginas *nodoAlgormito = nodo_algoritmo(
-						nodoPagina->indiceVector);
-				int frame = nodoAlgormito->frame;
-				int offset = frame * muse_page_size() + offset_del_frame - 5;
-
-				printf("----->offset fisico heap %d \n", offset);
-				memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
-
-				//if (!heap->libre && heap->size >= cpy->size) {
-					offset = offset + 5;
-					printf("----->offset fisico despues del heap %d \n",
-							offset);
-
-					memcpy(memoria + offset, cpy->content, cpy->size);
-					printf("----->size %d \n", heap->size);
-
-					memcpy(cpy->content, memoria + offset, cpy->size);
-
-					printf("----->Copy 4 bytes en el offset %d y el contenido es %d \n",
-												offset,*((int*) cpy->content));
-
-					t_protocol cpy_protocol = GET_OK;
-					send(libmuse_fd, &cpy_protocol, sizeof(protocol), 0);
-				//}
-
-				//else {
-				//	cpy_protocol = SEG_FAULT;
-				//	send(libmuse_fd, &cpy_protocol, sizeof(protocol), 0);
-				//}
-
+				copy_contenido_virtual (cpy->dst , nodoSegmento , cpy->size,cpy->content);
+				t_protocol cpy_protocol = GET_OK;
+				send(libmuse_fd, &cpy_protocol, sizeof(protocol), 0);
 			}
 			break;
 		}
@@ -1230,11 +1198,97 @@ t_heapMetadata* obtener_heap(int dir_virtual , t_nodo_segmento* nodoSegmento){
 		 memcpy(memoria + offset,pagina, muse_page_size());
 	}
 	offset = frame * muse_page_size() + offset_del_frame;
-    printf("----->offset fisico heap %d \n", offset);
+	printf("----->frame %d \n", frame);
+	printf("----->offset fisico heap %d \n", offset);
 	memcpy(heap, memoria + offset, sizeof(t_heapMetadata));
 	printf("----->heap size %d \n", heap->size);
 	return heap;
 
 }
 
+void  copy_contenido_virtual (int dir_virtual , t_nodo_segmento* nodoSegmento , int size,void *contenido){
+	int flag = -1 ;
+	int primera_pagina = pagina_segmento(dir_virtual,nodoSegmento->base);
+	int ultima_pagina = pagina_segmento(dir_virtual+size,nodoSegmento->base);
+	int  i = primera_pagina ;
+	int offset;
+	int copiar = size;
+	int copiado = 0;
+	while( flag == -1){
+		t_nodo_pagina* nodoPagina = list_get(nodoSegmento->list_paginas,
+				    		i);
+		t_nodo_atributo_paginas *nodoAlgormito = nodo_algoritmo(
+							nodoPagina->indiceVector);
+
+		int frame = nodoAlgormito->frame;
+		if (nodoAlgormito->presencia == 0){
+			 int frame = asignarFrameLibre();
+			 nodoAlgormito->presencia = 1;
+			 nodoAlgormito->frame = frame;
+			 void  * pagina = traer_archivo(path_swap, muse_page_size() *nodoAlgormito->frame,muse_page_size() );
+			 offset = frame * muse_page_size();
+			 memcpy(memoria + offset,pagina, muse_page_size());
+		}
+		printf("\n----pagina %d",i);
+		printf("\n----frame %d",i);
+
+		int tam;
+		if (copiar > muse_page_size()){
+			copiar = copiar - muse_page_size();
+		}
+		offset = 0;
+		if(i == primera_pagina){
+			offset =offset_frame(primera_pagina,dir_virtual,nodoSegmento->base);
+			tam = muse_page_size()-offset;
+
+		}
+		else
+			tam = muse_page_size();
+		if(i == ultima_pagina){
+			tam = copiar ;
+			flag = 0;
+		}
+
+		printf("\n----copiado %d",copiado);
+		printf("\n----offset %d",offset);
+		printf("\n----frame %d",frame);
+		printf("\n----tam %d",tam);
+
+
+		printf("\n----copiar en la direccion %d",offset+frame*muse_page_size());
+
+		memcpy(memoria+offset+frame*muse_page_size(),contenido + copiado,tam);
+
+		copiado = copiado + tam;
+		i++;
+	}
+}
+
+
+void estado_heap(t_nodo_segmento* nodoSegmento){
+		int desde = nodoSegmento->base;
+		int hasta = nodoSegmento->base + nodoSegmento->tamanio;
+		int primera_pagina = (desde / muse_page_size());
+		int ultima_pagina = list_size(nodoSegmento->list_paginas);
+		t_heapMetadata *heap = malloc(sizeof(t_heapMetadata));
+
+		int offset = 0;
+		int pagina = 0;
+		int dir_virtual = nodoSegmento->base;
+		do {
+			pagina = pagina_segmento(dir_virtual, nodoSegmento->base);
+			int offset_del_frame = offset_frame(pagina, dir_virtual,
+					nodoSegmento->base);
+			heap = obtener_heap(dir_virtual , nodoSegmento);
+			offset = offset + 5;
+			printf(" \n heap size %d \n", heap->size);
+			offset = offset + heap->size;
+			dir_virtual = offset;
+			printf("****offset: %d****** \n", offset);
+			printf("****virtual: %d****** \n", offset);
+
+		} while (offset < (nodoSegmento->base + nodoSegmento->tamanio) - 1);
+
+
+}
 

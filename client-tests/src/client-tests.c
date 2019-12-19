@@ -38,9 +38,9 @@ void recursiva(int num)
 	int longitud = strlen(estrofa)+1;
 	uint32_t ptr = muse_alloc(longitud);
 
-	muse_cpy(ptr, estrofa, longitud);
+	//muse_cpy(ptr, estrofa, longitud);
 	recursiva(num - 1);
-	muse_get(estrofa, ptr, longitud);
+	//muse_get(estrofa, ptr, longitud);
 
 	puts(estrofa);
 
