@@ -38,9 +38,9 @@ void recursiva(int num)
 	int longitud = strlen(estrofa)+1;
 	uint32_t ptr = muse_alloc(longitud);
 	printf("\n ptr %d alloc %d",ptr,longitud);
-	//muse_cpy(ptr, estrofa, longitud);
+	muse_cpy(ptr, estrofa, longitud);
 	recursiva(num - 1);
-	//muse_get(estrofa, ptr, longitud);
+	muse_get(estrofa, ptr, longitud);
 
 	puts(estrofa);
 
@@ -52,6 +52,6 @@ void recursiva(int num)
 int main(void)
 {
 	muse_init(getpid(), "127.0.0.1", 5003);
-	recursiva(15);
+	recursiva(3);
 	muse_close();
 }
