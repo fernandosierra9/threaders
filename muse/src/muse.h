@@ -134,6 +134,13 @@ t_nodo_proceso* existe_proceso_en_lista(int id);
 t_nodo_proceso* procesar_id(int id);
 t_nodo_proceso* existe_proceso_en_lista(int id);
 
+
+pthread_mutex_t mAlgoritmo;
+pthread_mutex_t mIndice;
+pthread_mutex_t mMemoria;
+pthread_mutex_t mLprocesos;
+
+
 int asignarFrameLibre();
 int asignarFrameLibreSWAP();
 
@@ -181,4 +188,5 @@ int agregar_paginas (int bytes_faltan ,t_nodo_segmento* nodoSegmento);
 void actualizar_heap(t_heapMetadata* heap,int offset,t_nodo_segmento* segmento);
 void estado_algoritmo();
 void test_swap();
+static void *handle_connection(void *arg);
 #endif /* MUSE_H_ */

@@ -31,12 +31,34 @@ void muse_server_init() {
 
 	muse_logger_info("Esperando conexion del libmuse");
 
-	int libmuse_fd = socket_accept_conection(muse_socket);
 
-	if (libmuse_fd == -1) {
-		muse_logger_error("Error al establecer conexion con el libmuse");
-		return;
+	struct sockaddr_in client_info;
+	socklen_t addrlen = sizeof client_info;
+
+	pthread_attr_t attrs;
+	pthread_attr_init(&attrs);
+	pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_JOINABLE);
+
+	for (;;) {
+		int *accepted_fd = malloc(sizeof(int));
+		*accepted_fd = accept(muse_socket, (struct sockaddr *) &client_info, &addrlen);
+
+		muse_logger_info("Creando un hilo para atender una conexión en el socket %d", *accepted_fd);
+
+		pthread_t tid;
+		pthread_create(&tid, &attrs, handle_connection, accepted_fd);
+		pthread_join(tid,NULL);
 	}
+	pthread_attr_destroy(&attrs);
+	close(muse_socket);
+
+}
+
+static void *handle_connection(void *arg) {
+
+
+	int libmuse_fd = *((int *)arg);
+	free(arg);
 
 	muse_logger_info("Conexion establecida con libmuse");
 	int received_bytes;
@@ -119,53 +141,13 @@ void muse_server_init() {
 				send(libmuse_fd, &free_failed, sizeof(t_protocol), 0);
 				break;
 			}
+			t_nodo_proceso* nodoProceso = procesar_id(free_receive->self_id);
+			t_nodo_segmento *nodoSegmento=buscar_segmento(free_receive->self_id,nodoProceso->list_segmento);
+			t_heapMetadata* heap =obtener_heap(free_receive->dir,nodoSegmento);
 
-			int dir = free_receive->dir;
-			t_heapMetadata* header = malloc(sizeof(t_heapMetadata));
 
-			memcpy(header, memoria + dir - 5, sizeof(header));
 
-			if (header->libre) {
-				t_protocol free_failed = SEG_FAULT;
-
-				send(libmuse_fd, &free_failed, sizeof(t_protocol), 0);
-				break;
-			}
-
-			else {
-				header->libre = true;
-				memset(memoria + dir + 5, '\0', header->size);
-				t_heapMetadata* closestHeader = malloc(sizeof(t_heapMetadata));
-				memcpy(closestHeader, memoria + dir + header->size,
-						sizeof(closestHeader));
-				int oldsize = header->size;
-
-				if (closestHeader->libre) {
-					header->size += closestHeader->size;
-					memset(memoria + dir + header->size, '\0', header->size);
-				}
-
-				t_heapMetadata* previousHeaderDir = malloc(
-						sizeof(previousHeaderDir));
-				int desp = 0;
-
-				do {
-					memcpy(previousHeaderDir, memoria + desp,
-							sizeof(previousHeaderDir));
-					if (memoria + desp + previousHeaderDir->size == dir - 6) {
-						if (previousHeaderDir->libre) {
-							previousHeaderDir->size += header->size;
-							memset(memoria + desp + 5, '\0',
-									previousHeaderDir->size);
-							break;
-						}
-					} else
-						desp = desp + previousHeaderDir->size + 1;
-				}
-
-				while (desp < dir - 5);
-			}
-
+			memfree(heap,nodoSegmento);
 			muse_logger_info("Direction %d will be freed", free_receive->dir);
 
 			t_free_response* free_res = malloc(sizeof(t_free_response));
@@ -380,6 +362,11 @@ void muse_server_init() {
 
 }
 void muse_init() {
+	pthread_mutex_init(&mAlgoritmo, NULL);
+	pthread_mutex_init(&mIndice, NULL);
+	pthread_mutex_init(&mMemoria, NULL);
+	pthread_mutex_init(&mLprocesos, NULL);
+
 	crear_archivo_swap ();
 	flag_algoritmo = 0;
 	lista_algoritmo = list_create();
@@ -1407,12 +1394,13 @@ void actualizar_heap(t_heapMetadata* heap,int offset,t_nodo_segmento* segmento){
 		nodoAlgormito->frame = frame;
 
 		offset = frame * muse_page_size() + offset_del_frame;
-		printf("\n******actualizo heap****** \n", frame);
+		printf("\n******actualizo heap****** \n");
 		printf("******frame %d****** \n", frame);
 		printf("******pagina %d****** \n", pagina);
 		printf("******heap %d****** \n", heap->size);
 		printf("******direccion virtual del heap %d****** \n", offset);
 		memcpy(memoria + offset, heap, sizeof(t_heapMetadata));
+
 }
 
 void test_swap(){
@@ -1423,4 +1411,40 @@ void test_swap(){
 	printf("\n ******heap %d****** \n", heap->size);
 	memcpy(heap,contenido+12, sizeof(t_heapMetadata));
 	printf("\n ******heap %d****** \n", heap->size);
+}
+
+
+
+
+void memfree(int dir_virtual,t_heapMetadata*  heap,t_nodo_segmento *nodoSegmento){
+
+	heap->libre = true;
+	int size = heap->size;
+	int primera_pagina;
+	int ultima_pagina;
+	int dir_virtual_next = dir_virtual +5 + heap->size;
+	if (dir_virtual < nodoSegmento->base + nodoSegmento->tamanio){
+		t_heapMetadata* otroHeap =obtener_heap(dir_virtual_next ,nodoSegmento);
+		heap->size = otroHeap->size +5;
+	}
+	actualizar_heap(heap,dir_virtual,nodoSegmento);
+	int primera  = pagina_segmento (dir_virtual,nodoSegmento->base);
+	int ultima  = pagina_segmento (dir_virtual,nodoSegmento->base);
+	/*
+	if(primera == ultima){
+		t_nodo_pagina * nodo_pagina = list_get(nodoSegmento->list_paginas, primera);
+		t_nodo_atributo_paginas * nodoAlgoritmo = nodo_algoritmo(
+								nodo_pagina->indiceVector);
+		nodoAlgoritmo->presencia = 0;
+		nodoAlgoritmo->modificado = 0;
+		nodoAlgoritmo->uso = 0;
+		nodoAlgoritmo->frame = -1;
+		cambiar_estado_frame(primera,false);
+	}
+	else{
+		for(int i =0; i<ultima; i++){
+
+		}
+	}
+	*/
 }
