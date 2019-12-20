@@ -5,55 +5,25 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-uint32_t leer_archivo(uint32_t arch, uint32_t leido)
+void recursiva(int num)
 {
-	uint32_t len;
-	char * palabra = malloc(100);
+	if(num == 0)
+		return;
 
-	//muse_get(&len, arch + leido, sizeof(uint32_t));
-	//leido += sizeof(uint32_t);
-	muse_get(palabra, arch + leido, 10);
-	leido += len;
+	uint32_t ptr = muse_alloc(4);
+	muse_cpy(ptr, &num, 4);
+	printf("%d\n", num);
 
-	printf("string %s",palabra);
-	free(palabra);
-	return leido;
+	recursiva(num - 1);
+	num = 0; // Se pisa para probar que muse_get cargue el valor adecuado
+	muse_get(&num, ptr, 4);
+	printf("%d\n", num);
+	muse_free(ptr);
 }
-
-void *revolucionar()
-{
-	uint32_t arch = muse_map("/home/utnso/git/tp-2019-2c-threaders/muse/Debug/fernando.txt", 4096, MAP_PRIVATE);
-	uint32_t offset = 0;
-	uint32_t size;
-
-	//muse_get(&size, arch, sizeof(uint32_t));
-	offset = sizeof(uint32_t);
-	//while(offset < size)
-	offset = leer_archivo(arch, 30);
-
-	arch += 5000;
-
-	muse_get(NULL, arch, 1);
-
-	muse_sync(arch, 4096);
-
-	muse_unmap(arch);
-	return 0;
-}
-
 
 int main(void)
 {
-	//struct hilolay_t revolucion;
-
-	//hilolay_init();
-	muse_init(2, "127.0.0.1", 5003);
-	uint32_t arch = muse_map("/home/utnso/git/tp-2019-2c-threaders/muse/Debug/fernando.txt", 4096, MAP_PRIVATE);
-	char * palabra = malloc(100);
-	muse_get(palabra, arch +5000 , 10);
-	printf("algo");
-	printf("%s",palabra);
-	muse_sync(arch, 4096);
-	muse_unmap(arch);
-
+	muse_init(getpid(), "127.0.0.1", 5003);
+	recursiva(5);
+	muse_close();
 }
