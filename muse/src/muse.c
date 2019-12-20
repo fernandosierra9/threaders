@@ -210,9 +210,9 @@ void muse_server_init() {
 
 				}
 				if(nodoSegmento->tipo == S_ALLOC){
-					t_heapMetadata* heap = obtener_heap(get_receive->src ,nodoSegmento);
+					t_heapMetadata* heap = obtener_heap(get_receive->src - 5,nodoSegmento);
 
-							if (!heap->libre && heap->size >= get_receive->size) {
+						if (!heap->libre && heap->size >= get_receive->size) {
 									t_copy* copy_send = malloc(sizeof(t_copy));
 									copy_send->self_id = get_receive->id_libmuse;
 									copy_send->size = get_receive->size;
@@ -1313,6 +1313,7 @@ void  copy_contenido_virtual (int dir_virtual , t_nodo_segmento* nodoSegmento , 
 		copiado = copiado + tam;
 		i++;
 	}
+
 }
 
 
