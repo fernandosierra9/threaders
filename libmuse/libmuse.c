@@ -87,13 +87,15 @@ int muse_get(void* dst, uint32_t src, size_t n) {
 	}
 
 	case SEG_FAULT: {
+		puts("SEG_FAULT");
+		exit(-1);
 		return -1;
 	}
 	}
 }
 
 int muse_cpy(uint32_t dst, void* src, int n) {
-	printf("destino %d",dst);
+	//printf("destino %d",dst);
 	t_copy* copy_send = malloc(sizeof(t_copy));
 	copy_send->self_id = getpid();
 	copy_send->size = n;

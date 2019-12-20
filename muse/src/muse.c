@@ -64,9 +64,6 @@ void muse_server_init() {
 			//toda logica para crear un nuevo proceso y segmentacion/paginacion
 			t_nodo_proceso* nodoProceso = procesar_id(
 					malloc_receive->id_libmuse);
-
-			t_nodo_segmento *unSegmento = buscar_segmento(5,
-					nodoProceso->list_segmento);
 			t_malloc_ok* res = malloc(sizeof(t_malloc_ok));
 			int cantidad_segmentos = list_size(nodoProceso->list_segmento);
 			if (cantidad_segmentos == 0) {
@@ -188,7 +185,6 @@ void muse_server_init() {
 
 			t_nodo_proceso* nodo = procesar_id(get_receive->id_libmuse);
 
-
 				t_nodo_segmento *nodoSegmento = buscar_segmento(
 						get_receive->src, nodo->list_segmento);
 
@@ -204,27 +200,40 @@ void muse_server_init() {
 					send(libmuse_fd, &copy_protocol, sizeof(protocol), 0);
 					break;
 				}
-				t_heapMetadata* heap = obtener_heap(get_receive->src ,nodoSegmento);
+				if(nodoSegmento->tipo == S_ALLOC){
+					t_heapMetadata* heap = obtener_heap(get_receive->src ,nodoSegmento);
 
-				if (!heap->libre && heap->size >= get_receive->size) {
-					get_contenido_virtual (get_receive->src,nodoSegmento ,get_receive->src);
-										t_copy* copy_send = malloc(sizeof(t_copy));
-					copy_send->self_id = get_receive->id_libmuse;
+								if (!heap->libre && heap->size >= get_receive->size) {
+									get_contenido_virtual (get_receive->src,nodoSegmento ,get_receive->size);
+									t_copy* copy_send = malloc(sizeof(t_copy));
+									copy_send->self_id = get_receive->id_libmuse;
+									copy_send->size = get_receive->size;
+									copy_send->dst = get_receive->src;
+									copy_send->content = malloc(get_receive->size);
+									copy_send->content = get_contenido_virtual (get_receive->src, nodoSegmento ,get_receive->size);
+									//memcpy(copy_send->content, content, get_receive->size);
+									utils_serialize_and_send(libmuse_fd, copy_protocol,
+											copy_send);
+
+									}
+
+							else {
+								copy_protocol = SEG_FAULT;
+								send(libmuse_fd, &copy_protocol, sizeof(protocol), 0);
+							}
+
+				}
+				else{
+					get_contenido_virtual (get_receive->src,nodoSegmento ,get_receive->size);
+					t_copy* copy_send = malloc(sizeof(t_copy));
+				    copy_send->self_id = get_receive->id_libmuse;
 					copy_send->size = get_receive->size;
 					copy_send->dst = get_receive->src;
 					copy_send->content = malloc(get_receive->size);
-
 					copy_send->content = get_contenido_virtual (get_receive->src, nodoSegmento ,get_receive->size);
-					//memcpy(copy_send->content, content, get_receive->size);
-
 					utils_serialize_and_send(libmuse_fd, copy_protocol,
-							copy_send);
+																copy_send);
 
-				}
-
-				else {
-					copy_protocol = SEG_FAULT;
-					send(libmuse_fd, &copy_protocol, sizeof(protocol), 0);
 				}
 
 				break;
@@ -265,17 +274,31 @@ void muse_server_init() {
 			t_msync *msync_receive = utils_receive_and_deserialize(libmuse_fd,
 					protocol);
 			muse_logger_info("id proceso %d", msync_receive->id_libmuse);
-			t_nodo_proceso* nodoProceso = procesar_id(
-					msync_receive->id_libmuse);
-			t_nodo_segmento * segmento = buscar_segmento(msync_receive->src,
-					nodoProceso->list_segmento);
-			t_protocol protocol = SYNC_OK;
-			if (msync_receive->src + msync_receive->size
-					<= segmento->tamanio + segmento->base) {
+			muse_logger_info("size %d",msync_receive->size );
+			muse_logger_info("src %d",msync_receive->src );
 
-				sincronizar(segmento, msync_receive->size);
+
+			t_nodo_proceso* nodo = procesar_id(msync_receive->id_libmuse);
+
+			t_nodo_segmento *nodoSegmento;
+			for(int i=0;i<list_size(nodo->list_segmento);i++){
+				nodoSegmento = list_get(nodo->list_segmento,i);
+				if(nodoSegmento->base < msync_receive->src){
+					if(nodoSegmento->base+nodoSegmento->tamanio > msync_receive->src){
+						sincronizar(nodoSegmento, msync_receive->size);
+						send(libmuse_fd, &protocol, sizeof(protocol), 0);
+						break;
+					}
+				}
 			}
-			send(libmuse_fd, &protocol, sizeof(protocol), 0);
+
+			int size = list_size(nodo->list_segmento);
+			printf("\n size %d",size);
+
+
+			printf("\n Segmento base %d", nodoSegmento->base);
+			printf("\n Segmento tamanio %d",nodoSegmento->tamanio);
+
 			break;
 		}
 		case MAP: {
@@ -293,6 +316,7 @@ void muse_server_init() {
 				nodo_Segmento->tipo = MAP_PRIVATE;
 				tipo_map_private *type = malloc(sizeof(tipo_map_private));
 				type->path = strdup(map_receive->path);
+				nodo_Segmento->map=type;
 			}
 			if (map_receive->flag == MAP_SHARED) {
 				muse_logger_info("**** MAP compartido *****");
@@ -1079,20 +1103,33 @@ void *get_contenido_virtual (int dir_virtual , t_nodo_segmento* nodoSegmento , i
 	int offset;
 	int copiar = size;
 	int copiado = 0;
-	while( flag == -1){
+	while( flag == -1 && i <=ultima_pagina ){
 		t_nodo_pagina* nodoPagina = list_get(nodoSegmento->list_paginas,
 				    		i);
 		t_nodo_atributo_paginas *nodoAlgormito = nodo_algoritmo(
 							nodoPagina->indiceVector);
 
 		int frame = nodoAlgormito->frame;
-		if (nodoAlgormito->presencia == 0){
+		if (nodoAlgormito->presencia == 0 && nodoSegmento->tipo == S_ALLOC){
 			 int frame = asignarFrameLibre();
 			 nodoAlgormito->presencia = 1;
 			 void  * pagina = traer_archivo(path_swap, muse_page_size() *nodoAlgormito->frame,muse_page_size() );
 			 nodoAlgormito->frame = frame;
 			 offset = frame * muse_page_size();
 			 memcpy(memoria + offset,pagina, muse_page_size());
+		}
+		else{
+			int pagina =pagina_segmento (dir_virtual,nodoSegmento->base);
+			char *unPath = path_segmento(nodoSegmento);
+			char *contenido =  traer_archivo(unPath, muse_page_size(), pagina);
+			if (nodoAlgormito->presencia == 0 ){
+				 int frame = asignarFrameLibre();
+				 nodoAlgormito->presencia = 1;
+				 nodoAlgormito->frame = frame;
+				 offset = frame * muse_page_size();
+				 memcpy(memoria + offset,contenido, muse_page_size());
+			}
+			flag = 0;
 		}
 		printf("\n----pagina %d",i);
 		printf("\n----frame %d",i);
@@ -1113,7 +1150,7 @@ void *get_contenido_virtual (int dir_virtual , t_nodo_segmento* nodoSegmento , i
 		else
 			tam = muse_page_size();
 		if(i == ultima_pagina){
-			tam = size - copiar ;
+			tam = size - copiado ;
 			flag = 0;
 		}
 		printf("\n----tam %d",tam);
@@ -1122,7 +1159,7 @@ void *get_contenido_virtual (int dir_virtual , t_nodo_segmento* nodoSegmento , i
 		printf("\n----tam %d",tam);
 
 		memcpy(get+copiado,contenido_pagina + offset,tam);
-
+		printf("\n----get %s",(char *) get);
 		copiado = copiado + tam;
 		i++;
 		free(contenido_pagina);
@@ -1202,7 +1239,7 @@ void  copy_contenido_virtual (int dir_virtual , t_nodo_segmento* nodoSegmento , 
 							nodoPagina->indiceVector);
 
 		int frame = nodoAlgormito->frame;
-		if (nodoAlgormito->presencia == 0){
+		if (nodoAlgormito->presencia == 0 && nodoSegmento->tipo == S_ALLOC){
 			 int frame = asignarFrameLibre();
 			 nodoAlgormito->presencia = 1;
 
@@ -1210,6 +1247,18 @@ void  copy_contenido_virtual (int dir_virtual , t_nodo_segmento* nodoSegmento , 
 			 nodoAlgormito->frame = frame;
 			 offset = frame * muse_page_size();
 			 memcpy(memoria + offset,pagina, muse_page_size());
+		}
+		else{
+			int pagina =pagina_segmento (dir_virtual,nodoSegmento->base);
+			char *unPath =path_segmento(nodoSegmento) ;
+			char *contenido =  traer_archivo(unPath, muse_page_size(), pagina);
+			if (nodoAlgormito->presencia == 0 ){
+			    int frame = asignarFrameLibre();
+				nodoAlgormito->presencia = 1;
+				nodoAlgormito->frame = frame;
+				offset = frame * muse_page_size();
+				memcpy(memoria + offset,contenido, muse_page_size());
+			}
 		}
 		printf("\n----pagina %d",i);
 		printf("\n----frame %d",i);

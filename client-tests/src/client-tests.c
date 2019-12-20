@@ -5,53 +5,55 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-char* pasa_palabra(int cod)
+uint32_t leer_archivo(uint32_t arch, uint32_t leido)
 {
-	switch(cod)
-	{
-	case 1:
-		return strdup("No sabes que sufro?\n");
-	case 2:
-		return strdup("No escuchas mi plato girar?\n");
-	case 3:
-		return strdup("Cuanto tiempo hasta hallarte?\n");
-	case 4:
-	case 5:
-		return strdup("Uh, haces mi motor andar\n");
-	case 6:
-		return strdup("Y mis cilindros rotar\n");
-	default:
-	{
-		if(cod % 2)
-			return strdup("Oh si\n");
-		else
-			return strdup("un Archivo de swap supermasivo\n");
-	}
-	}
+	uint32_t len;
+	char * palabra = malloc(100);
+
+	//muse_get(&len, arch + leido, sizeof(uint32_t));
+	//leido += sizeof(uint32_t);
+	muse_get(palabra, arch + leido, 10);
+	leido += len;
+
+	printf("string %s",palabra);
+	free(palabra);
+	return leido;
 }
 
-void recursiva(int num)
+void *revolucionar()
 {
-	if(num == 0)
-		return;
-	char* estrofa = pasa_palabra(num);
-	int longitud = strlen(estrofa)+1;
-	uint32_t ptr = muse_alloc(longitud);
-	printf("\n ptr %d alloc %d",ptr,longitud);
-	muse_cpy(ptr, estrofa, longitud);
-	recursiva(num - 1);
-	muse_get(estrofa, ptr, longitud);
+	uint32_t arch = muse_map("/home/utnso/git/tp-2019-2c-threaders/muse/Debug/fernando.txt", 4096, MAP_PRIVATE);
+	uint32_t offset = 0;
+	uint32_t size;
 
-	puts(estrofa);
+	//muse_get(&size, arch, sizeof(uint32_t));
+	offset = sizeof(uint32_t);
+	//while(offset < size)
+	offset = leer_archivo(arch, 30);
 
-	//muse_free(ptr);
-	free(estrofa);
-	sleep(1);
+	arch += 5000;
+
+	muse_get(NULL, arch, 1);
+
+	muse_sync(arch, 4096);
+
+	muse_unmap(arch);
+	return 0;
 }
+
 
 int main(void)
 {
-	muse_init(getpid(), "127.0.0.1", 5003);
-	recursiva(3);
-	muse_close();
+	//struct hilolay_t revolucion;
+
+	//hilolay_init();
+	muse_init(2, "127.0.0.1", 5003);
+	uint32_t arch = muse_map("/home/utnso/git/tp-2019-2c-threaders/muse/Debug/fernando.txt", 4096, MAP_PRIVATE);
+	char * palabra = malloc(100);
+	muse_get(palabra, arch +5000 , 10);
+	printf("algo");
+	printf("%s",palabra);
+	muse_sync(arch, 4096);
+	muse_unmap(arch);
+
 }
